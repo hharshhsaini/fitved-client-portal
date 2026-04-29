@@ -38,6 +38,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="px-3 py-4">
         <FitvedLogo showWord={!collapsed} />
+        {!collapsed && (
+          <p className="mt-1 pl-1 text-[10px] uppercase tracking-[0.22em] text-sidebar-foreground/70">
+            Fitness for grownups
+          </p>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
