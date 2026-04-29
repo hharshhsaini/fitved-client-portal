@@ -42,11 +42,14 @@ export default function Login() {
         <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/40 blur-3xl" />
         <div className="relative">
           <FitvedLogo />
+          <p className="mt-2 pl-1 text-xs uppercase tracking-[0.28em] text-primary/80">
+            Fitness for grownups
+          </p>
         </div>
         <div className="relative space-y-6">
           <h1 className="font-display text-5xl leading-tight text-foreground">
-            Calm strength.<br />
-            <span className="text-primary">Every day.</span>
+            Strong at every age.<br />
+            <span className="text-primary">Calm in every move.</span>
           </h1>
           <p className="max-w-md text-lg text-muted-foreground">
             A simpler way to manage your fitness program. Pause classes, track your plan,
