@@ -116,6 +116,7 @@
 @layer utilities {
   .bg-gradient-brand { background: var(--gradient-brand); }
   .bg-gradient-soft { background: var(--gradient-soft); }
+  .bg-gradient-gold { background: var(--gradient-gold); }
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-elevated { box-shadow: var(--shadow-elevated); }
