@@ -1,0 +1,70 @@
+import { NavLink, useLocation } from "react-router-dom";
+import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Shield } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { FitvedLogo } from "./FitvedLogo";
+import { useAuth } from "@/contexts/AuthContext";
+
+const clientItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Pause Classes", url: "/pause", icon: CalendarOff },
+  { title: "Plan", url: "/plan", icon: CreditCard },
+  { title: "Health Report", url: "/health", icon: FileHeart },
+  { title: "Profile", url: "/profile", icon: UserCircle2 },
+];
+
+export function AppSidebar() {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+  const { pathname } = useLocation();
+  const { user } = useAuth();
+
+  const items = [...clientItems];
+  if (user?.role === "admin") items.push({ title: "Admin", url: "/admin", icon: Shield });
+
+  const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
+
+  return (
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader className="px-3 py-4">
+        <FitvedLogo showWord={!collapsed} />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Your space</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => {
+                const active = isActive(item.url);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className="flex items-center gap-3 rounded-lg transition-colors"
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {!collapsed && <span className="text-[15px]">{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
+  );
+}
