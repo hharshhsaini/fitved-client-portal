@@ -1,15 +1,23 @@
-import { Leaf } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/fitved-logo.png";
 
-export function FitvedLogo({ className, showWord = true }: { className?: string; showWord?: boolean }) {
+interface FitvedLogoProps {
+  className?: string;
+  showWord?: boolean;
+  showTagline?: boolean;
+}
+
+export function FitvedLogo({ className, showWord = true, showTagline = false }: FitvedLogoProps) {
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-brand text-primary-foreground shadow-soft">
-        <Leaf className="h-5 w-5" strokeWidth={2.2} />
-      </span>
-      {showWord && (
-        <span className="font-display text-2xl tracking-tight text-foreground">
-          Fitved
+    <div className={cn("flex items-center gap-3", className)}>
+      <img
+        src={logo}
+        alt="Fitved — fitness for grownups"
+        className={cn("object-contain rounded-md", showWord ? "h-10" : "h-9 w-9")}
+      />
+      {showTagline && (
+        <span className="font-sans text-xs uppercase tracking-[0.2em] text-accent-foreground/80">
+          Fitness for grownups
         </span>
       )}
     </div>
