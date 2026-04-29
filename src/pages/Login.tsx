@@ -67,8 +67,11 @@ export default function Login() {
       {/* Form panel */}
       <div className="flex items-center justify-center p-6 sm:p-10">
         <Card className="w-full max-w-md p-8 shadow-elevated rounded-2xl border-border/60">
-          <div className="lg:hidden mb-6 flex justify-center">
+          <div className="lg:hidden mb-6 flex flex-col items-center gap-1">
             <FitvedLogo />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
+              Fitness for grownups
+            </p>
           </div>
           <h2 className="font-display text-3xl text-foreground">
             {mode === "signin" ? "Welcome back" : "Create your account"}
