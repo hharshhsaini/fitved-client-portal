@@ -68,7 +68,8 @@ export default function Admin() {
     },
   });
 
-  const updatePlan = async (userId: string, patch: { type?: PlanType; status?: string }) => {
+  type PlanStatus = "active" | "paused" | "cancelled";
+  const updatePlan = async (userId: string, patch: { type?: PlanType; status?: PlanStatus }) => {
     const { data: existing } = await supabase
       .from("plans").select("id").eq("user_id", userId)
       .order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -99,8 +100,8 @@ export default function Admin() {
     try {
       if (patch.plan_type !== undefined || patch.plan_status !== undefined) {
         await updatePlan(selected.id, {
-          type: patch.plan_type ?? selected.plan_type ?? undefined,
-          status: patch.plan_status ?? selected.plan_status ?? undefined,
+          type: (patch.plan_type ?? selected.plan_type) ?? undefined,
+          status: ((patch.plan_status ?? selected.plan_status) as PlanStatus | null) ?? undefined,
         });
       }
       if (patch.trainer_id !== undefined) await updateTrainer(selected.id, patch.trainer_id);
