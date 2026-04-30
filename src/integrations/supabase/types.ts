@@ -14,16 +14,237 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      billing_history: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string | null
+          payment_date: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          payment_date: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          payment_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_reports: {
+        Row: {
+          created_at: string
+          file_path: string | null
+          id: string
+          report_date: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          report_date: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          report_date?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pauses: {
+        Row: {
+          created_at: string
+          from_date: string
+          id: string
+          status: Database["public"]["Enums"]["pause_status"]
+          to_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_date: string
+          id?: string
+          status?: Database["public"]["Enums"]["pause_status"]
+          to_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_date?: string
+          id?: string
+          status?: Database["public"]["Enums"]["pause_status"]
+          to_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          amount: number
+          auto_renew: boolean
+          created_at: string
+          id: string
+          next_payment_date: string
+          payment_method: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["plan_status"]
+          type: Database["public"]["Enums"]["plan_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          auto_renew?: boolean
+          created_at?: string
+          id?: string
+          next_payment_date: string
+          payment_method?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["plan_status"]
+          type: Database["public"]["Enums"]["plan_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          auto_renew?: boolean
+          created_at?: string
+          id?: string
+          next_payment_date?: string
+          payment_method?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["plan_status"]
+          type?: Database["public"]["Enums"]["plan_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          phone: string | null
+          society: string | null
+          time_slot: string | null
+          trainer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name?: string | null
+          phone?: string | null
+          society?: string | null
+          time_slot?: string | null
+          trainer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          phone?: string | null
+          society?: string | null
+          time_slot?: string | null
+          trainer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          client_id: string
+          completed: boolean
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          title: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed?: boolean
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          title: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed?: boolean
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          title?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "client" | "trainer" | "admin"
+      pause_status: "active" | "completed"
+      plan_status: "active" | "paused" | "cancelled"
+      plan_type: "1-month" | "3-month" | "6-month"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +371,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["client", "trainer", "admin"],
+      pause_status: ["active", "completed"],
+      plan_status: ["active", "paused", "cancelled"],
+      plan_type: ["1-month", "3-month", "6-month"],
+    },
   },
 } as const
