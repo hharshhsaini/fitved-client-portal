@@ -114,20 +114,6 @@ export default function Login() {
             </button>
           </p>
 
-          <div className="my-6 flex items-center gap-3">
-            <Separator className="flex-1" />
-            <span className="text-xs text-muted-foreground">or try the demo</span>
-            <Separator className="flex-1" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" onClick={() => quickEnter("client")} className="h-10">
-              <Sparkles className="mr-2 h-4 w-4" /> As Client
-            </Button>
-            <Button variant="outline" onClick={() => quickEnter("admin")} className="h-10">
-              <Sparkles className="mr-2 h-4 w-4" /> As Admin
-            </Button>
-          </div>
         </Card>
       </div>
     </div>
