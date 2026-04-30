@@ -1,73 +1,65 @@
-# Fitved — Clean Wellness Dashboard (UI-only)
+## Goal
 
-A calm, premium fitness-service UI for clients aged 35–55, plus a simple mock admin view. Built with React + Vite + Tailwind + shadcn/ui (Lovable's stack — equivalent to the Next.js/Tailwind setup you described). All data is mocked in-memory; nothing persists across refresh.
+Remove every mock data source. The app will only show real data from your manually-connected Supabase project — no demo fallbacks, no `mockData.ts`.
 
-## Brand & visual style
+## Prerequisite (you do this once)
 
-- Palette: white / light grey backgrounds, muted sage-green primary, soft slate-blue accent, gentle shadows, generous spacing, rounded-2xl cards.
-- Typography: large, readable (16–18px base), comfortable for 35–55 age group.
-- Tone: warm, trustworthy, uncluttered. No dense data tables on the client side.
-- Fully mobile responsive (sidebar collapses to a hamburger on small screens).
+1. In your Supabase project, run the SQL schema I gave you earlier (profiles, user_roles + `app_role` enum + `has_role` function, plans, pauses, health_reports, tasks, RLS policies, `handle_new_user` trigger).
+2. Create a private storage bucket named `health-reports`.
+3. Click the green **Supabase** button in Lovable to connect the project. This generates `src/integrations/supabase/client.ts` and `types.ts` automatically.
+4. Tell me it's connected — then I run the steps below.
 
-## Screens
+If any of that isn't done yet, the new code will fail to compile (no Supabase client) or fail at runtime (no tables). So order matters.
 
-### 1. Login / Signup
-- Split layout: left = soft brand panel with "Fitved" wordmark + tagline ("Calm strength. Every day."); right = form.
-- Email + password fields, "Sign in" / "Create account" toggle, forgot-password link (visual only).
-- Mock auth: any email/password works. Demo helper buttons: **Continue as Client** and **Continue as Admin** so you can preview both views instantly.
+## What I'll do after Supabase is connected
 
-### 2. App shell (after login)
-- Left sidebar (collapsible to icon-only) with: Dashboard, Pause Classes, Plan, Health Report, Profile. Admin users see an extra "Admin" item.
-- Top bar: sidebar toggle, greeting "Hi Priya 👋", small notification bell, avatar menu (logout).
+### 1. Real auth
+- Rewrite `src/contexts/AuthContext.tsx` to use `supabase.auth`:
+  - `onAuthStateChange` listener set up BEFORE `getSession()`.
+  - Exposes `user`, `session`, `profile`, `role`, `loading`, `signIn`, `signUp`, `signOut`.
+- Rewrite `src/pages/Login.tsx`:
+  - Real `signInWithPassword` and `signUp` (with `emailRedirectTo: window.location.origin`).
+  - Real "Forgot password?" → `resetPasswordForEmail` with `redirectTo: ${origin}/reset-password`.
+- New `src/pages/ResetPassword.tsx` (public route) → `supabase.auth.updateUser({ password })`.
+- Update `ProtectedRoute` to wait for `loading`, check real session, and gate `/admin` on `role === 'admin'` from the `user_roles` table.
+- Add `/reset-password` route to `App.tsx`.
 
-### 3. Client Dashboard (/)
-Greeting + overview grid of cards:
-- **Next session notification** banner — "Your next session is tomorrow at 7:30 AM with Coach Arjun."
-- **Plan summary card** — plan type, start date, next payment due, days remaining (progress bar).
-- **Pause status card** — "Active" or "Paused until 12 May" with quick link to manage.
-- **Health report card** — last updated date + Download button.
-- **Profile snapshot card** — society, time slot, trainer.
+### 2. Replace mock data with live queries (TanStack Query)
+- **Dashboard** — fetch active plan, latest health report, profile, active pause from DB.
+- **Plan** — fetch current plan + billing rows.
+- **Pause** — `usePauseStore` becomes thin wrappers around `pauses` inserts/updates; history comes from `useQuery`.
+- **Health** — list `health_reports` for the user; download via short-lived signed URL from the `health-reports` bucket.
+- **Profile** — read/update `profiles` row (phone, society, time slot, trainer).
+- **Admin** — list all clients (admin-only via `has_role`); update plan/trainer/status; upload reports to storage + insert `health_reports` row.
 
-### 4. Pause Classes (/pause)
-- Calendar date-range picker (shadcn Calendar with `pointer-events-auto`).
-- Summary line: "You're pausing X days."
-- Primary button: **Pause My Classes** → success toast, status card updates.
-- Current pause status panel with **Resume Now** option if a pause is active.
-- Past pauses list (mock, 2–3 entries).
+### 3. Empty states (no fake fallbacks)
+Each page renders an explicit empty state when the signed-in user has no data yet (e.g. "No plan assigned yet — your trainer will set this up."). No demo values are ever shown.
 
-### 5. Plan Details (/plan)
-Large card showing: plan type badge (1 / 3 / 6 month), start date, next payment due, amount, payment method (mock), renewal toggle. Secondary card: billing history (3 mock rows).
+### 4. Cleanup
+- Delete `src/lib/mockData.ts`.
+- Move the small helpers (`formatDate`, `daysBetween`) to `src/lib/dates.ts`.
+- Remove every `mock*` import across the app.
 
-### 6. Health Report (/health)
-- Hero card: "Latest report — updated 18 Apr 2026" + **Download Latest Report (PDF)** button (downloads a generated mock PDF blob).
-- List of previous reports (date + download icon).
+## Technical details
 
-### 7. Profile (/profile)
-Read-only profile card: name, email, phone, society name, time slot, assigned trainer (with small avatar + specialty). Edit button opens a dialog (mock save → toast).
+- Roles live in `user_roles` (never on `profiles`). Admin checks go through the `has_role()` security-definer function inside RLS, so there's no recursion risk.
+- All reads use TanStack Query; mutations invalidate the relevant query keys.
+- Storage downloads use signed URLs, not public URLs — the bucket stays private.
+- **First admin**: after you sign up the first time, run this once in the Supabase SQL editor:
+  ```sql
+  insert into public.user_roles (user_id, role)
+  values ('<your-auth-uid>', 'admin');
+  ```
+  I'll show your UID on the Profile page to make this easy.
 
-### 8. Admin view (/admin) — mock only
-Simple table of clients (name, plan, trainer, status). Click a row → side panel to edit plan, assign trainer, upload report (file picker is visual only). Clear "Mock data — changes reset on refresh" notice at top.
+## Files
 
-## Navigation & state
+**New**: `src/pages/ResetPassword.tsx`, `src/lib/dates.ts`, `src/hooks/useProfile.ts`, `src/hooks/usePlan.ts`, `src/hooks/usePauses.ts`, `src/hooks/useHealthReports.ts`, `src/hooks/useClients.ts`.
 
-```text
-/login                → Login screen
-/                     → Dashboard
-/pause /plan /health /profile  → Client sections
-/admin                → Admin (only if role = admin)
-```
+**Rewritten**: `AuthContext.tsx`, `Login.tsx`, `ProtectedRoute.tsx`, `pauseStore.tsx`, `Dashboard.tsx`, `Plan.tsx`, `Pause.tsx`, `Health.tsx`, `Profile.tsx`, `Admin.tsx`, `App.tsx`.
 
-- Auth + role kept in a lightweight React context (in-memory). Refresh returns to /login.
-- Mock data lives in `src/lib/mockData.ts` (user, plan, pauses, reports, trainers, clients).
+**Deleted**: `src/lib/mockData.ts`.
 
-## Technical notes
+## After approval
 
-- Stack: React 18 + Vite + TypeScript + Tailwind + shadcn/ui + react-router-dom (Lovable's standard; functionally matches the Next.js/Tailwind brief).
-- Design tokens defined as HSL CSS variables in `index.css` and mapped in `tailwind.config.ts` (sage primary, slate accent, soft surfaces). No hardcoded colors in components.
-- Components: `AppSidebar`, `TopBar`, `AuthContext`, `ProtectedRoute`, `RoleRoute`, plus one component per card (PlanCard, PauseCard, HealthCard, ProfileCard, NotificationBanner).
-- PDF download uses a generated Blob so the button actually downloads a small placeholder file.
-- Sidebar follows the shadcn sidebar pattern with `collapsible="icon"` and a persistent trigger in the top bar.
-
-## Out of scope (since UI-only)
-
-- Real authentication, real database, real PDF reports, real payments, real persistence. All actions show success toasts and update local state only. Easy to upgrade to Lovable Cloud later without redesigning the UI.
+Confirm Supabase is connected (green button done, schema run, bucket created), then I execute the rewrite in one pass.
