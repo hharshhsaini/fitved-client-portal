@@ -27,10 +27,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
-  const { user } = useAuth();
+  const { role } = useAuth();
 
   const items = [...clientItems];
-  if (user?.role === "admin") items.push({ title: "Admin", url: "/admin", icon: Shield });
+  if (role === "admin") items.push({ title: "Admin", url: "/admin", icon: Shield });
 
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
 

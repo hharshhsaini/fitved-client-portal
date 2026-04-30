@@ -13,16 +13,20 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useProfile } from "@/hooks/useProfile";
 
 export function TopBar() {
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
+  const { data: profile } = useProfile();
   const navigate = useNavigate();
-  const firstName = user?.name.split(" ")[0] ?? "there";
-  const initials = (user?.name ?? "U")
+  const displayName = profile?.name || user?.email?.split("@")[0] || "there";
+  const firstName = displayName.split(" ")[0];
+  const initials = displayName
     .split(" ")
     .map((p) => p[0])
     .slice(0, 2)
-    .join("");
+    .join("")
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/80 px-4 backdrop-blur md:px-6">
@@ -33,7 +37,7 @@ export function TopBar() {
         </p>
         <p className="text-sm text-muted-foreground sm:hidden">Hi {firstName} 👋</p>
       </div>
-      {user?.role === "admin" && (
+      {role === "admin" && (
         <Badge variant="secondary" className="hidden sm:inline-flex">Admin</Badge>
       )}
       <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
@@ -51,13 +55,13 @@ export function TopBar() {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>
             <div className="flex flex-col">
-              <span className="font-medium">{user?.name}</span>
+              <span className="font-medium">{displayName}</span>
               <span className="text-xs text-muted-foreground">{user?.email}</span>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => { signOut(); navigate("/login"); }}>
+          <DropdownMenuItem onClick={async () => { await signOut(); navigate("/login"); }}>
             <LogOut className="mr-2 h-4 w-4" /> Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
