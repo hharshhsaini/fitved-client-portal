@@ -9,7 +9,7 @@ import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePauseStore } from "@/stores/pauseStore";
-import { formatDate, daysBetween } from "@/lib/mockData";
+import { formatDate, daysBetween } from "@/lib/dates";
 import { toast } from "sonner";
 
 export default function Pause() {
@@ -18,19 +18,27 @@ export default function Pause() {
 
   const days = range?.from && range?.to ? daysBetween(range.from.toISOString(), range.to.toISOString()) : 0;
 
-  const handlePause = () => {
+  const handlePause = async () => {
     if (!range?.from || !range?.to) {
       toast.error("Please select a start and end date");
       return;
     }
-    pause(range.from.toISOString(), range.to.toISOString());
-    toast.success(`Classes paused for ${days} day${days === 1 ? "" : "s"}`);
-    setRange(undefined);
+    try {
+      await pause(range.from.toISOString(), range.to.toISOString());
+      toast.success(`Classes paused for ${days} day${days === 1 ? "" : "s"}`);
+      setRange(undefined);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Could not pause");
+    }
   };
 
-  const handleResume = () => {
-    resume();
-    toast.success("Classes resumed — see you soon!");
+  const handleResume = async () => {
+    try {
+      await resume();
+      toast.success("Classes resumed — see you soon!");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Could not resume");
+    }
   };
 
   return (
@@ -40,7 +48,6 @@ export default function Pause() {
         <p className="mt-1 text-muted-foreground">Need a break? Pause your sessions for any date range.</p>
       </header>
 
-      {/* Active status */}
       <Card className={cn(
         "p-6 rounded-2xl shadow-card border-l-4",
         activePause ? "border-l-warning bg-warning/5" : "border-l-success bg-success/5"
@@ -70,7 +77,6 @@ export default function Pause() {
         </div>
       </Card>
 
-      {/* Schedule pause */}
       <Card className="p-6 rounded-2xl shadow-card">
         <h2 className="font-display text-xl">Schedule a pause</h2>
         <p className="mt-1 text-sm text-muted-foreground">Pick the start and end date for your break.</p>
@@ -119,13 +125,12 @@ export default function Pause() {
               </p>
             )}
           </div>
-          <Button onClick={handlePause} disabled={!range?.from || !range?.to} className="h-11">
+          <Button onClick={handlePause} disabled={!range?.from || !range?.to || !!activePause} className="h-11">
             <PauseCircle className="mr-2 h-4 w-4" /> Pause my classes
           </Button>
         </div>
       </Card>
 
-      {/* History */}
       <Card className="p-6 rounded-2xl shadow-card">
         <h2 className="font-display text-xl">Past pauses</h2>
         <ul className="mt-4 divide-y divide-border">

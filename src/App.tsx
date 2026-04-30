@@ -8,6 +8,7 @@ import { PauseProvider } from "@/stores/pauseStore";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Pause from "./pages/Pause";
 import Plan from "./pages/Plan";
@@ -28,6 +29,7 @@ const App = () => (
           <PauseProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/pause" element={<Pause />} />
