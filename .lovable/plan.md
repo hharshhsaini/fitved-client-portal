@@ -1,65 +1,65 @@
-## Goal
+## Plan: Admin promotion + Customer Management UI
 
-Remove every mock data source. The app will only show real data from your manually-connected Supabase project — no demo fallbacks, no `mockData.ts`.
+### Step 1 — Promote you to admin
+Insert an `admin` role row for your user (`vish262025@gmail.com`, id `e3179c7e-f2f5-4eb7-b35c-efa87446444a`) into `user_roles`. Your existing `client` role stays (harmless). After refresh, the Admin section unlocks.
 
-## Prerequisite (you do this once)
+### Step 2 — Customer onboarding (option C)
+Support both:
+- **Self-signup**: existing login page (already wired; auto-creates profile + `client` role via the `handle_new_user` trigger).
+- **Admin-created accounts**: an "Add customer" button in Admin that creates the auth user server-side, sends them a password-setup email, and lets the admin pre-fill profile fields (name, phone, society, time slot, trainer).
 
-1. In your Supabase project, run the SQL schema I gave you earlier (profiles, user_roles + `app_role` enum + `has_role` function, plans, pauses, health_reports, tasks, RLS policies, `handle_new_user` trigger).
-2. Create a private storage bucket named `health-reports`.
-3. Click the green **Supabase** button in Lovable to connect the project. This generates `src/integrations/supabase/client.ts` and `types.ts` automatically.
-4. Tell me it's connected — then I run the steps below.
+### Step 3 — Admin Customers list page (`/admin/customers`)
+- Table of all profiles with: name, email, phone, society, plan status, trainer.
+- Search by name/email/phone, filter by plan status and trainer.
+- "Add customer" button (opens dialog from Step 2).
+- Click a row → customer detail page.
 
-If any of that isn't done yet, the new code will fail to compile (no Supabase client) or fail at runtime (no tables). So order matters.
+### Step 4 — Customer detail page (`/admin/customers/:id`)
+Tabbed view:
+1. **Profile** — edit name, phone, society, time_slot, assign trainer, change role (client/trainer/admin).
+2. **Plan** — view/create/edit plan (type, amount, start_date, next_payment_date, payment_method, auto_renew, status).
+3. **Pauses** — list pauses, create new pause (from/to dates), cancel active pause.
+4. **Billing** — list billing history, add payment entry (date, amount, method).
+5. **Health Reports** — list reports, upload new PDF (to `health-reports` bucket), delete, generate signed URL to view.
+6. **Tasks** — list tasks assigned to client, create task (title, notes, due_date, assigned trainer), mark complete.
 
-## What I'll do after Supabase is connected
+### Step 5 — Edge function for admin-created accounts
+A `create-customer` edge function (service role) that:
+- Verifies caller is admin (`has_role`).
+- Creates the auth user with a generated temp password.
+- Sends a password-reset/invite email so the customer sets their own password.
+- Updates the auto-created profile with admin-provided fields (name, phone, society, time_slot, trainer_id).
 
-### 1. Real auth
-- Rewrite `src/contexts/AuthContext.tsx` to use `supabase.auth`:
-  - `onAuthStateChange` listener set up BEFORE `getSession()`.
-  - Exposes `user`, `session`, `profile`, `role`, `loading`, `signIn`, `signUp`, `signOut`.
-- Rewrite `src/pages/Login.tsx`:
-  - Real `signInWithPassword` and `signUp` (with `emailRedirectTo: window.location.origin`).
-  - Real "Forgot password?" → `resetPasswordForEmail` with `redirectTo: ${origin}/reset-password`.
-- New `src/pages/ResetPassword.tsx` (public route) → `supabase.auth.updateUser({ password })`.
-- Update `ProtectedRoute` to wait for `loading`, check real session, and gate `/admin` on `role === 'admin'` from the `user_roles` table.
-- Add `/reset-password` route to `App.tsx`.
+### Step 6 — Sidebar / navigation
+Add "Customers" link under the existing Admin section, visible only when `has_role(admin)` is true.
 
-### 2. Replace mock data with live queries (TanStack Query)
-- **Dashboard** — fetch active plan, latest health report, profile, active pause from DB.
-- **Plan** — fetch current plan + billing rows.
-- **Pause** — `usePauseStore` becomes thin wrappers around `pauses` inserts/updates; history comes from `useQuery`.
-- **Health** — list `health_reports` for the user; download via short-lived signed URL from the `health-reports` bucket.
-- **Profile** — read/update `profiles` row (phone, society, time slot, trainer).
-- **Admin** — list all clients (admin-only via `has_role`); update plan/trainer/status; upload reports to storage + insert `health_reports` row.
+---
 
-### 3. Empty states (no fake fallbacks)
-Each page renders an explicit empty state when the signed-in user has no data yet (e.g. "No plan assigned yet — your trainer will set this up."). No demo values are ever shown.
+### Technical details
 
-### 4. Cleanup
-- Delete `src/lib/mockData.ts`.
-- Move the small helpers (`formatDate`, `daysBetween`) to `src/lib/dates.ts`.
-- Remove every `mock*` import across the app.
+**Database changes**: none required — schema already supports everything. Just one data insert (admin role) handled via the insert tool.
 
-## Technical details
+**Files to create**:
+- `src/pages/admin/Customers.tsx` (list)
+- `src/pages/admin/CustomerDetail.tsx` (tabbed detail)
+- `src/components/admin/AddCustomerDialog.tsx`
+- `src/components/admin/customer-tabs/` (ProfileTab, PlanTab, PausesTab, BillingTab, HealthTab, TasksTab)
+- `src/hooks/useCustomers.ts`, `useCustomer.ts` (TanStack Query)
+- `supabase/functions/create-customer/index.ts` + `config.toml` entry (`verify_jwt = true`)
 
-- Roles live in `user_roles` (never on `profiles`). Admin checks go through the `has_role()` security-definer function inside RLS, so there's no recursion risk.
-- All reads use TanStack Query; mutations invalidate the relevant query keys.
-- Storage downloads use signed URLs, not public URLs — the bucket stays private.
-- **First admin**: after you sign up the first time, run this once in the Supabase SQL editor:
-  ```sql
-  insert into public.user_roles (user_id, role)
-  values ('<your-auth-uid>', 'admin');
-  ```
-  I'll show your UID on the Profile page to make this easy.
+**Files to edit**:
+- `src/App.tsx` — add `/admin/customers` and `/admin/customers/:id` routes (admin-protected).
+- `src/components/AppSidebar.tsx` — add Customers link.
+- `src/pages/Admin.tsx` — link/redirect into Customers.
 
-## Files
+**RLS**: Existing admin policies already allow full CRUD on profiles, plans, pauses, billing_history, health_reports, tasks, user_roles. No new policies needed.
 
-**New**: `src/pages/ResetPassword.tsx`, `src/lib/dates.ts`, `src/hooks/useProfile.ts`, `src/hooks/usePlan.ts`, `src/hooks/usePauses.ts`, `src/hooks/useHealthReports.ts`, `src/hooks/useClients.ts`.
+**Storage**: `health-reports` bucket exists. Admin uploads via signed upload; viewing via short-lived signed URLs.
 
-**Rewritten**: `AuthContext.tsx`, `Login.tsx`, `ProtectedRoute.tsx`, `pauseStore.tsx`, `Dashboard.tsx`, `Plan.tsx`, `Pause.tsx`, `Health.tsx`, `Profile.tsx`, `Admin.tsx`, `App.tsx`.
+**Roles**: Profile tab role-change uses `user_roles` table (insert/delete rows for `admin` / `trainer` / `client`).
 
-**Deleted**: `src/lib/mockData.ts`.
+---
 
-## After approval
-
-Confirm Supabase is connected (green button done, schema run, bucket created), then I execute the rewrite in one pass.
+### What you'll do after approval
+1. I promote you to admin and build everything above.
+2. You hard-refresh, log in, navigate to **Admin → Customers**, and start adding/managing customers.
