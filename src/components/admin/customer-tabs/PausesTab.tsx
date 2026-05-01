@@ -40,11 +40,11 @@ export function PausesTab({ userId }: { userId: string }) {
 
   const cancel = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pauses").update({ status: "cancelled" }).eq("id", id);
+      const { error } = await supabase.from("pauses").update({ status: "completed" }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Pause cancelled");
+      toast.success("Pause ended");
       qc.invalidateQueries({ queryKey: ["customer-pauses", userId] });
     },
   });
@@ -79,7 +79,7 @@ export function PausesTab({ userId }: { userId: string }) {
               <Badge variant={p.status === "active" ? "secondary" : "outline"} className="mt-1">{p.status}</Badge>
             </div>
             {p.status === "active" && (
-              <Button size="sm" variant="outline" onClick={() => cancel.mutate(p.id)}>Cancel</Button>
+              <Button size="sm" variant="outline" onClick={() => cancel.mutate(p.id)}>End</Button>
             )}
           </div>
         ))}
