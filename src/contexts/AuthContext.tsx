@@ -49,11 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .order("role")
-      .limit(1)
-      .maybeSingle();
-    setRole((data?.role as AppRole) ?? "client");
+      .eq("user_id", userId);
+    const roles = (data ?? []).map((r) => r.role as AppRole);
+    const best: AppRole = roles.includes("admin")
+      ? "admin"
+      : roles.includes("trainer")
+      ? "trainer"
+      : "client";
+    setRole(best);
   };
 
   const signIn = useCallback(async (email: string, password: string) => {

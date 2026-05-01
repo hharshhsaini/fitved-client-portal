@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Shield } from "lucide-react";
+import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Shield, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +30,10 @@ export function AppSidebar() {
   const { role } = useAuth();
 
   const items = [...clientItems];
-  if (role === "admin") items.push({ title: "Admin", url: "/admin", icon: Shield });
+  if (role === "admin") {
+    items.push({ title: "Customers", url: "/admin/customers", icon: Users });
+    items.push({ title: "Admin", url: "/admin", icon: Shield });
+  }
 
   const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
 
