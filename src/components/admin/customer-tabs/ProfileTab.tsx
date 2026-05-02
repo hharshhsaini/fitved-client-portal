@@ -49,6 +49,7 @@ export function ProfileTab({ userId }: { userId: string }) {
   const [society, setSociety] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
   const [trainerId, setTrainerId] = useState<string>("");
+  const [newDob, setNewDob] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (profile) {
@@ -59,6 +60,23 @@ export function ProfileTab({ userId }: { userId: string }) {
       setTrainerId(profile.trainer_id ?? "");
     }
   }, [profile]);
+
+  const resetDob = useMutation({
+    mutationFn: async (date: Date) => {
+      const iso = date.toISOString().slice(0, 10);
+      const { data, error } = await supabase.functions.invoke("reset-customer-dob", {
+        body: { user_id: userId, dob: iso },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      toast.success("Birthday reset — customer's password is now their new birthday");
+      setNewDob(undefined);
+      qc.invalidateQueries({ queryKey: ["customer-profile", userId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Reset failed"),
+  });
 
   const save = useMutation({
     mutationFn: async () => {
