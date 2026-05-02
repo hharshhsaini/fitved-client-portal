@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { phoneToEmail, dobToPassword, normalizePhone } from "@/lib/phoneAuth";
 
 type AppRole = "client" | "trainer" | "admin";
 
@@ -11,6 +12,8 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  signInWithPhone: (phone: string, dob: Date) => Promise<{ error: string | null }>;
+  signUpWithPhone: (name: string, phone: string, dob: Date) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -76,13 +79,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   }, []);
 
+  const signInWithPhone = useCallback(async (phone: string, dob: Date) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: phoneToEmail(phone),
+      password: dobToPassword(dob),
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const signUpWithPhone = useCallback(async (name: string, phone: string, dob: Date) => {
+    const normalized = normalizePhone(phone);
+    const { error } = await supabase.auth.signUp({
+      email: phoneToEmail(phone),
+      password: dobToPassword(dob),
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          name,
+          phone: normalized,
+          dob: dob.toISOString().slice(0, 10),
+        },
+      },
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
   }, []);
 
   const value = useMemo(
-    () => ({ user, session, role, loading, signIn, signUp, signOut }),
-    [user, session, role, loading, signIn, signUp, signOut]
+    () => ({ user, session, role, loading, signIn, signUp, signInWithPhone, signUpWithPhone, signOut }),
+    [user, session, role, loading, signIn, signUp, signInWithPhone, signUpWithPhone, signOut]
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

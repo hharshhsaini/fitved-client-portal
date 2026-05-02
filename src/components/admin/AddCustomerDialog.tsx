@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { isValidPhone, isValidDob, normalizePhone } from "@/lib/phoneAuth";
 
 interface Props {
   open: boolean;
@@ -18,27 +23,25 @@ interface Props {
 
 export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
   const qc = useQueryClient();
-  const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState<Date | undefined>(undefined);
   const [society, setSociety] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
-  const [sendInvite, setSendInvite] = useState(true);
 
   const reset = () => {
-    setEmail(""); setName(""); setPhone(""); setSociety(""); setTimeSlot(""); setSendInvite(true);
+    setName(""); setPhone(""); setDob(undefined); setSociety(""); setTimeSlot("");
   };
 
   const create = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("create-customer", {
         body: {
-          email,
           name,
-          phone: phone || null,
+          phone: normalizePhone(phone),
+          dob: dob!.toISOString().slice(0, 10),
           society: society || null,
           time_slot: timeSlot || null,
-          send_invite: sendInvite,
         },
       });
       if (error) throw error;
@@ -46,7 +49,7 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
       return data;
     },
     onSuccess: () => {
-      toast.success(sendInvite ? "Customer added — password setup email sent" : "Customer added");
+      toast.success("Customer added — they can log in with their phone + birthday");
       qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
       onCreated?.();
       reset();
@@ -55,47 +58,75 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
     onError: (e: unknown) => toast.error(e instanceof Error ? e.message : "Failed to create customer"),
   });
 
+  const canSubmit = !!name.trim() && isValidPhone(phone) && isValidDob(dob);
+
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) reset(); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add customer</DialogTitle>
-          <DialogDescription>Create a new client account. They'll get an email to set their password.</DialogDescription>
+          <DialogDescription>
+            Customers log in with their phone number and date of birth.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email">Email *</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="name">Name *</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="phone">Phone * (10 digits — used to log in)</Label>
+            <Input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(e) => setPhone(normalizePhone(e.target.value).slice(0, 10))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Date of birth * (used as password)</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal", !dob && "text-muted-foreground")}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dob ? format(dob, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dob}
+                  onSelect={setDob}
+                  captionLayout="dropdown-buttons"
+                  fromYear={1925}
+                  toYear={new Date().getFullYear()}
+                  defaultMonth={dob ?? new Date(1980, 0, 1)}
+                  disabled={(d) => d > new Date() || d < new Date("1925-01-01")}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="slot">Time slot</Label>
               <Input id="slot" placeholder="6–7 AM" value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="society">Society</Label>
-            <Input id="society" value={society} onChange={(e) => setSociety(e.target.value)} />
-          </div>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div>
-              <Label htmlFor="invite" className="text-sm">Send password setup email</Label>
-              <p className="text-xs text-muted-foreground">Customer sets their own password via email link</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="society">Society</Label>
+              <Input id="society" value={society} onChange={(e) => setSociety(e.target.value)} />
             </div>
-            <Switch id="invite" checked={sendInvite} onCheckedChange={setSendInvite} />
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={() => create.mutate()} disabled={!email || !name || create.isPending}>
+          <Button onClick={() => create.mutate()} disabled={!canSubmit || create.isPending}>
             {create.isPending ? "Creating…" : "Create customer"}
           </Button>
         </DialogFooter>
