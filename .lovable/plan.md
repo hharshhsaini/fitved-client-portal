@@ -1,65 +1,82 @@
-## Plan: Admin promotion + Customer Management UI
+## Plan: Phone + birthdate login for customers (admin keeps email/password)
 
-### Step 1 — Promote you to admin
-Insert an `admin` role row for your user (`vish262025@gmail.com`, id `e3179c7e-f2f5-4eb7-b35c-efa87446444a`) into `user_roles`. Your existing `client` role stays (harmless). After refresh, the Admin section unlocks.
+### How it will work
 
-### Step 2 — Customer onboarding (option C)
-Support both:
-- **Self-signup**: existing login page (already wired; auto-creates profile + `client` role via the `handle_new_user` trigger).
-- **Admin-created accounts**: an "Add customer" button in Admin that creates the auth user server-side, sends them a password-setup email, and lets the admin pre-fill profile fields (name, phone, society, time slot, trainer).
+**Customers**
+- Sign up with: name, phone (10 digits), date of birth.
+- Log in with: phone + DOB (entered as DDMMYYYY, e.g. `26041988`).
+- Internally we store the phone as a synthetic email (`<phone>@phone.fitved.local`) so Supabase auth accepts it. The DOB string becomes the password.
 
-### Step 3 — Admin Customers list page (`/admin/customers`)
-- Table of all profiles with: name, email, phone, society, plan status, trainer.
-- Search by name/email/phone, filter by plan status and trainer.
-- "Add customer" button (opens dialog from Step 2).
-- Click a row → customer detail page.
+**Admins (you)**
+- Keep logging in exactly as today with your real email + password.
+- Your existing account (`vish262025@gmail.com`) and admin role are untouched.
 
-### Step 4 — Customer detail page (`/admin/customers/:id`)
-Tabbed view:
-1. **Profile** — edit name, phone, society, time_slot, assign trainer, change role (client/trainer/admin).
-2. **Plan** — view/create/edit plan (type, amount, start_date, next_payment_date, payment_method, auto_renew, status).
-3. **Pauses** — list pauses, create new pause (from/to dates), cancel active pause.
-4. **Billing** — list billing history, add payment entry (date, amount, method).
-5. **Health Reports** — list reports, upload new PDF (to `health-reports` bucket), delete, generate signed URL to view.
-6. **Tasks** — list tasks assigned to client, create task (title, notes, due_date, assigned trainer), mark complete.
+### Important caveats (please read)
 
-### Step 5 — Edge function for admin-created accounts
-A `create-customer` edge function (service role) that:
-- Verifies caller is admin (`has_role`).
-- Creates the auth user with a generated temp password.
-- Sends a password-reset/invite email so the customer sets their own password.
-- Updates the auto-created profile with admin-provided fields (name, phone, society, time_slot, trainer_id).
+1. **Security is weak.** Anyone who knows a customer's phone + DOB can log into their account, see health reports, billing, etc. Acceptable only because customers are non-sensitive in this flow and admins remain protected.
+2. **DOB must be entered consistently.** We'll force `DDMMYYYY` (8 digits, no slashes) everywhere — signup, login, and admin-created accounts — otherwise the "password" won't match.
+3. **Phone is the unique ID.** Two customers cannot share a phone number. If a customer mistypes their phone at signup, only an admin can fix it.
+4. **DOB cannot be changed by the customer** without effectively changing their password. We'll add an admin-only "Reset DOB/password" action on the customer detail page.
+5. **Your admin status is safe.** Roles live in the `user_roles` table keyed by user ID, not by email or phone. Login method changes don't touch it.
 
-### Step 6 — Sidebar / navigation
-Add "Customers" link under the existing Admin section, visible only when `has_role(admin)` is true.
+### Login screen redesign
 
----
+The `/login` page becomes tabbed:
 
-### Technical details
+```text
+┌─────────────────────────────────┐
+│  [ Customer ]   [ Staff ]       │  ← two tabs
+├─────────────────────────────────┤
+│  Phone:    [__________]         │
+│  Birthday: [DD][MM][YYYY]       │
+│  [   Sign in   ]                │
+│  New here? Create account →     │
+└─────────────────────────────────┘
+```
 
-**Database changes**: none required — schema already supports everything. Just one data insert (admin role) handled via the insert tool.
+- **Customer** tab: phone + DOB fields, with Sign-in / Sign-up toggle.
+- **Staff** tab: existing email + password form (unchanged), with "Forgot password".
 
-**Files to create**:
-- `src/pages/admin/Customers.tsx` (list)
-- `src/pages/admin/CustomerDetail.tsx` (tabbed detail)
-- `src/components/admin/AddCustomerDialog.tsx`
-- `src/components/admin/customer-tabs/` (ProfileTab, PlanTab, PausesTab, BillingTab, HealthTab, TasksTab)
-- `src/hooks/useCustomers.ts`, `useCustomer.ts` (TanStack Query)
-- `supabase/functions/create-customer/index.ts` + `config.toml` entry (`verify_jwt = true`)
+### Signup flow (customer)
 
-**Files to edit**:
-- `src/App.tsx` — add `/admin/customers` and `/admin/customers/:id` routes (admin-protected).
-- `src/components/AppSidebar.tsx` — add Customers link.
-- `src/pages/Admin.tsx` — link/redirect into Customers.
+Form fields: Name, Phone, Date of birth (date picker), confirm DOB.
+On submit:
+- Validate phone is 10 digits, DOB is a real date, customer is ≥ 13 years old.
+- Call `supabase.auth.signUp` with email = `<phone>@phone.fitved.local`, password = `DDMMYYYY`, metadata `{ name, phone, dob }`.
+- Trigger `handle_new_user` populates the profile + `client` role automatically.
 
-**RLS**: Existing admin policies already allow full CRUD on profiles, plans, pauses, billing_history, health_reports, tasks, user_roles. No new policies needed.
+### Admin "Add customer" flow
 
-**Storage**: `health-reports` bucket exists. Admin uploads via signed upload; viewing via short-lived signed URLs.
+Update `AddCustomerDialog` + `create-customer` edge function:
+- Required fields: name, phone, DOB. Email becomes optional.
+- Edge function builds the synthetic email and uses DOB as the password.
+- No invite email needed (customer already knows their DOB).
+- Adds a "Reset DOB" button on the Profile tab so admins can update it later.
 
-**Roles**: Profile tab role-change uses `user_roles` table (insert/delete rows for `admin` / `trainer` / `client`).
+### Files to change
 
----
+- `src/pages/Login.tsx` — tabbed UI, phone/DOB form, validation.
+- `src/contexts/AuthContext.tsx` — add `signInWithPhone(phone, dob)` and `signUpWithPhone(name, phone, dob)`; keep existing email helpers for staff.
+- `src/lib/phoneAuth.ts` (new) — helpers: `phoneToEmail(phone)`, `dobToPassword(date)`, `formatDob(input)`, validators.
+- `src/components/admin/AddCustomerDialog.tsx` — replace email field with phone + DOB.
+- `src/pages/admin/CustomerDetail.tsx` (Profile tab) — add "Reset DOB" admin action.
+- `supabase/functions/create-customer/index.ts` — accept `phone` + `dob`, build synthetic email, set DOB as password, drop invite email.
+- New edge function `reset-customer-dob` — admin-only, updates the customer's password to the new DOB.
+
+### Database
+
+No schema changes. We'll store DOB in `profiles` so admins can see it without decoding the password — requires one small migration:
+- Add `dob date` column to `profiles` (nullable for existing accounts including yours).
+- Update `handle_new_user` to copy `dob` from signup metadata into the profile.
+
+### Your account specifically
+
+- You stay on email/password (Staff tab).
+- Your `admin` role row in `user_roles` is unchanged.
+- After deploy, hard-refresh, click **Staff**, log in as before.
 
 ### What you'll do after approval
-1. I promote you to admin and build everything above.
-2. You hard-refresh, log in, navigate to **Admin → Customers**, and start adding/managing customers.
+
+1. I make all the code changes above.
+2. You hard-refresh, test the **Staff** tab with your existing email/password — should work unchanged.
+3. Test the **Customer** tab by self-signing-up a dummy account with a phone + DOB, then logging back in.

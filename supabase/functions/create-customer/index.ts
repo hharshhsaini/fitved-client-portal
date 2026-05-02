@@ -5,6 +5,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const PHONE_EMAIL_DOMAIN = "phone.fitved.local";
+
+function dobToPassword(iso: string): string {
+  // iso = YYYY-MM-DD → DDMMYYYY
+  const [y, m, d] = iso.split("-");
+  return `${d}${m}${y}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -21,7 +29,6 @@ Deno.serve(async (req) => {
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const ANON = Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is admin using their JWT
     const userClient = createClient(SUPABASE_URL, ANON, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -46,27 +53,29 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { email, name, phone, society, time_slot, trainer_id, send_invite } = body ?? {};
+    const { name, phone, dob, society, time_slot, trainer_id } = body ?? {};
 
-    if (!email || !name) {
-      return new Response(JSON.stringify({ error: "email and name required" }), {
+    const phoneDigits = String(phone ?? "").replace(/\D/g, "");
+    if (!name || phoneDigits.length !== 10 || !/^\d{4}-\d{2}-\d{2}$/.test(String(dob ?? ""))) {
+      return new Response(JSON.stringify({ error: "name, 10-digit phone, and dob (YYYY-MM-DD) required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Generate a temp password
-    const tempPassword = crypto.randomUUID() + "Aa1!";
+    const email = `${phoneDigits}@${PHONE_EMAIL_DOMAIN}`;
+    const password = dobToPassword(dob);
 
     const { data: created, error: createErr } = await admin.auth.admin.createUser({
       email,
-      password: tempPassword,
+      password,
       email_confirm: true,
-      user_metadata: { name, phone },
+      user_metadata: { name, phone: phoneDigits, dob },
     });
 
     if (createErr || !created.user) {
-      return new Response(JSON.stringify({ error: createErr?.message ?? "Create failed" }), {
+      const msg = createErr?.message ?? "Create failed";
+      return new Response(JSON.stringify({ error: msg.includes("registered") ? "This phone is already registered" : msg }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -74,27 +83,14 @@ Deno.serve(async (req) => {
 
     const newUserId = created.user.id;
 
-    // Update profile (it was auto-created by handle_new_user trigger)
     await admin.from("profiles").update({
       name,
-      phone: phone ?? null,
+      phone: phoneDigits,
+      dob,
       society: society ?? null,
       time_slot: time_slot ?? null,
       trainer_id: trainer_id ?? null,
     }).eq("id", newUserId);
-
-    // Optionally send password setup email
-    if (send_invite) {
-      const redirectTo = `${req.headers.get("origin") ?? ""}/reset-password`;
-      await admin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: { redirectTo },
-      });
-      // Use resetPasswordForEmail to actually send the email
-      const userClient2 = createClient(SUPABASE_URL, ANON);
-      await userClient2.auth.resetPasswordForEmail(email, { redirectTo });
-    }
 
     return new Response(JSON.stringify({ ok: true, user_id: newUserId }), {
       status: 200,

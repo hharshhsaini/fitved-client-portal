@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type AppRole = "client" | "trainer" | "admin";
 
@@ -44,6 +49,7 @@ export function ProfileTab({ userId }: { userId: string }) {
   const [society, setSociety] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
   const [trainerId, setTrainerId] = useState<string>("");
+  const [newDob, setNewDob] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
     if (profile) {
@@ -54,6 +60,23 @@ export function ProfileTab({ userId }: { userId: string }) {
       setTrainerId(profile.trainer_id ?? "");
     }
   }, [profile]);
+
+  const resetDob = useMutation({
+    mutationFn: async (date: Date) => {
+      const iso = date.toISOString().slice(0, 10);
+      const { data, error } = await supabase.functions.invoke("reset-customer-dob", {
+        body: { user_id: userId, dob: iso },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      toast.success("Birthday reset — customer's password is now their new birthday");
+      setNewDob(undefined);
+      qc.invalidateQueries({ queryKey: ["customer-profile", userId] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Reset failed"),
+  });
 
   const save = useMutation({
     mutationFn: async () => {
@@ -148,6 +171,51 @@ export function ProfileTab({ userId }: { userId: string }) {
           })}
         </div>
         <p className="text-xs text-muted-foreground">Click to toggle. A user can have multiple roles.</p>
+      </div>
+
+      <div className="border-t pt-5 space-y-3">
+        <Label>Reset birthday (password)</Label>
+        <p className="text-xs text-muted-foreground">
+          Customer's birthday is their login password. Current:{" "}
+          <span className="font-medium text-foreground">
+            {profile?.dob ? format(new Date(profile.dob), "PPP") : "not set"}
+          </span>
+        </p>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn("justify-start text-left font-normal", !newDob && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newDob ? format(newDob, "PPP") : <span>Pick new birthday</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={newDob}
+                onSelect={setNewDob}
+                captionLayout="dropdown-buttons"
+                fromYear={1925}
+                toYear={new Date().getFullYear()}
+                defaultMonth={newDob ?? (profile?.dob ? new Date(profile.dob) : new Date(1980, 0, 1))}
+                disabled={(d) => d > new Date() || d < new Date("1925-01-01")}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="destructive"
+            disabled={!newDob || resetDob.isPending}
+            onClick={() => newDob && resetDob.mutate(newDob)}
+          >
+            {resetDob.isPending ? "Resetting…" : "Reset"}
+          </Button>
+        </div>
       </div>
     </div>
   );
