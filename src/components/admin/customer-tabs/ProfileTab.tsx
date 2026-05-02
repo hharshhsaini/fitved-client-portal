@@ -172,6 +172,51 @@ export function ProfileTab({ userId }: { userId: string }) {
         </div>
         <p className="text-xs text-muted-foreground">Click to toggle. A user can have multiple roles.</p>
       </div>
+
+      <div className="border-t pt-5 space-y-3">
+        <Label>Reset birthday (password)</Label>
+        <p className="text-xs text-muted-foreground">
+          Customer's birthday is their login password. Current:{" "}
+          <span className="font-medium text-foreground">
+            {profile?.dob ? format(new Date(profile.dob), "PPP") : "not set"}
+          </span>
+        </p>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                className={cn("justify-start text-left font-normal", !newDob && "text-muted-foreground")}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {newDob ? format(newDob, "PPP") : <span>Pick new birthday</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={newDob}
+                onSelect={setNewDob}
+                captionLayout="dropdown-buttons"
+                fromYear={1925}
+                toYear={new Date().getFullYear()}
+                defaultMonth={newDob ?? (profile?.dob ? new Date(profile.dob) : new Date(1980, 0, 1))}
+                disabled={(d) => d > new Date() || d < new Date("1925-01-01")}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="destructive"
+            disabled={!newDob || resetDob.isPending}
+            onClick={() => newDob && resetDob.mutate(newDob)}
+          >
+            {resetDob.isPending ? "Resetting…" : "Reset"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
