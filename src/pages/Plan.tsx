@@ -1,28 +1,24 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, CheckCircle2 } from "lucide-react";
-import { formatDate, daysBetween } from "@/lib/dates";
+import { CreditCard, CheckCircle2, CalendarDays } from "lucide-react";
+import { formatDate } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function Plan() {
   const { user } = useAuth();
-  const [autoRenew, setAutoRenew] = useState(true);
 
-  const { data: plan } = useQuery({
+  const { data: plan, refetch } = useQuery({
     queryKey: ["plan", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("plans").select("*").eq("user_id", user!.id)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      if (data) setAutoRenew(data.auto_renew);
       return data;
     },
   });
@@ -52,15 +48,10 @@ export default function Plan() {
     );
   }
 
-  const totalDays = daysBetween(plan.start_date, plan.next_payment_date);
-  const elapsed = daysBetween(plan.start_date, new Date().toISOString());
-  const daysLeft = Math.max(0, totalDays - elapsed);
-
   const handleAutoRenew = async (v: boolean) => {
-    setAutoRenew(v);
     const { error } = await supabase.from("plans").update({ auto_renew: v }).eq("id", plan.id);
     if (error) toast.error(error.message);
-    else toast.success(v ? "Auto-renew enabled" : "Auto-renew disabled");
+    else { toast.success(v ? "Auto-renew enabled" : "Auto-renew disabled"); refetch(); }
   };
 
   return (
@@ -78,7 +69,9 @@ export default function Plan() {
               <CreditCard className="h-6 w-6" />
             </span>
             <div>
-              <Badge className="mb-2 bg-primary-soft text-primary hover:bg-primary-soft">{plan.type} plan</Badge>
+              <Badge className="mb-2 bg-primary-soft text-primary hover:bg-primary-soft">
+                {plan.total_sessions} sessions
+              </Badge>
               <p className="font-display text-2xl">₹{Number(plan.amount).toLocaleString("en-IN")}</p>
               <p className="text-sm text-muted-foreground">per cycle</p>
             </div>
@@ -96,12 +89,22 @@ export default function Plan() {
             <dd className="mt-1 font-medium">{formatDate(plan.start_date)}</dd>
           </div>
           <div>
-            <dt className="text-sm text-muted-foreground">Next payment due</dt>
-            <dd className="mt-1 font-medium">{formatDate(plan.next_payment_date)}</dd>
+            <dt className="text-sm text-muted-foreground">Plan ends (last session)</dt>
+            <dd className="mt-1 font-medium">{formatDate(plan.end_date)}</dd>
           </div>
           <div>
-            <dt className="text-sm text-muted-foreground">Days remaining</dt>
-            <dd className="mt-1 font-medium">{daysLeft} days</dd>
+            <dt className="text-sm text-muted-foreground">Next plan starts</dt>
+            <dd className="mt-1 font-medium text-primary">{formatDate(plan.renewal_date)}</dd>
+          </div>
+          <div className="sm:col-span-3">
+            <dt className="text-sm text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays className="h-3.5 w-3.5" /> Training days
+            </dt>
+            <dd className="mt-1 flex flex-wrap gap-1.5">
+              {(plan.training_days ?? []).map((d: string) => (
+                <Badge key={d} variant="outline">{d.slice(0, 3)}</Badge>
+              ))}
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-muted-foreground">Payment method</dt>
@@ -112,7 +115,7 @@ export default function Plan() {
               <p className="font-medium">Auto-renewal</p>
               <p className="text-xs text-muted-foreground">Renew automatically at the end of each cycle.</p>
             </div>
-            <Switch checked={autoRenew} onCheckedChange={handleAutoRenew} />
+            <Switch checked={plan.auto_renew} onCheckedChange={handleAutoRenew} />
           </div>
         </dl>
       </Card>

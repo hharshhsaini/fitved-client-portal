@@ -33,22 +33,24 @@ export default function Customers() {
       const ids = (roles ?? []).map((r) => r.user_id);
       if (ids.length === 0) return [];
 
-      const [{ data: profiles }, { data: plans }, { data: trainers }] = await Promise.all([
-        supabase.from("profiles").select("id, name, phone, society, trainer_id").in("id", ids),
-        supabase.from("plans").select("user_id, type, status").in("user_id", ids),
-        supabase.from("profiles").select("id, name"),
+      const [{ data: profiles }, { data: plans }, { data: trainers }, { data: societies }] = await Promise.all([
+        supabase.from("profiles").select("id, name, phone, society_id, trainer_id").in("id", ids),
+        supabase.from("plans").select("user_id, total_sessions, status").in("user_id", ids),
+        supabase.from("trainers").select("id, name"),
+        supabase.from("societies").select("id, name"),
       ]);
 
       return (profiles ?? []).map((p) => {
         const plan = plans?.find((pl) => pl.user_id === p.id);
         const trainer = trainers?.find((t) => t.id === p.trainer_id);
+        const soc = societies?.find((s) => s.id === p.society_id);
         return {
           id: p.id,
           name: p.name,
           phone: p.phone,
-          society: p.society,
+          society: soc?.name ?? null,
           trainer_name: trainer?.name ?? null,
-          plan_type: plan?.type ?? null,
+          plan_type: plan ? `${plan.total_sessions} sessions` : null,
           plan_status: plan?.status ?? null,
         };
       });

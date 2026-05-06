@@ -26,12 +26,17 @@ export function ProfileTab({ userId }: { userId: string }) {
   });
 
   const { data: trainers = [] } = useQuery({
-    queryKey: ["all-trainers"],
+    queryKey: ["trainers-active"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "trainer");
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (!ids.length) return [] as { id: string; name: string | null }[];
-      const { data } = await supabase.from("profiles").select("id, name").in("id", ids);
+      const { data } = await supabase.from("trainers").select("id, name, active").eq("active", true).order("name");
+      return data ?? [];
+    },
+  });
+
+  const { data: societies = [] } = useQuery({
+    queryKey: ["societies"],
+    queryFn: async () => {
+      const { data } = await supabase.from("societies").select("id, name").order("name");
       return data ?? [];
     },
   });
@@ -49,6 +54,7 @@ export function ProfileTab({ userId }: { userId: string }) {
   const [society, setSociety] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
   const [trainerId, setTrainerId] = useState<string>("");
+  const [societyId, setSocietyId] = useState<string>("");
   const [newDob, setNewDob] = useState<Date | undefined>(undefined);
 
   useEffect(() => {
@@ -58,6 +64,7 @@ export function ProfileTab({ userId }: { userId: string }) {
       setSociety(profile.society ?? "");
       setTimeSlot(profile.time_slot ?? "");
       setTrainerId(profile.trainer_id ?? "");
+      setSocietyId(profile.society_id ?? "");
     }
   }, [profile]);
 
@@ -86,6 +93,7 @@ export function ProfileTab({ userId }: { userId: string }) {
         society: society || null,
         time_slot: timeSlot || null,
         trainer_id: trainerId || null,
+        society_id: societyId || null,
       }).eq("id", userId);
       if (error) throw error;
     },
@@ -135,17 +143,31 @@ export function ProfileTab({ userId }: { userId: string }) {
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Assigned trainer</Label>
-        <Select value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No trainer</SelectItem>
-            {trainers.map((t) => (
-              <SelectItem key={t.id} value={t.id}>{t.name ?? "Unnamed"}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label>Assigned trainer</Label>
+          <Select value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No trainer</SelectItem>
+              {trainers.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name ?? "Unnamed"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Society</Label>
+          <Select value={societyId || "none"} onValueChange={(v) => setSocietyId(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No society</SelectItem>
+              {societies.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Button onClick={() => save.mutate()} disabled={save.isPending}>

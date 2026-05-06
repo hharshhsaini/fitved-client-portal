@@ -50,7 +50,7 @@ export default function Dashboard() {
     },
   });
 
-  const totalDays = plan ? daysBetween(plan.start_date, plan.next_payment_date) : 0;
+  const totalDays = plan ? daysBetween(plan.start_date, plan.end_date) : 0;
   const elapsedDays = plan ? daysBetween(plan.start_date, new Date().toISOString()) : 0;
   const progress = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
   const daysLeft = Math.max(0, totalDays - elapsedDays);
@@ -87,7 +87,7 @@ export default function Dashboard() {
               </span>
               <div>
                 <p className="text-sm text-muted-foreground">Your plan</p>
-                <p className="font-display text-xl">{plan?.type ?? "Not assigned"}</p>
+                <p className="font-display text-xl">{plan ? `${plan.total_sessions} sessions` : "Not assigned"}</p>
               </div>
             </div>
             {plan && <Badge variant="secondary">{daysLeft} days left</Badge>}
@@ -102,8 +102,8 @@ export default function Dashboard() {
                     <p className="font-medium">{formatDate(plan.start_date)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-muted-foreground">Next payment</p>
-                    <p className="font-medium">{formatDate(plan.next_payment_date)}</p>
+                    <p className="text-muted-foreground">Next plan starts</p>
+                    <p className="font-medium">{formatDate(plan.renewal_date)}</p>
                   </div>
                 </div>
               </div>
