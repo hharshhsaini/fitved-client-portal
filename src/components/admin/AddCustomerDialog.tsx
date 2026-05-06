@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -26,11 +27,29 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [dob, setDob] = useState<Date | undefined>(undefined);
-  const [society, setSociety] = useState("");
+  const [societyId, setSocietyId] = useState("");
+  const [trainerId, setTrainerId] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
 
+  const { data: societies = [] } = useQuery({
+    queryKey: ["societies"],
+    queryFn: async () => {
+      const { data } = await supabase.from("societies").select("id, name").order("name");
+      return data ?? [];
+    },
+  });
+
+  const { data: trainers = [] } = useQuery({
+    queryKey: ["trainers-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("trainers").select("id, name").eq("active", true).order("name");
+      return data ?? [];
+    },
+  });
+
   const reset = () => {
-    setName(""); setPhone(""); setDob(undefined); setSociety(""); setTimeSlot("");
+    setName(""); setPhone(""); setDob(undefined);
+    setSocietyId(""); setTrainerId(""); setTimeSlot("");
   };
 
   const create = useMutation({
@@ -40,7 +59,8 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
           name,
           phone: normalizePhone(phone),
           dob: dob!.toISOString().slice(0, 10),
-          society: society || null,
+          society_id: societyId || null,
+          trainer_id: trainerId || null,
           time_slot: timeSlot || null,
         },
       });
@@ -62,7 +82,7 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) reset(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add customer</DialogTitle>
           <DialogDescription>
@@ -113,15 +133,35 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="slot">Time slot</Label>
-              <Input id="slot" placeholder="6–7 AM" value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} />
+              <Label>Society</Label>
+              <Select value={societyId || "none"} onValueChange={(v) => setSocietyId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select society" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— none —</SelectItem>
+                  {societies.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="society">Society</Label>
-              <Input id="society" value={society} onChange={(e) => setSociety(e.target.value)} />
+              <Label>Trainer</Label>
+              <Select value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="Select trainer" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— none —</SelectItem>
+                  {trainers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="slot">Time slot</Label>
+            <Input id="slot" placeholder="6–7 AM" value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} />
           </div>
         </div>
         <DialogFooter>

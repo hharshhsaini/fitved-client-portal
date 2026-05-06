@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, phone, dob, society, time_slot, trainer_id } = body ?? {};
+    const { name, phone, dob, society_id, trainer_id, time_slot } = body ?? {};
 
     const phoneDigits = String(phone ?? "").replace(/\D/g, "");
     if (!name || phoneDigits.length !== 10 || !/^\d{4}-\d{2}-\d{2}$/.test(String(dob ?? ""))) {
@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
       name,
       phone: phoneDigits,
       dob,
-      society: society ?? null,
-      time_slot: time_slot ?? null,
+      society_id: society_id ?? null,
       trainer_id: trainer_id ?? null,
+      time_slot: time_slot ?? null,
     }).eq("id", newUserId);
 
     return new Response(JSON.stringify({ ok: true, user_id: newUserId }), {
