@@ -17,6 +17,8 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Customers from "./pages/admin/Customers";
 import CustomerDetail from "./pages/admin/CustomerDetail";
+import Trainers from "./pages/admin/Trainers";
+import Societies from "./pages/admin/Societies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +61,22 @@ const App = () => (
                   element={
                     <ProtectedRoute requireAdmin>
                       <CustomerDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/trainers"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <Trainers />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/societies"
+                  element={
+                    <ProtectedRoute requireAdmin>
+                      <Societies />
                     </ProtectedRoute>
                   }
                 />
