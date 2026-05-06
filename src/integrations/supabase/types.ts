@@ -100,12 +100,14 @@ export type Database = {
           amount: number
           auto_renew: boolean
           created_at: string
+          end_date: string
           id: string
-          next_payment_date: string
           payment_method: string | null
+          renewal_date: string
           start_date: string
           status: Database["public"]["Enums"]["plan_status"]
-          type: Database["public"]["Enums"]["plan_type"]
+          total_sessions: number
+          training_days: string[]
           updated_at: string
           user_id: string
         }
@@ -113,12 +115,14 @@ export type Database = {
           amount: number
           auto_renew?: boolean
           created_at?: string
+          end_date: string
           id?: string
-          next_payment_date: string
           payment_method?: string | null
+          renewal_date: string
           start_date: string
           status?: Database["public"]["Enums"]["plan_status"]
-          type: Database["public"]["Enums"]["plan_type"]
+          total_sessions: number
+          training_days: string[]
           updated_at?: string
           user_id: string
         }
@@ -126,12 +130,14 @@ export type Database = {
           amount?: number
           auto_renew?: boolean
           created_at?: string
+          end_date?: string
           id?: string
-          next_payment_date?: string
           payment_method?: string | null
+          renewal_date?: string
           start_date?: string
           status?: Database["public"]["Enums"]["plan_status"]
-          type?: Database["public"]["Enums"]["plan_type"]
+          total_sessions?: number
+          training_days?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -145,6 +151,7 @@ export type Database = {
           name: string | null
           phone: string | null
           society: string | null
+          society_id: string | null
           time_slot: string | null
           trainer_id: string | null
           updated_at: string
@@ -156,6 +163,7 @@ export type Database = {
           name?: string | null
           phone?: string | null
           society?: string | null
+          society_id?: string | null
           time_slot?: string | null
           trainer_id?: string | null
           updated_at?: string
@@ -167,8 +175,41 @@ export type Database = {
           name?: string | null
           phone?: string | null
           society?: string | null
+          society_id?: string | null
           time_slot?: string | null
           trainer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      societies: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -206,6 +247,72 @@ export type Database = {
           title?: string
           trainer_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      trainer_societies: {
+        Row: {
+          created_at: string
+          society_id: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          society_id: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          society_id?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_societies_society_id_fkey"
+            columns: ["society_id"]
+            isOneToOne: false
+            referencedRelation: "societies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trainer_societies_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trainers: {
+        Row: {
+          active: boolean
+          contact: string | null
+          created_at: string
+          id: string
+          name: string
+          specialization: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          specialization?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          specialization?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
