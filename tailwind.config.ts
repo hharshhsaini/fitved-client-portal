@@ -57,6 +57,11 @@ export default {
         },
         "primary-soft": "hsl(var(--primary-soft))",
         "primary-glow": "hsl(var(--primary-glow))",
+        "fv-navy": "#1E3A5F",
+        "fv-orange": "#FF6B35",
+        "fv-neutral": "#F5F5F5",
+        "fv-text": "#333333",
+        "fv-success": "#4CAF50",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
