@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          created_at: string
+          id: string
+          interest: string
+          name: string
+          phone: string
+          source: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest: string
+          name: string
+          phone: string
+          source?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest?: string
+          name?: string
+          phone?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       pauses: {
         Row: {
           created_at: string

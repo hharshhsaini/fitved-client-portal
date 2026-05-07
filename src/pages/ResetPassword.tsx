@@ -26,7 +26,7 @@ export default function ResetPassword() {
       return;
     }
     toast.success("Password updated");
-    navigate("/");
+    navigate("/dashboard");
   };
 
   return (
