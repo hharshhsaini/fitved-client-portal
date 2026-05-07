@@ -8,6 +8,7 @@ import { PauseProvider } from "@/stores/pauseStore";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Pause from "./pages/Pause";
@@ -32,10 +33,11 @@ const App = () => (
         <AuthProvider>
           <PauseProvider>
             <Routes>
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/pause" element={<Pause />} />
                 <Route path="/plan" element={<Plan />} />
                 <Route path="/health" element={<Health />} />
@@ -81,7 +83,7 @@ const App = () => (
                   }
                 />
               </Route>
-              <Route path="/index" element={<Navigate to="/" replace />} />
+              <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PauseProvider>
