@@ -57,7 +57,7 @@ export default function Login() {
           return;
         }
         toast.success("Welcome back!");
-        navigate("/");
+        navigate("/dashboard");
       } else {
         const { error } = await signUpWithPhone(custName.trim(), custPhone, custDob!);
         if (error) {
@@ -66,7 +66,7 @@ export default function Login() {
         }
         toast.success("Account created — signing you in…");
         const { error: signInErr } = await signInWithPhone(custPhone, custDob!);
-        if (!signInErr) navigate("/");
+        if (!signInErr) navigate("/dashboard");
       }
     } finally {
       setBusy(false);
@@ -85,7 +85,7 @@ export default function Login() {
         const { error } = await signIn(email, password);
         if (error) { toast.error(error); return; }
         toast.success("Welcome back!");
-        navigate("/");
+        navigate("/dashboard");
       } else {
         const { error } = await signUp(email, password, name);
         if (error) { toast.error(error); return; }

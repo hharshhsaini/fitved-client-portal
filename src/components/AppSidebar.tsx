@@ -16,7 +16,7 @@ import { FitvedLogo } from "./FitvedLogo";
 import { useAuth } from "@/contexts/AuthContext";
 
 const clientItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Pause Classes", url: "/pause", icon: CalendarOff },
   { title: "Plan", url: "/plan", icon: CreditCard },
   { title: "Health Report", url: "/health", icon: FileHeart },
@@ -36,7 +36,7 @@ export function AppSidebar() {
     items.push({ title: "Societies", url: "/admin/societies", icon: Building2 });
   }
 
-  const isActive = (path: string) => (path === "/" ? pathname === "/" : pathname.startsWith(path));
+  const isActive = (path: string) => (path === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(path));
 
   return (
     <Sidebar collapsible="icon" className="border-r">
@@ -60,7 +60,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                       <NavLink
                         to={item.url}
-                        end={item.url === "/"}
+                        end={item.url === "/dashboard"}
                         className="flex items-center gap-3 rounded-lg transition-colors"
                       >
                         <item.icon className="h-5 w-5 shrink-0" />
