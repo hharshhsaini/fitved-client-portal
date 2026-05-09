@@ -1098,9 +1098,8 @@ function Footer() {
     <footer className="bg-fv-navy text-white/80 py-10 pb-28 md:pb-10">
       <div className="mx-auto max-w-6xl px-4 grid md:grid-cols-3 gap-8">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-md bg-fv-orange text-white font-bold">F</div>
-            <span className="text-lg font-bold text-white">Fitved</span>
+          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2 w-fit">
+            <img src={fitvedLogo} alt="Fitved" className="h-9 w-auto rounded" />
           </div>
           <p className="mt-3 text-sm text-white/60">
             Calm strength, every day. Society-based clinical fitness in Bangalore.
