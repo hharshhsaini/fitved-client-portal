@@ -821,30 +821,34 @@ function Testimonials() {
             Trusted by Bangalore's Busiest Professionals & Active Seniors
           </h2>
         </div>
-        <div className="mt-12 grid md:grid-cols-3 gap-5">
-          {items.map((t) => (
-            <div
-              key={t.name}
-              className="rounded-2xl border border-fv-navy/10 p-6 bg-fv-neutral shadow-card"
-            >
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-full bg-fv-navy text-white font-bold">
-                  {t.name[0]}
+        <Carousel opts={{ align: "start", loop: true }} className="mt-12">
+          <CarouselContent className="-ml-4">
+            {items.map((t) => (
+              <CarouselItem key={t.name} className="pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <div className="h-full rounded-2xl border border-fv-navy/10 p-6 bg-fv-neutral shadow-card">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-fv-navy text-white font-bold">
+                      {t.name[0]}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-fv-navy">{t.name}</div>
+                      <div className="text-[11px] text-fv-text/60">{t.sub}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-0.5 text-fv-orange">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-fv-orange" />
+                    ))}
+                  </div>
+                  <p className="mt-3 text-sm text-fv-text/80 italic">"{t.quote}"</p>
                 </div>
-                <div>
-                  <div className="font-semibold text-fv-navy">{t.name}</div>
-                  <div className="text-[11px] text-fv-text/60">{t.sub}</div>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-0.5 text-fv-orange">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-fv-orange" />
-                ))}
-              </div>
-              <p className="mt-3 text-sm text-fv-text/80 italic">"{t.quote}"</p>
-            </div>
-          ))}
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-4 bg-white border-fv-navy/20 text-fv-navy" />
+          <CarouselNext className="hidden md:flex -right-4 bg-white border-fv-navy/20 text-fv-navy" />
+        </Carousel>
+        <p className="mt-3 text-center text-xs text-fv-text/50 md:hidden">← swipe to see more →</p>
       </div>
     </section>
   );
