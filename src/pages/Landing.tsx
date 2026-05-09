@@ -276,9 +276,16 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden bg-gradient-to-br from-fv-navy via-fv-navy to-[#2A4A7A] text-white"
+      className="relative overflow-hidden text-white"
     >
-      <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_40%)]" />
+      <img
+        src={heroHands}
+        alt="Two hands reaching toward each other — strength shared"
+        className="absolute inset-0 h-full w-full object-cover"
+        width={1920}
+        height={1080}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-fv-navy/90 via-fv-navy/80 to-fv-navy/60" />
       <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-5 gap-10 items-center">
         <div className="md:col-span-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider">
