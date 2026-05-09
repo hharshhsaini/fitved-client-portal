@@ -33,10 +33,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import fitvedLogo from "@/assets/fitved-logo.png";
+import heroHands from "@/assets/hero-hands.jpg";
 
 const PHONE = "+919999999999";
 const PHONE_DISPLAY = "+91 99999 99999";
