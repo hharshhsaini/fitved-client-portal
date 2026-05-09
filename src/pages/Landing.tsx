@@ -725,37 +725,41 @@ function Results() {
             Numbers from actual clients. No filters, no edits.
           </p>
         </div>
-        <div className="mt-12 grid md:grid-cols-3 gap-5">
-          {cases.map((c) => (
-            <div
-              key={c.name}
-              className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col"
-            >
-              <div>
-                <h3 className="font-bold text-fv-navy text-lg">{c.name}</h3>
-                <p className="text-xs text-fv-text/60">{c.sub}</p>
-              </div>
-              <div className="mt-5 space-y-3">
-                {c.metrics.map((m) => (
-                  <div key={m.label} className="rounded-lg bg-fv-neutral p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-fv-text/70">{m.label}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-fv-orange font-bold">
-                        {m.note}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-end gap-2 text-fv-navy">
-                      <span className="text-sm text-fv-text/40 line-through">{m.from}</span>
-                      <ArrowRight className="h-3 w-3 mb-1 text-fv-text/40" />
-                      <span className="text-lg font-bold text-fv-orange">{m.to}</span>
-                    </div>
+        <Carousel opts={{ align: "start", loop: true }} className="mt-12">
+          <CarouselContent className="-ml-4">
+            {cases.map((c) => (
+              <CarouselItem key={c.name} className="pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <div className="h-full rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col">
+                  <div>
+                    <h3 className="font-bold text-fv-navy text-lg">{c.name}</h3>
+                    <p className="text-xs text-fv-text/60">{c.sub}</p>
                   </div>
-                ))}
-              </div>
-              <p className="mt-5 text-sm italic text-fv-text/80">"{c.quote}"</p>
-            </div>
-          ))}
-        </div>
+                  <div className="mt-5 space-y-3">
+                    {c.metrics.map((m) => (
+                      <div key={m.label} className="rounded-lg bg-fv-neutral p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-fv-text/70">{m.label}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-fv-orange font-bold">
+                            {m.note}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-end gap-2 text-fv-navy">
+                          <span className="text-sm text-fv-text/40 line-through">{m.from}</span>
+                          <ArrowRight className="h-3 w-3 mb-1 text-fv-text/40" />
+                          <span className="text-lg font-bold text-fv-orange">{m.to}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-5 text-sm italic text-fv-text/80">"{c.quote}"</p>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-4 bg-white border-fv-navy/20 text-fv-navy" />
+          <CarouselNext className="hidden md:flex -right-4 bg-white border-fv-navy/20 text-fv-navy" />
+        </Carousel>
+        <p className="mt-3 text-center text-xs text-fv-text/50 md:hidden">← swipe to see more →</p>
         <div className="mt-12 text-center">
           <Button
             onClick={() => scrollTo("contact")}
