@@ -215,6 +215,13 @@ export type Database = {
             referencedRelation: "societies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "profiles_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       societies: {
