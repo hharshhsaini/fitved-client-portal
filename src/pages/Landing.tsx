@@ -201,8 +201,7 @@ function Nav({
     <header className="sticky top-0 z-40 w-full border-b border-fv-navy/10 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <a href="#home" className="flex items-center gap-2" onClick={() => scrollTo("home")}>
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-fv-navy text-white font-bold">F</div>
-          <span className="text-lg font-bold text-fv-navy">Fitved</span>
+          <img src={fitvedLogo} alt="Fitved" className="h-9 w-auto rounded" />
         </a>
         <nav className="hidden md:flex items-center gap-1">
           {NAV.map((n) => (
