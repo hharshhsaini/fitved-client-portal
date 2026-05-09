@@ -33,10 +33,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import fitvedLogo from "@/assets/fitved-logo.png";
+import heroHands from "@/assets/hero-hands.jpg";
 
 const PHONE = "+919999999999";
 const PHONE_DISPLAY = "+91 99999 99999";
@@ -198,8 +201,7 @@ function Nav({
     <header className="sticky top-0 z-40 w-full border-b border-fv-navy/10 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <a href="#home" className="flex items-center gap-2" onClick={() => scrollTo("home")}>
-          <div className="grid h-9 w-9 place-items-center rounded-md bg-fv-navy text-white font-bold">F</div>
-          <span className="text-lg font-bold text-fv-navy">Fitved</span>
+          <img src={fitvedLogo} alt="Fitved" className="h-9 w-auto rounded" />
         </a>
         <nav className="hidden md:flex items-center gap-1">
           {NAV.map((n) => (
@@ -274,9 +276,16 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden bg-gradient-to-br from-fv-navy via-fv-navy to-[#2A4A7A] text-white"
+      className="relative overflow-hidden text-white"
     >
-      <div className="absolute inset-0 opacity-10 [background-image:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_40%)]" />
+      <img
+        src={heroHands}
+        alt="Two hands reaching toward each other — strength shared"
+        className="absolute inset-0 h-full w-full object-cover"
+        width={1920}
+        height={1080}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-fv-navy/90 via-fv-navy/80 to-fv-navy/60" />
       <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-5 gap-10 items-center">
         <div className="md:col-span-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider">
@@ -554,83 +563,58 @@ function Roadmap() {
       icon: Wrench,
       tag: "Weeks 1–3",
       title: "Rebuild",
-      focus: "Foundation & Assessment",
-      points: [
-        "Full body composition analysis (fat %, visceral fat, muscle mass)",
-        "Movement screening (identify pain points, imbalances)",
-        "Breath-led core stabilization",
-        "Gentle mobility & posture correction",
-      ],
-      outcome: "Understand your body, move without pain, build confidence",
+      tagline: "Assess. Reset. Move pain-free.",
+      pill: "Foundation",
     },
     {
       icon: Dumbbell,
       tag: "Weeks 4–8",
       title: "Strengthen",
-      focus: "Progressive Load & Muscle Building",
-      points: [
-        "Resistance training (bands, dumbbells, bodyweight)",
-        "Anti-rotation core work (functional strength)",
-        "Protein optimization (1g/kg target)",
-        "Cardiovascular conditioning",
-      ],
-      outcome: "Visible muscle gain, improved stamina, clothes fit better",
+      tagline: "Build muscle. Burn visceral fat.",
+      pill: "Progress",
     },
     {
       icon: Trophy,
       tag: "Weeks 9–12",
       title: "Perform",
-      focus: "Peak Performance & Habit Lock-In",
-      points: [
-        "Advanced strength patterns (deadlifts, squats, presses)",
-        "Sport-specific training (if applicable)",
-        "Metabolic conditioning (HIIT, circuits)",
-        "Nutrition habit solidification",
-      ],
-      outcome: "Training becomes lifestyle, sustainable long-term",
+      tagline: "Lock in habits for life.",
+      pill: "Peak",
     },
   ];
   return (
-    <section className="py-20 md:py-28 bg-gradient-to-b from-white to-fv-neutral">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-white to-fv-neutral">
       <div className="mx-auto max-w-6xl px-4">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
-            Your 12-Week Journey to Longevity Fitness
+            Your 12-Week Journey
           </h2>
-          <p className="mt-3 text-fv-text/70">
-            A clinical, progressive arc — designed for measurable change.
+          <p className="mt-2 text-fv-text/70 text-sm md:text-base">
+            Three phases. One transformation.
           </p>
         </div>
-        <div className="mt-14 grid md:grid-cols-3 gap-6 relative">
-          {phases.map((p, i) => (
-            <div
-              key={p.title}
-              className="relative rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card"
-            >
-              <div className="flex items-center justify-between">
-                <span className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-fv-navy to-fv-orange text-white">
-                  <p.icon className="h-6 w-6" />
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">
-                  Phase {i + 1}
-                </span>
+
+        {/* Visual timeline */}
+        <div className="mt-12 relative">
+          <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-1 bg-gradient-to-r from-fv-navy via-fv-orange to-fv-success rounded-full" />
+          <div className="grid md:grid-cols-3 gap-6 relative">
+            {phases.map((p, i) => (
+              <div key={p.title} className="flex flex-col items-center text-center">
+                <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated z-10">
+                  <p.icon className="h-10 w-10 text-fv-navy" />
+                  <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
+                    {p.pill}
+                  </span>
+                </div>
+                <div className="mt-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
+                  <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
+                  <p className="mt-1 text-sm text-fv-text/70 max-w-[200px] mx-auto">{p.tagline}</p>
+                </div>
               </div>
-              <h3 className="mt-4 text-xl font-bold text-fv-navy">{p.title}</h3>
-              <p className="text-sm text-fv-text/60">{p.tag} · {p.focus}</p>
-              <ul className="mt-4 space-y-2 text-sm text-fv-text/80">
-                {p.points.map((pt) => (
-                  <li key={pt} className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-fv-orange mt-0.5 shrink-0" /> {pt}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 rounded-lg bg-fv-neutral p-3 text-xs text-fv-navy">
-                <span className="font-semibold">Outcome: </span>
-                {p.outcome}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
         <div className="mt-12 text-center">
           <Button
             onClick={() => scrollTo("contact")}
@@ -741,37 +725,41 @@ function Results() {
             Numbers from actual clients. No filters, no edits.
           </p>
         </div>
-        <div className="mt-12 grid md:grid-cols-3 gap-5">
-          {cases.map((c) => (
-            <div
-              key={c.name}
-              className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col"
-            >
-              <div>
-                <h3 className="font-bold text-fv-navy text-lg">{c.name}</h3>
-                <p className="text-xs text-fv-text/60">{c.sub}</p>
-              </div>
-              <div className="mt-5 space-y-3">
-                {c.metrics.map((m) => (
-                  <div key={m.label} className="rounded-lg bg-fv-neutral p-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-fv-text/70">{m.label}</span>
-                      <span className="text-[10px] uppercase tracking-wider text-fv-orange font-bold">
-                        {m.note}
-                      </span>
-                    </div>
-                    <div className="mt-1 flex items-end gap-2 text-fv-navy">
-                      <span className="text-sm text-fv-text/40 line-through">{m.from}</span>
-                      <ArrowRight className="h-3 w-3 mb-1 text-fv-text/40" />
-                      <span className="text-lg font-bold text-fv-orange">{m.to}</span>
-                    </div>
+        <Carousel opts={{ align: "start", loop: true }} className="mt-12">
+          <CarouselContent className="-ml-4">
+            {cases.map((c) => (
+              <CarouselItem key={c.name} className="pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <div className="h-full rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col">
+                  <div>
+                    <h3 className="font-bold text-fv-navy text-lg">{c.name}</h3>
+                    <p className="text-xs text-fv-text/60">{c.sub}</p>
                   </div>
-                ))}
-              </div>
-              <p className="mt-5 text-sm italic text-fv-text/80">"{c.quote}"</p>
-            </div>
-          ))}
-        </div>
+                  <div className="mt-5 space-y-3">
+                    {c.metrics.map((m) => (
+                      <div key={m.label} className="rounded-lg bg-fv-neutral p-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-fv-text/70">{m.label}</span>
+                          <span className="text-[10px] uppercase tracking-wider text-fv-orange font-bold">
+                            {m.note}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex items-end gap-2 text-fv-navy">
+                          <span className="text-sm text-fv-text/40 line-through">{m.from}</span>
+                          <ArrowRight className="h-3 w-3 mb-1 text-fv-text/40" />
+                          <span className="text-lg font-bold text-fv-orange">{m.to}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-5 text-sm italic text-fv-text/80">"{c.quote}"</p>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-4 bg-white border-fv-navy/20 text-fv-navy" />
+          <CarouselNext className="hidden md:flex -right-4 bg-white border-fv-navy/20 text-fv-navy" />
+        </Carousel>
+        <p className="mt-3 text-center text-xs text-fv-text/50 md:hidden">← swipe to see more →</p>
         <div className="mt-12 text-center">
           <Button
             onClick={() => scrollTo("contact")}
@@ -833,30 +821,34 @@ function Testimonials() {
             Trusted by Bangalore's Busiest Professionals & Active Seniors
           </h2>
         </div>
-        <div className="mt-12 grid md:grid-cols-3 gap-5">
-          {items.map((t) => (
-            <div
-              key={t.name}
-              className="rounded-2xl border border-fv-navy/10 p-6 bg-fv-neutral shadow-card"
-            >
-              <div className="flex items-center gap-3">
-                <div className="grid h-12 w-12 place-items-center rounded-full bg-fv-navy text-white font-bold">
-                  {t.name[0]}
+        <Carousel opts={{ align: "start", loop: true }} className="mt-12">
+          <CarouselContent className="-ml-4">
+            {items.map((t) => (
+              <CarouselItem key={t.name} className="pl-4 basis-[85%] sm:basis-1/2 lg:basis-1/3">
+                <div className="h-full rounded-2xl border border-fv-navy/10 p-6 bg-fv-neutral shadow-card">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-12 w-12 place-items-center rounded-full bg-fv-navy text-white font-bold">
+                      {t.name[0]}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-fv-navy">{t.name}</div>
+                      <div className="text-[11px] text-fv-text/60">{t.sub}</div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex gap-0.5 text-fv-orange">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="h-4 w-4 fill-fv-orange" />
+                    ))}
+                  </div>
+                  <p className="mt-3 text-sm text-fv-text/80 italic">"{t.quote}"</p>
                 </div>
-                <div>
-                  <div className="font-semibold text-fv-navy">{t.name}</div>
-                  <div className="text-[11px] text-fv-text/60">{t.sub}</div>
-                </div>
-              </div>
-              <div className="mt-4 flex gap-0.5 text-fv-orange">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-fv-orange" />
-                ))}
-              </div>
-              <p className="mt-3 text-sm text-fv-text/80 italic">"{t.quote}"</p>
-            </div>
-          ))}
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-4 bg-white border-fv-navy/20 text-fv-navy" />
+          <CarouselNext className="hidden md:flex -right-4 bg-white border-fv-navy/20 text-fv-navy" />
+        </Carousel>
+        <p className="mt-3 text-center text-xs text-fv-text/50 md:hidden">← swipe to see more →</p>
       </div>
     </section>
   );
@@ -1106,9 +1098,8 @@ function Footer() {
     <footer className="bg-fv-navy text-white/80 py-10 pb-28 md:pb-10">
       <div className="mx-auto max-w-6xl px-4 grid md:grid-cols-3 gap-8">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-md bg-fv-orange text-white font-bold">F</div>
-            <span className="text-lg font-bold text-white">Fitved</span>
+          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2 w-fit">
+            <img src={fitvedLogo} alt="Fitved" className="h-9 w-auto rounded" />
           </div>
           <p className="mt-3 text-sm text-white/60">
             Calm strength, every day. Society-based clinical fitness in Bangalore.
