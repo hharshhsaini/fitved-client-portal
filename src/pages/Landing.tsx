@@ -41,8 +41,8 @@ import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 import heroHands from "@/assets/hero-hands.jpg";
 
-const PHONE = "+919999999999";
-const PHONE_DISPLAY = "+91 99999 99999";
+const PHONE = "+919890471383";
+const PHONE_DISPLAY = "+91 9890471383";
 const WHATSAPP_TEXT = encodeURIComponent("Hi, I'm interested in Fitved training. Can you help me?");
 const WHATSAPP_URL = `https://wa.me/${PHONE.replace(/\D/g, "")}?text=${WHATSAPP_TEXT}`;
 
