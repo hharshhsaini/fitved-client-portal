@@ -353,14 +353,14 @@ function Hero() {
             </div>
             <div className="mt-6 space-y-3">
               {[
-                { label: "Visceral Fat", val: 70 },
-                { label: "Muscle Mass", val: 85 },
-                { label: "Mobility Score", val: 78 },
+                { label: "Visceral Fat", val: 50, trend: "down" },
+                { label: "Muscle Mass", val: 85, trend: "up" },
+                { label: "Mobility Score", val: 78, trend: "up" },
               ].map((b) => (
                 <div key={b.label}>
                   <div className="flex justify-between text-xs text-white/70 mb-1">
                     <span>{b.label}</span>
-                    <span>+{b.val}%</span>
+                    <span>{b.trend === "down" ? "-" : "+"}{b.val}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div
