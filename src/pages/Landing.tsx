@@ -40,6 +40,7 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 import heroHands from "@/assets/hero-hands.jpg";
+import monalisaFit from "@/assets/monalisa-fit.jpg";
 
 const PHONE = "+919890471383";
 const PHONE_DISPLAY = "+91 9890471383";
@@ -80,8 +81,7 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [active, setActive] = useState("home");
   const [showTimer, setShowTimer] = useState(false);
-  const [showExit, setShowExit] = useState(false);
-  const popupShown = useRef({ timer: false, exit: false });
+  const popupShown = useRef({ shown: false });
 
   // SEO meta
   useEffect(() => {
@@ -123,27 +123,22 @@ export default function Landing() {
     return () => obs.disconnect();
   }, []);
 
-  // Timer popup
+  // Single popup: trigger on 30s timer OR exit-intent (whichever first)
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      if (!popupShown.current.timer) {
-        popupShown.current.timer = true;
-        setShowTimer(true);
-      }
-    }, 30000);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  // Exit-intent popup
-  useEffect(() => {
+    const trigger = () => {
+      if (popupShown.current.shown) return;
+      popupShown.current.shown = true;
+      setShowTimer(true);
+    };
+    const t = window.setTimeout(trigger, 30000);
     const onLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !popupShown.current.exit) {
-        popupShown.current.exit = true;
-        setShowExit(true);
-      }
+      if (e.clientY <= 0) trigger();
     };
     document.addEventListener("mouseleave", onLeave);
-    return () => document.removeEventListener("mouseleave", onLeave);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("mouseleave", onLeave);
+    };
   }, []);
 
   return (
@@ -154,10 +149,11 @@ export default function Landing() {
         <Hero />
         <ProblemSolution />
         <Services />
-        <Roadmap />
         <Difference />
+        <ZeroExcuse />
         <Results />
         <Testimonials />
+        <Roadmap />
         <Locations />
         <FAQ />
         <EnquiryForm />
@@ -173,15 +169,7 @@ export default function Landing() {
         onOpenChange={setShowTimer}
         title="Wait — before you go!"
         body="Get a FREE Body Composition Analysis + 30-min Consultation when you book your first session this week."
-        source="popup_30s"
-      />
-      <PopupModal
-        open={showExit}
-        onOpenChange={setShowExit}
-        title="Not ready yet? That's okay."
-        body="Leave your number and we'll send you a free guide: 5 Mistakes Busy Professionals Make with Fitness (And How to Fix Them)."
         source="popup_exit"
-        nameOptional
       />
     </div>
   );
@@ -500,19 +488,18 @@ function Services() {
       cta: "Learn More",
     },
     {
+      icon: Laptop,
+      title: "Online Training",
+      desc: "Live video sessions, personalized meal plans, weekly check-ins. For clients outside Bangalore or with unpredictable schedules.",
+      ideal: "Remote professionals, frequent travelers",
+      cta: "Join Waitlist",
+    },
+    {
       icon: Building2,
       title: "Corporate Wellness",
       desc: "Bulk society bookings for apartment complexes. Monthly packages, flexible scheduling, dedicated trainers for your community.",
       ideal: "RWA committees, property managers",
       cta: "Learn More",
-    },
-    {
-      icon: Laptop,
-      title: "Virtual Coaching",
-      desc: "Live video sessions, personalized meal plans, weekly check-ins. For clients outside Bangalore or with unpredictable schedules.",
-      ideal: "Remote professionals, frequent travelers",
-      cta: "Join Waitlist",
-      soon: true,
     },
   ];
   return (
@@ -537,11 +524,6 @@ function Services() {
               </span>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-fv-navy text-lg">{c.title}</h3>
-                {c.soon && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider rounded bg-fv-orange/15 text-fv-orange px-1.5 py-0.5 bg-black/0">
-                    ​
-                  </span>
-                )}
               </div>
               <p className="mt-2 text-sm text-fv-text/70 flex-1">{c.desc}</p>
               <p className="mt-3 text-xs text-fv-text/60">
@@ -677,6 +659,78 @@ function Difference() {
           protein/kg optimization, anti-inflammatory nutrition, and Centenarian Decathlon training
           (inspired by Dr. Peter Attia's Outlive framework).
         </p>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- ZERO EXCUSE ---------- */
+function ZeroExcuse() {
+  const excuses = [
+    {
+      problem: "Time and travel issue?",
+      solution: "Fitved comes to your society — train inside your own building.",
+    },
+    {
+      problem: "Workout feels monotonous?",
+      solution: "A thoughtful mix of weights, yoga and pilates — every week different.",
+    },
+    {
+      problem: "Working out alone is boring?",
+      solution: "We make it a group activity with neighbours and friends.",
+    },
+    {
+      problem: "I travel a lot for work?",
+      solution: "Carry forward missed classes — never lose what you paid for.",
+    },
+    {
+      problem: "My medical condition won't allow it?",
+      solution: "Train with clinical specialists who understand your medical history.",
+    },
+    {
+      problem: "Difficult to commit a fixed time?",
+      solution: "Flexible scheduling that adapts to your day — not the other way around.",
+    },
+  ];
+  return (
+    <section className="py-20 md:py-28 bg-fv-neutral">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-10 lg:gap-14 items-start">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-3xl bg-fv-orange/15 -rotate-3" aria-hidden />
+              <img
+                src={monalisaFit}
+                alt="Mona Lisa in workout attire holding a dumbbell"
+                width={768}
+                height={768}
+                loading="lazy"
+                className="relative w-48 md:w-56 h-48 md:h-56 rounded-2xl object-cover shadow-elevated"
+              />
+            </div>
+            <h2 className="mt-6 font-display text-3xl md:text-4xl font-bold text-fv-navy leading-tight">
+              Fitved is your <span className="text-fv-orange">zero-excuse</span> fit partner.
+            </h2>
+            <p className="mt-3 text-fv-text/70 text-sm md:text-base max-w-xs">
+              Whatever's been stopping you — we've already solved for it.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {excuses.map((e) => (
+              <div
+                key={e.problem}
+                className="rounded-2xl bg-white border border-fv-navy/10 p-5 shadow-card"
+              >
+                <p className="text-sm font-semibold text-fv-navy">{e.problem}</p>
+                <div className="mt-2 flex items-start gap-2">
+                  <Check className="h-4 w-4 text-fv-orange shrink-0 mt-1" />
+                  <p className="text-sm text-fv-text/75">{e.solution}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
