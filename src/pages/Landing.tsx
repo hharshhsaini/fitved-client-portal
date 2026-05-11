@@ -40,6 +40,7 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 import heroHands from "@/assets/hero-hands.jpg";
+import monalisaFit from "@/assets/monalisa-fit.jpg";
 
 const PHONE = "+919890471383";
 const PHONE_DISPLAY = "+91 9890471383";
@@ -80,8 +81,7 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [active, setActive] = useState("home");
   const [showTimer, setShowTimer] = useState(false);
-  const [showExit, setShowExit] = useState(false);
-  const popupShown = useRef({ timer: false, exit: false });
+  const popupShown = useRef({ shown: false });
 
   // SEO meta
   useEffect(() => {
@@ -123,27 +123,22 @@ export default function Landing() {
     return () => obs.disconnect();
   }, []);
 
-  // Timer popup
+  // Single popup: trigger on 30s timer OR exit-intent (whichever first)
   useEffect(() => {
-    const t = window.setTimeout(() => {
-      if (!popupShown.current.timer) {
-        popupShown.current.timer = true;
-        setShowTimer(true);
-      }
-    }, 30000);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  // Exit-intent popup
-  useEffect(() => {
+    const trigger = () => {
+      if (popupShown.current.shown) return;
+      popupShown.current.shown = true;
+      setShowTimer(true);
+    };
+    const t = window.setTimeout(trigger, 30000);
     const onLeave = (e: MouseEvent) => {
-      if (e.clientY <= 0 && !popupShown.current.exit) {
-        popupShown.current.exit = true;
-        setShowExit(true);
-      }
+      if (e.clientY <= 0) trigger();
     };
     document.addEventListener("mouseleave", onLeave);
-    return () => document.removeEventListener("mouseleave", onLeave);
+    return () => {
+      window.clearTimeout(t);
+      document.removeEventListener("mouseleave", onLeave);
+    };
   }, []);
 
   return (
@@ -154,10 +149,11 @@ export default function Landing() {
         <Hero />
         <ProblemSolution />
         <Services />
-        <Roadmap />
         <Difference />
+        <ZeroExcuse />
         <Results />
         <Testimonials />
+        <Roadmap />
         <Locations />
         <FAQ />
         <EnquiryForm />
@@ -173,15 +169,7 @@ export default function Landing() {
         onOpenChange={setShowTimer}
         title="Wait — before you go!"
         body="Get a FREE Body Composition Analysis + 30-min Consultation when you book your first session this week."
-        source="popup_30s"
-      />
-      <PopupModal
-        open={showExit}
-        onOpenChange={setShowExit}
-        title="Not ready yet? That's okay."
-        body="Leave your number and we'll send you a free guide: 5 Mistakes Busy Professionals Make with Fitness (And How to Fix Them)."
         source="popup_exit"
-        nameOptional
       />
     </div>
   );
@@ -500,19 +488,18 @@ function Services() {
       cta: "Learn More",
     },
     {
+      icon: Laptop,
+      title: "Online Training",
+      desc: "Live video sessions, personalized meal plans, weekly check-ins. For clients outside Bangalore or with unpredictable schedules.",
+      ideal: "Remote professionals, frequent travelers",
+      cta: "Join Waitlist",
+    },
+    {
       icon: Building2,
       title: "Corporate Wellness",
       desc: "Bulk society bookings for apartment complexes. Monthly packages, flexible scheduling, dedicated trainers for your community.",
       ideal: "RWA committees, property managers",
       cta: "Learn More",
-    },
-    {
-      icon: Laptop,
-      title: "Virtual Coaching",
-      desc: "Live video sessions, personalized meal plans, weekly check-ins. For clients outside Bangalore or with unpredictable schedules.",
-      ideal: "Remote professionals, frequent travelers",
-      cta: "Join Waitlist",
-      soon: true,
     },
   ];
   return (
