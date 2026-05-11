@@ -40,7 +40,7 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 import heroHands from "@/assets/hero-hands.jpg";
-import monalisaFit from "@/assets/monalisa-fit.jpg";
+import monalisaFit from "@/assets/monalisa-fit.png";
 
 const PHONE = "+919890471383";
 const PHONE_DISPLAY = "+91 9890471383";
