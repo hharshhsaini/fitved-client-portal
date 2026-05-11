@@ -664,6 +664,78 @@ function Difference() {
   );
 }
 
+/* ---------- ZERO EXCUSE ---------- */
+function ZeroExcuse() {
+  const excuses = [
+    {
+      problem: "Time and travel issue?",
+      solution: "Fitved comes to your society — train inside your own building.",
+    },
+    {
+      problem: "Workout feels monotonous?",
+      solution: "A thoughtful mix of weights, yoga and pilates — every week different.",
+    },
+    {
+      problem: "Working out alone is boring?",
+      solution: "We make it a group activity with neighbours and friends.",
+    },
+    {
+      problem: "I travel a lot for work?",
+      solution: "Carry forward missed classes — never lose what you paid for.",
+    },
+    {
+      problem: "My medical condition won't allow it?",
+      solution: "Train with clinical specialists who understand your medical history.",
+    },
+    {
+      problem: "Difficult to commit a fixed time?",
+      solution: "Flexible scheduling that adapts to your day — not the other way around.",
+    },
+  ];
+  return (
+    <section className="py-20 md:py-28 bg-fv-neutral">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="grid lg:grid-cols-[280px_1fr] gap-10 lg:gap-14 items-start">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-3xl bg-fv-orange/15 -rotate-3" aria-hidden />
+              <img
+                src={monalisaFit}
+                alt="Mona Lisa in workout attire holding a dumbbell"
+                width={768}
+                height={768}
+                loading="lazy"
+                className="relative w-48 md:w-56 h-48 md:h-56 rounded-2xl object-cover shadow-elevated"
+              />
+            </div>
+            <h2 className="mt-6 font-display text-3xl md:text-4xl font-bold text-fv-navy leading-tight">
+              Fitved is your <span className="text-fv-orange">zero-excuse</span> fit partner.
+            </h2>
+            <p className="mt-3 text-fv-text/70 text-sm md:text-base max-w-xs">
+              Whatever's been stopping you — we've already solved for it.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {excuses.map((e) => (
+              <div
+                key={e.problem}
+                className="rounded-2xl bg-white border border-fv-navy/10 p-5 shadow-card"
+              >
+                <p className="text-sm font-semibold text-fv-navy">{e.problem}</p>
+                <div className="mt-2 flex items-start gap-2">
+                  <Check className="h-4 w-4 text-fv-orange shrink-0 mt-1" />
+                  <p className="text-sm text-fv-text/75">{e.solution}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- RESULTS ---------- */
 function Results() {
   const cases = [
