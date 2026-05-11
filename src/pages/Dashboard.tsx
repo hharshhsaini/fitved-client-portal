@@ -11,9 +11,11 @@ import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
 import { usePauseStore } from "@/stores/pauseStore";
 import { toast } from "sonner";
+import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
+import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: profile } = useProfile();
   const { activePause } = usePauseStore();
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
@@ -194,6 +196,18 @@ export default function Dashboard() {
             <Link to="/profile">Manage profile <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
         </Card>
+
+        {role === "trainer" && (
+          <div className="md:col-span-2">
+            <TrainerPauses />
+          </div>
+        )}
+
+        {role !== "trainer" && (
+          <div className="md:col-span-2">
+            <SocietyBatches />
+          </div>
+        )}
       </div>
     </div>
   );
