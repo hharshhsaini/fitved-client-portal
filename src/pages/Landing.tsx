@@ -1122,7 +1122,7 @@ function Footer() {
               </a>
             </li>
             <li>
-              <a href="mailto:hello@fitved.in" className="hover:text-fv-orange">hello@fitved.in</a>
+              <a href="" className="hover:text-fv-orange">​</a>
             </li>
           </ul>
         </div>
