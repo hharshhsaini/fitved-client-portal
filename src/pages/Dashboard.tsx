@@ -196,6 +196,18 @@ export default function Dashboard() {
             <Link to="/profile">Manage profile <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
         </Card>
+
+        {role === "trainer" && (
+          <div className="md:col-span-2">
+            <TrainerPauses />
+          </div>
+        )}
+
+        {role !== "trainer" && (
+          <div className="md:col-span-2">
+            <SocietyBatches />
+          </div>
+        )}
       </div>
     </div>
   );
