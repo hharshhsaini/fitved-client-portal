@@ -376,6 +376,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_society_batches: {
+        Args: never
+        Returns: {
+          member_count: number
+          society_id: string
+          society_name: string
+          time_slot: string
+          trainer_id: string
+          trainer_name: string
+        }[]
+      }
+      get_trainer_client_pauses: {
+        Args: never
+        Returns: {
+          client_id: string
+          client_name: string
+          from_date: string
+          pause_id: string
+          society: string
+          status: Database["public"]["Enums"]["pause_status"]
+          time_slot: string
+          to_date: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
