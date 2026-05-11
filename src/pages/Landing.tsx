@@ -364,7 +364,12 @@ function Hero() {
                   </div>
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-fv-orange to-amber-300"
+                      className={cn(
+                        "h-full bg-gradient-to-r",
+                        b.trend === "down"
+                          ? "from-red-700 via-red-500 to-red-300"
+                          : "from-fv-orange to-amber-300"
+                      )}
                       style={{ width: `${b.val}%` }}
                     />
                   </div>
