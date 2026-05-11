@@ -524,11 +524,6 @@ function Services() {
               </span>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-fv-navy text-lg">{c.title}</h3>
-                {c.soon && (
-                  <span className="text-[10px] font-bold uppercase tracking-wider rounded bg-fv-orange/15 text-fv-orange px-1.5 py-0.5 bg-black/0">
-                    ​
-                  </span>
-                )}
               </div>
               <p className="mt-2 text-sm text-fv-text/70 flex-1">{c.desc}</p>
               <p className="mt-3 text-xs text-fv-text/60">
