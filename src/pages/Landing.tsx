@@ -291,7 +291,7 @@ function Hero() {
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider">
             <ShieldCheck className="h-3.5 w-3.5" /> Clinical-grade · Bangalore
           </span>
-          <h1 className="mt-5 font-display text-4xl md:text-6xl font-bold leading-[1.05]">
+          <h1 className="mt-5 font-display md:text-6xl font-bold leading-[1.05] text-3xl">
             Fitness for the Busy Ones,
             <br />
             <span className="text-fv-orange">Fitness at Your Doorstep</span>
