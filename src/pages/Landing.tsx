@@ -518,31 +518,36 @@ function Services() {
             Four ways to start training with Fitved — pick the one that fits your life.
           </p>
         </div>
-        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {cards.map((c) => (
-            <div
+        <Accordion type="single" collapsible className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {cards.map((c, i) => (
+            <AccordionItem
               key={c.title}
-              className="group flex flex-col rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card hover:shadow-elevated transition-shadow"
+              value={`svc-${i}`}
+              className="rounded-2xl bg-white border border-fv-navy/10 px-6 shadow-card hover:shadow-elevated transition-shadow data-[state=open]:shadow-elevated"
             >
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-fv-navy text-white mb-4">
-                <c.icon className="h-6 w-6" />
-              </span>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-fv-navy text-lg">{c.title}</h3>
-              </div>
-              <p className="mt-2 text-sm text-fv-text/70 flex-1">{c.desc}</p>
-              <p className="mt-3 text-xs text-fv-text/60">
-                <span className="font-semibold text-fv-navy">Ideal for:</span> {c.ideal}
-              </p>
-              <button
-                onClick={() => scrollTo("contact")}
-                className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-fv-orange hover:underline"
-              >
-                {c.cta} <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
+              <AccordionTrigger className="hover:no-underline py-6">
+                <div className="flex flex-col items-start text-left">
+                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-fv-navy text-white mb-4">
+                    <c.icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="font-semibold text-fv-navy text-lg">{c.title}</h3>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <p className="text-sm text-fv-text/70">{c.desc}</p>
+                <p className="mt-3 text-xs text-fv-text/60">
+                  <span className="font-semibold text-fv-navy">Ideal for:</span> {c.ideal}
+                </p>
+                <button
+                  onClick={() => scrollTo("contact")}
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-fv-orange hover:underline"
+                >
+                  {c.cta} <ArrowRight className="h-4 w-4" />
+                </button>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </div>
     </section>
   );
