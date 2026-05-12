@@ -590,26 +590,30 @@ function Roadmap() {
           </p>
         </div>
 
-        {/* Visual timeline */}
-        <div className="mt-12 relative">
-          <div className="hidden md:block absolute top-12 left-[12%] right-[12%] h-1 bg-gradient-to-r from-fv-navy via-fv-orange to-fv-success rounded-full" />
-          <div className="grid md:grid-cols-3 gap-6 relative">
-            {phases.map((p, i) => (
-              <div key={p.title} className="flex flex-col items-center text-center">
-                <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated z-10">
-                  <p.icon className="h-10 w-10 text-fv-navy" />
-                  <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
-                    {p.pill}
-                  </span>
-                </div>
-                <div className="mt-6">
-                  <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
-                  <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
-                  <p className="mt-1 text-sm text-fv-text/70 max-w-[200px] mx-auto">{p.tagline}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="mt-12 relative px-12">
+          <Carousel opts={{ align: "start", loop: true }}>
+            <CarouselContent>
+              {phases.map((p) => (
+                <CarouselItem key={p.title} className="md:basis-1/2 lg:basis-1/3">
+                  <div className="flex flex-col items-center text-center rounded-2xl bg-white border border-fv-navy/10 p-8 shadow-card h-full">
+                    <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated">
+                      <p.icon className="h-10 w-10 text-fv-navy" />
+                      <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
+                        {p.pill}
+                      </span>
+                    </div>
+                    <div className="mt-6">
+                      <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
+                      <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
+                      <p className="mt-1 text-sm text-fv-text/70 max-w-[220px] mx-auto">{p.tagline}</p>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-2 md:-left-6" />
+            <CarouselNext className="-right-2 md:-right-6" />
+          </Carousel>
         </div>
 
         <div className="mt-12 text-center">
