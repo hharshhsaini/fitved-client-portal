@@ -418,26 +418,31 @@ function ProblemSolution() {
           <p className="mt-3 text-fv-text/70">
             Three groups we hear from every week — and what's quietly going wrong.
           </p>
-          <div className="mt-8 space-y-5">
-            {problems.map((p) => (
-              <div
+          <Accordion type="single" collapsible className="mt-8 space-y-5">
+            {problems.map((p, i) => (
+              <AccordionItem
                 key={p.title}
-                className="rounded-xl border border-fv-navy/10 p-5 bg-fv-neutral"
+                value={`prob-${i}`}
+                className="rounded-xl border border-fv-navy/10 bg-fv-neutral px-5"
               >
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-fv-navy text-white">
-                    <p.icon className="h-5 w-5" />
-                  </span>
-                  <h3 className="font-semibold text-fv-navy text-lg">{p.title}</h3>
-                </div>
-                <ul className="mt-3 space-y-1.5 text-sm text-fv-text/80 list-disc pl-5">
-                  {p.points.map((pt) => (
-                    <li key={pt}>{pt}</li>
-                  ))}
-                </ul>
-              </div>
+                <AccordionTrigger className="hover:no-underline py-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-lg bg-fv-navy text-white">
+                      <p.icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="font-semibold text-fv-navy text-lg text-left">{p.title}</h3>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ul className="space-y-1.5 text-sm text-fv-text/80 list-disc pl-5">
+                    {p.points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         </div>
 
         <div>
