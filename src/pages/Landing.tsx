@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
-import heroHands from "@/assets/hero-hands.jpg";
+const heroHands = "https://images.pexels.com/videos/8342835/pictures/preview-0.jpg";
 import monalisaFit from "@/assets/monalisa-fit.png";
 
 const PHONE = "+919890471383";
@@ -147,14 +147,16 @@ export default function Landing() {
 
       <main>
         <Hero />
+        <ZeroExcuse />
         <ProblemSolution />
         <Services />
+        <Trainers />
         <Difference />
-        <ZeroExcuse />
         <Results />
         <Testimonials />
         <Roadmap />
         <Locations />
+        <Pricing />
         <FAQ />
         <EnquiryForm />
       </main>
@@ -189,7 +191,7 @@ function Nav({
     <header className="sticky top-0 z-40 w-full border-b border-fv-navy/10 bg-white/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <a href="#home" className="flex items-center gap-2" onClick={() => scrollTo("home")}>
-          <img src={fitvedLogo} alt="Fitved" className="h-9 w-auto rounded" />
+          <img src={fitvedLogo} alt="Fitved" className="h-12 w-auto rounded" />
         </a>
         <nav className="hidden md:flex items-center gap-1">
           {NAV.map((n) => (
@@ -266,13 +268,20 @@ function Hero() {
       id="home"
       className="relative overflow-hidden text-white"
     >
-      <img
-        src={heroHands}
-        alt="Two hands reaching toward each other — strength shared"
-        className="absolute inset-0 h-full w-full object-cover"
-        width={1920}
-        height={1080}
-      />
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={heroHands}
+        className="absolute inset-0 h-full w-full object-cover object-center"
+      >
+        <source
+          src="/hero-video.mp4"
+          type="video/mp4"
+        />
+      </video>
       <div className="absolute inset-0 bg-gradient-to-br from-fv-navy/90 via-fv-navy/80 to-fv-navy/60" />
       <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-5 gap-10 items-center">
         <div className="md:col-span-3">
@@ -341,14 +350,14 @@ function Hero() {
             </div>
             <div className="mt-6 space-y-3">
               {[
-                { label: "Visceral Fat", val: 50, trend: "down" },
-                { label: "Muscle Mass", val: 85, trend: "up" },
-                { label: "Mobility Score", val: 78, trend: "up" },
+                { label: "Visceral Fat", val: 50, trend: "down", display: null as string | null },
+                { label: "Muscle Mass", val: 65, trend: "up", display: "+3.2 kg lean mass" },
+                { label: "Mobility Score", val: 78, trend: "up", display: null as string | null },
               ].map((b) => (
                 <div key={b.label}>
                   <div className="flex justify-between text-xs text-white/70 mb-1">
                     <span>{b.label}</span>
-                    <span>{b.trend === "down" ? "-" : "+"}{b.val}%</span>
+                    <span>{b.display ?? `${b.trend === "down" ? "-" : "+"}${b.val}%`}</span>
                   </div>
                   <div className="h-2 rounded-full bg-white/10 overflow-hidden">
                     <div
@@ -525,12 +534,12 @@ function Services() {
               value={`svc-${i}`}
               className="rounded-2xl bg-white border border-fv-navy/10 px-6 shadow-card hover:shadow-elevated transition-shadow data-[state=open]:shadow-elevated"
             >
-              <AccordionTrigger className="hover:no-underline py-6">
-                <div className="flex flex-col items-start text-left">
-                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-fv-navy text-white mb-4">
-                    <c.icon className="h-6 w-6" />
+              <AccordionTrigger className="hover:no-underline py-4">
+                <div className="flex items-center gap-3 text-left">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-fv-navy text-white">
+                    <c.icon className="h-5 w-5" />
                   </span>
-                  <h3 className="font-semibold text-fv-navy text-lg">{c.title}</h3>
+                  <h3 className="font-semibold text-fv-navy text-base">{c.title}</h3>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
@@ -590,11 +599,31 @@ function Roadmap() {
           </p>
         </div>
 
-        <div className="mt-12 relative px-12">
+        {/* Desktop: static 3-column grid */}
+        <div className="hidden md:grid md:grid-cols-3 gap-6 mt-12">
+          {phases.map((p) => (
+            <div key={p.title} className="flex flex-col items-center text-center rounded-2xl bg-white border border-fv-navy/10 p-8 shadow-card">
+              <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated">
+                <p.icon className="h-10 w-10 text-fv-navy" />
+                <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
+                  {p.pill}
+                </span>
+              </div>
+              <div className="mt-6">
+                <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
+                <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
+                <p className="mt-1 text-sm text-fv-text/70 max-w-[220px] mx-auto">{p.tagline}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile: carousel */}
+        <div className="md:hidden mt-12 relative px-12">
           <Carousel opts={{ align: "start", loop: true }}>
             <CarouselContent>
               {phases.map((p) => (
-                <CarouselItem key={p.title} className="md:basis-1/2 lg:basis-1/3">
+                <CarouselItem key={p.title} className="basis-[85%]">
                   <div className="flex flex-col items-center text-center rounded-2xl bg-white border border-fv-navy/10 p-8 shadow-card h-full">
                     <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated">
                       <p.icon className="h-10 w-10 text-fv-navy" />
@@ -611,8 +640,8 @@ function Roadmap() {
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="-left-2 md:-left-6" />
-            <CarouselNext className="-right-2 md:-right-6" />
+            <CarouselPrevious className="-left-2" />
+            <CarouselNext className="-right-2" />
           </Carousel>
         </div>
 
@@ -649,20 +678,21 @@ function Difference() {
           </h2>
         </div>
         <div className="mt-10 overflow-hidden rounded-2xl border border-fv-navy/10 shadow-card">
-          <div className="grid grid-cols-2 bg-fv-navy text-white">
-            <div className="p-4 text-sm font-semibold opacity-80">Traditional Gym</div>
+          {/* Header */}
+          <div className="grid grid-cols-1 md:grid-cols-2 bg-fv-navy text-white">
+            <div className="hidden md:block p-4 text-sm font-semibold opacity-80">Traditional Gym</div>
             <div className="p-4 text-sm font-semibold bg-fv-orange">Fitved Longevity Training</div>
           </div>
           {rows.map(([a, b], i) => (
             <div
               key={a}
               className={cn(
-                "grid grid-cols-2 text-sm",
+                "grid grid-cols-1 md:grid-cols-2 text-sm",
                 i % 2 === 0 ? "bg-white" : "bg-fv-neutral"
               )}
             >
-              <div className="p-4 text-fv-text/60 line-through decoration-fv-text/30">{a}</div>
-              <div className="p-4 text-fv-navy font-medium flex items-start gap-2">
+              <div className="px-4 pt-3 pb-1 md:py-4 text-fv-text/50 text-xs md:text-sm line-through decoration-fv-text/30">{a}</div>
+              <div className="px-4 pb-3 pt-0 md:py-4 text-fv-navy font-medium flex items-start gap-2">
                 <Check className="h-4 w-4 text-fv-orange mt-0.5 shrink-0" /> {b}
               </div>
             </div>
@@ -744,6 +774,91 @@ function ZeroExcuse() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- TRAINERS ---------- */
+function Trainers() {
+  const trainers = [
+    {
+      initials: "AS",
+      name: "Arjun S.",
+      experience: "6 years",
+      specialization: "Clinical Rehab & Corrective Exercise",
+      bio: "Helps clients recover from injuries and build resilience through evidence-based movement protocols.",
+    },
+    {
+      initials: "PM",
+      name: "Priya M.",
+      experience: "5 years",
+      specialization: "Yoga & Mobility Specialist",
+      bio: "Combines functional yoga and breathwork to improve flexibility, posture, and long-term joint health.",
+    },
+    {
+      initials: "RK",
+      name: "Rohit K.",
+      experience: "7 years",
+      specialization: "Strength & Metabolic Conditioning",
+      bio: "Specializes in body recomposition for busy professionals — lean muscle gain with sustainable fat loss.",
+    },
+  ];
+  return (
+    <section className="py-20 md:py-28 bg-fv-neutral">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
+            Meet Your Trainers
+          </h2>
+          <p className="mt-3 text-fv-text/70">
+            Clinical fitness specialists — not generic gym instructors.
+          </p>
+        </div>
+        {/* Desktop: grid */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+          {trainers.map((t) => (
+            <div
+              key={t.name}
+              className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col items-center text-center"
+            >
+              <div className="grid h-20 w-20 place-items-center rounded-full bg-fv-navy text-white text-2xl font-bold">
+                {t.initials}
+              </div>
+              <h3 className="mt-4 font-display text-xl font-bold text-fv-navy">{t.name}</h3>
+              <span className="mt-1 inline-flex items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
+                {t.experience} experience
+              </span>
+              <p className="mt-2 text-sm font-semibold text-fv-navy/80">{t.specialization}</p>
+              <p className="mt-2 text-sm text-fv-text/70">{t.bio}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile: carousel */}
+        <div className="sm:hidden mt-12 relative px-12">
+          <Carousel opts={{ align: "start", loop: true }}>
+            <CarouselContent>
+              {trainers.map((t) => (
+                <CarouselItem key={t.name} className="basis-[85%]">
+                  <div className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col items-center text-center h-full">
+                    <div className="grid h-20 w-20 place-items-center rounded-full bg-fv-navy text-white text-2xl font-bold">
+                      {t.initials}
+                    </div>
+                    <h3 className="mt-4 font-display text-xl font-bold text-fv-navy">{t.name}</h3>
+                    <span className="mt-1 inline-flex items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
+                      {t.experience} experience
+                    </span>
+                    <p className="mt-2 text-sm font-semibold text-fv-navy/80">{t.specialization}</p>
+                    <p className="mt-2 text-sm text-fv-text/70">{t.bio}</p>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="-left-2" />
+            <CarouselNext className="-right-2" />
+          </Carousel>
         </div>
       </div>
     </section>
@@ -980,6 +1095,94 @@ function Locations() {
   );
 }
 
+/* ---------- PRICING ---------- */
+function Pricing() {
+  const plans = [
+    {
+      name: "Group Training",
+      price: "₹3,000",
+      period: "/month",
+      features: [
+        "3–4 sessions per week",
+        "Society batch format",
+        "Group accountability",
+        "Carry-forward sessions",
+      ],
+      cta: "Join a Batch",
+      highlight: false,
+    },
+    {
+      name: "Personal Training",
+      price: "₹11,999",
+      period: "/month",
+      features: [
+        "3 sessions per week",
+        "1-on-1 with trainer",
+        "Customized program",
+        "Progress reports",
+      ],
+      cta: "Book a Trainer",
+      highlight: true,
+    },
+  ];
+  return (
+    <section className="py-20 md:py-28 bg-white">
+      <div className="mx-auto max-w-4xl px-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
+            Simple, Transparent Pricing
+          </h2>
+          <p className="mt-3 text-fv-text/70">No hidden fees. No joining charges.</p>
+        </div>
+        <div className="mt-12 grid sm:grid-cols-2 gap-6">
+          {plans.map((p) => (
+            <div
+              key={p.name}
+              className={cn(
+                "rounded-2xl border p-8 flex flex-col shadow-card",
+                p.highlight
+                  ? "bg-fv-navy text-white border-fv-navy"
+                  : "bg-fv-neutral border-fv-navy/10 text-fv-navy"
+              )}
+            >
+              <p className={cn("text-sm font-semibold uppercase tracking-wider", p.highlight ? "text-fv-orange" : "text-fv-orange")}>
+                {p.name}
+              </p>
+              <div className="mt-3 flex items-end gap-1">
+                <span className={cn("text-xs mb-2", p.highlight ? "text-white/50" : "text-fv-text/50")}>starts at</span>
+                <span className="text-4xl font-bold font-display ml-1">{p.price}</span>
+                <span className={cn("text-sm mb-1", p.highlight ? "text-white/60" : "text-fv-text/60")}>{p.period}</span>
+              </div>
+              <ul className="mt-6 space-y-3 flex-1">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm">
+                    <Check className={cn("h-4 w-4 shrink-0", p.highlight ? "text-fv-orange" : "text-fv-orange")} />
+                    <span className={p.highlight ? "text-white/85" : "text-fv-text/80"}>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={() => scrollTo("contact")}
+                className={cn(
+                  "mt-8 h-12 font-semibold",
+                  p.highlight
+                    ? "bg-fv-orange text-white hover:bg-fv-orange/90"
+                    : "bg-fv-navy text-white hover:bg-fv-navy/90"
+                )}
+              >
+                {p.cta}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-center text-sm text-fv-text/50">
+          All plans include a free trial session. No joining fee.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- FAQ ---------- */
 function FAQ() {
   const qa = [
@@ -1157,6 +1360,18 @@ function EnquiryForm() {
               <p className="text-center text-xs text-fv-text/50 flex items-center justify-center gap-1">
                 <ShieldCheck className="h-3.5 w-3.5" /> Your data is safe with us.
               </p>
+              <div className="pt-3 border-t border-fv-navy/10">
+                <p className="text-xs font-semibold text-fv-navy/50 uppercase tracking-wider mb-2">What happens next?</p>
+                {[
+                  "We call you within 24 hours",
+                  "Free trial session in your society",
+                  "No commitment until you love it",
+                ].map((step) => (
+                  <p key={step} className="flex items-center gap-1.5 text-xs text-fv-text/60 mb-1">
+                    <Check className="h-3.5 w-3.5 text-fv-orange shrink-0" /> {step}
+                  </p>
+                ))}
+              </div>
             </form>
           )}
         </div>
@@ -1190,7 +1405,17 @@ function Footer() {
               </a>
             </li>
             <li>
-              <a href="" className="hover:text-fv-orange">​</a>
+              <a
+                href="https://instagram.com/fitved.in"
+                target="_blank"
+                rel="noopener"
+                className="hover:text-fv-orange inline-flex items-center gap-1.5"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.333 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.333-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.333-2.633 1.308-3.608.975-.975 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038C23.986 15.668 24 15.259 24 12s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+                </svg>
+                Instagram
+              </a>
             </li>
           </ul>
         </div>
