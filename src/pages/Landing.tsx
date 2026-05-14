@@ -39,7 +39,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
-const heroHands = "https://images.pexels.com/videos/8342835/pictures/preview-0.jpg";
+const heroHands = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80";
 import monalisaFit from "@/assets/monalisa-fit.png";
 import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
 
@@ -262,27 +262,40 @@ function Nav({
   );
 }
 
+const HERO_PHRASES = [
+  "reduce weight",
+  "build strength",
+  "reduce pain",
+  "build stamina",
+  "feel energetic",
+];
+
 /* ---------- HERO ---------- */
 function Hero() {
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const cycle = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setPhraseIndex((i) => (i + 1) % HERO_PHRASES.length);
+        setVisible(true);
+      }, 400);
+    }, 2200);
+    return () => clearInterval(cycle);
+  }, []);
+
   return (
     <section
       id="home"
       className="relative overflow-hidden text-white"
     >
-      <video
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster={heroHands}
+      <img
+        src={heroHands}
+        alt="People doing yoga"
         className="absolute inset-0 h-full w-full object-cover object-center"
-      >
-        <source
-          src="/hero-video.mp4"
-          type="video/mp4"
-        />
-      </video>
+      />
       <div className="absolute inset-0 bg-gradient-to-br from-fv-navy/90 via-fv-navy/80 to-fv-navy/60" />
       <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-5 gap-10 items-center">
         <div className="md:col-span-3">
@@ -290,13 +303,16 @@ function Hero() {
             <ShieldCheck className="h-3.5 w-3.5" /> Your Society, Your Time, Our Trainer
           </span>
           <h1 className="mt-5 font-display md:text-6xl font-bold leading-[1.05] text-3xl">
-            Fitness for the Busy Ones,
-            <br />
-            <span className="text-fv-orange">Fitness at Your Doorstep</span>
+            Join us to{" "}
+            <span
+              className="text-fv-orange transition-opacity duration-400"
+              style={{ opacity: visible ? 1 : 0 }}
+            >
+              {HERO_PHRASES[phraseIndex]}
+            </span>
           </h1>
-          <p className="mt-5 text-base md:text-lg text-white/85 max-w-xl">
-            Clinical-grade personal and group training in your society. Build
-            strength, reduce pain, and train for longevity — not just a six-pack.
+          <p className="mt-5 text-base md:text-lg text-white/70 max-w-xl">
+            Fitness for the Busy Ones — Fitness at Your Doorstep
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
             <Button
