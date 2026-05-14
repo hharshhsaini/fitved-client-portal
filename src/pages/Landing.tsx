@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 const heroHands = "https://images.pexels.com/videos/8342835/pictures/preview-0.jpg";
 import monalisaFit from "@/assets/monalisa-fit.png";
+import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
 
 const PHONE = "+919890471383";
 const PHONE_DISPLAY = "+91 9890471383";
@@ -710,6 +711,11 @@ function Difference() {
 
 /* ---------- ZERO EXCUSE ---------- */
 function ZeroExcuse() {
+  const [isFit, setIsFit] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setIsFit((v) => !v), 1800);
+    return () => clearInterval(t);
+  }, []);
   const excuses = [
     {
       problem: "Time and travel issue?",
@@ -743,14 +749,33 @@ function ZeroExcuse() {
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
             <div className="relative">
               <div className="absolute -inset-3 rounded-3xl bg-fv-orange/15 -rotate-3" aria-hidden />
-              <img
-                src={monalisaFit}
-                alt="Mona Lisa in workout attire holding a dumbbell"
-                width={768}
-                height={768}
-                loading="lazy"
-                className="relative w-48 md:w-56 h-48 md:h-56 rounded-2xl object-cover shadow-elevated"
-              />
+              <div className="relative w-44 md:w-52 rounded-2xl overflow-hidden shadow-elevated" style={{ aspectRatio: "4/5" }}>
+                {/* Doubtful Mona Lisa */}
+                <img
+                  src={monalisaDoubtful}
+                  alt="Mona Lisa looking doubtful"
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
+                  style={{ opacity: isFit ? 0 : 1 }}
+                />
+                {/* Fit Mona Lisa */}
+                <img
+                  src={monalisaFit}
+                  alt="Mona Lisa in workout attire"
+                  className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
+                  style={{ opacity: isFit ? 1 : 0 }}
+                />
+                {/* Label badge */}
+                <span
+                  className={cn(
+                    "absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-700",
+                    isFit
+                      ? "bg-fv-orange text-white"
+                      : "bg-fv-navy/70 text-white/80"
+                  )}
+                >
+                  {isFit ? "After Fitved ✓" : "Before Fitved…"}
+                </span>
+              </div>
             </div>
             <h2 className="mt-6 font-display text-3xl md:text-4xl font-bold text-fv-navy leading-tight">
               Fitved is your <span className="text-fv-orange">zero-excuse</span> fit partner.
