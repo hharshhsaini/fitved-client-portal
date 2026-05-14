@@ -286,7 +286,7 @@ function Hero() {
       <div className="relative mx-auto max-w-6xl px-4 py-16 md:py-24 grid md:grid-cols-5 gap-10 items-center">
         <div className="md:col-span-3">
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider">
-            <ShieldCheck className="h-3.5 w-3.5" /> Clinical-grade · Bangalore
+            <ShieldCheck className="h-3.5 w-3.5" /> Your Society, Your Time, Our Trainer
           </span>
           <h1 className="mt-5 font-display md:text-6xl font-bold leading-[1.05] text-3xl">
             Fitness for the Busy Ones,
