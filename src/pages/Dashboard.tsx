@@ -1,10 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CalendarOff, CreditCard, Download, FileHeart, MapPin, Clock, UserRound, ArrowRight, Bell } from "lucide-react";
+import {
+  Bell, ChevronRight, Check,
+  FileHeart, CalendarOff, UserCircle2,
+  CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
+} from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -13,13 +17,38 @@ import { usePauseStore } from "@/stores/pauseStore";
 import { toast } from "sonner";
 import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
+import { ProgressRing } from "@/components/ui/progress-ring";
+
+// ── Design tokens ──────────────────────────────────────────────────────────────
+const GOLD       = "#f0a720";
+const GOLD_LIGHT = "#fef3d0";
+const NAVY       = "#1E3A5F";
+const NAVY_LIGHT = "#2d5a8e";
+const MUTED      = "#8a8f9e";
+const BORDER     = "rgba(30,58,95,0.08)";
+const GREEN      = "#2e9e5b";
+const GREEN_LIGHT = "#e6f7ed";
+
+const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Returns 0=Mon … 6=Sun */
+function getTodayIdx() {
+  const d = new Date().getDay(); // 0=Sun
+  return d === 0 ? 6 : d - 1;
+}
 
 export default function Dashboard() {
   const { user, role } = useAuth();
   const { data: profile } = useProfile();
   const { activePause } = usePauseStore();
-  const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
+  const navigate = useNavigate();
 
+  const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
+  const initials  = firstName.slice(0, 2).toUpperCase();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning ✨" : hour < 17 ? "Good afternoon ✨" : "Good evening ✨";
+
+  // ── Data queries (unchanged from original) ──────────────────────────────────
   const { data: plan } = useQuery({
     queryKey: ["plan", user?.id],
     enabled: !!user,
@@ -52,28 +81,217 @@ export default function Dashboard() {
     },
   });
 
-  const totalDays = plan ? daysBetween(plan.start_date, plan.end_date) : 0;
+  // ── Derived values ──────────────────────────────────────────────────────────
+  const totalDays   = plan ? daysBetween(plan.start_date, plan.end_date) : 0;
   const elapsedDays = plan ? daysBetween(plan.start_date, new Date().toISOString()) : 0;
-  const progress = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
-  const daysLeft = Math.max(0, totalDays - elapsedDays);
+  const progress    = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
+  const daysLeft    = Math.max(0, totalDays - elapsedDays);
+  const sessionsUsed  = plan ? Math.round((plan.total_sessions * progress) / 100) : 0;
+  const sessionsLeft  = plan ? plan.total_sessions - sessionsUsed : 0;
+
+  const trainingDays: string[] = (plan?.training_days ?? []).map((d: string) => d.slice(0, 3));
+  const todayIdx     = getTodayIdx();
+  const nextTrainingDay = WEEK_DAYS.find((d, i) => i >= todayIdx && trainingDays.includes(d))
+    ?? trainingDays[0]
+    ?? null;
 
   const handleDownload = async () => {
-    if (!latestReport?.file_path) {
-      toast.error("No file attached to this report");
-      return;
-    }
+    if (!latestReport?.file_path) { toast.error("No file attached"); return; }
     const { data, error } = await supabase.storage
-      .from("health-reports")
-      .createSignedUrl(latestReport.file_path, 60);
-    if (error || !data) {
-      toast.error("Could not generate download link");
-      return;
-    }
+      .from("health-reports").createSignedUrl(latestReport.file_path, 60);
+    if (error || !data) { toast.error("Could not generate download link"); return; }
     window.open(data.signedUrl, "_blank");
   };
 
-  return (
-    <div className="space-y-6">
+  // ── Mobile layout ───────────────────────────────────────────────────────────
+  const MobileLayout = () => (
+    <div style={{ background: "#f4f2ee", minHeight: "100%" }}>
+
+      {/* Hero gradient card */}
+      <div
+        className="mx-4 mt-3 rounded-[28px] overflow-hidden relative"
+        style={{
+          background: `linear-gradient(145deg, ${NAVY} 0%, ${NAVY_LIGHT} 100%)`,
+          padding: "22px 24px 28px",
+        }}
+      >
+        {/* Decorative circles */}
+        <div className="pointer-events-none absolute rounded-full"
+          style={{ top: -40, right: -40, width: 140, height: 140, background: "rgba(240,167,32,0.15)" }} />
+        <div className="pointer-events-none absolute rounded-full"
+          style={{ bottom: -20, right: 60, width: 80, height: 80, background: "rgba(255,255,255,0.05)" }} />
+
+        {/* Greeting row */}
+        <div className="flex items-start justify-between mb-5 relative">
+          <div>
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>{greeting}</p>
+            <h1 className="font-display text-white mt-0.5" style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em" }}>
+              {firstName}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2.5">
+            <button
+              className="relative flex items-center justify-center rounded-full border-none"
+              style={{ width: 36, height: 36, background: "rgba(255,255,255,0.12)" }}
+            >
+              <Bell size={16} color="rgba(255,255,255,0.8)" />
+              <span className="absolute rounded-full" style={{ top: 7, right: 8, width: 6, height: 6, background: GOLD }} />
+            </button>
+            <div
+              className="flex items-center justify-center rounded-full font-display font-bold"
+              style={{ width: 36, height: 36, background: `${GOLD}33`, border: `2px solid ${GOLD}`, fontSize: 13, color: GOLD }}
+            >
+              {initials}
+            </div>
+          </div>
+        </div>
+
+        {/* Sessions + progress ring */}
+        <div className="flex items-center justify-between relative">
+          <div className="flex flex-col gap-1">
+            <span className="font-display font-bold text-white" style={{ fontSize: 52, lineHeight: 1 }}>
+              {plan ? sessionsLeft : "—"}
+            </span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>sessions left</span>
+            <div className="flex items-center gap-2 mt-2.5">
+              <span className="rounded-full font-semibold"
+                style={{ fontSize: 12, color: GOLD, background: "rgba(240,167,32,0.2)", padding: "3px 10px" }}>
+                {daysLeft} days left
+              </span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{progress}% done</span>
+            </div>
+          </div>
+          <ProgressRing progress={progress} size={110} strokeWidth={9} color={GOLD} trackColor="rgba(255,255,255,0.12)">
+            <span className="font-bold text-white" style={{ fontSize: 18 }}>{progress}%</span>
+          </ProgressRing>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-5 relative">
+          <div className="rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.12)" }}>
+            <div className="h-full rounded-full" style={{ width: `${progress}%`, background: GOLD, transition: "width 1s ease" }} />
+          </div>
+          <div className="flex justify-between mt-1.5">
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{sessionsUsed} used</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{plan?.total_sessions ?? 0} total</span>
+          </div>
+        </div>
+      </div>
+
+      {/* This week */}
+      <div className="px-5 pt-5 pb-1">
+        <p className="font-semibold uppercase mb-3"
+          style={{ fontSize: 13, color: MUTED, letterSpacing: "0.08em" }}>
+          This week
+        </p>
+        <div className="flex gap-2">
+          {WEEK_DAYS.map((d, i) => {
+            const isTraining = trainingDays.length > 0 && trainingDays.includes(d);
+            const isPast     = i < todayIdx;
+            const isToday    = i === todayIdx;
+            return (
+              <div key={d} className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl py-2.5"
+                style={{
+                  background: isTraining ? (isPast ? GOLD_LIGHT : NAVY) : "#fff",
+                  border: isToday
+                    ? `2px solid ${GOLD}`
+                    : `1px solid ${isTraining ? (isPast ? GOLD : "transparent") : BORDER}`,
+                }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 600,
+                  color: isTraining ? (isPast ? GOLD : "rgba(255,255,255,0.7)") : MUTED,
+                }}>
+                  {d[0]}
+                </span>
+                {isTraining && (
+                  <div className="flex items-center justify-center rounded-full"
+                    style={{ width: 20, height: 20, background: isPast ? GOLD : "rgba(255,255,255,0.15)" }}>
+                    {isPast
+                      ? <Check size={11} color="#fff" strokeWidth={3} />
+                      : <div className="rounded-full" style={{ width: 5, height: 5, background: "rgba(255,255,255,0.6)" }} />
+                    }
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Next session banner */}
+      <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
+        style={{
+          background: "#fff", border: `1px solid ${BORDER}`,
+          padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
+        }}>
+        <div>
+          <p className="uppercase font-semibold"
+            style={{ fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>
+            Next session
+          </p>
+          <p className="font-bold mt-1" style={{ fontSize: 17, color: NAVY }}>
+            {nextTrainingDay
+              ? `${nextTrainingDay} · ${profile?.time_slot ?? "—"}`
+              : "No sessions scheduled"}
+          </p>
+          <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+            {trainerName ?? "Your trainer"} · {profile?.society ?? "Your society"}
+          </p>
+        </div>
+        <Link to="/plan">
+          <div className="flex items-center justify-center rounded-full"
+            style={{ width: 44, height: 44, background: GOLD_LIGHT, flexShrink: 0 }}>
+            <ChevronRight size={18} color={GOLD} />
+          </div>
+        </Link>
+      </div>
+
+      {/* Quick cards */}
+      <div className="flex gap-2.5 px-4 pb-4 pt-1">
+        <button onClick={() => navigate("/health")} className="flex-1 rounded-[20px] p-4 text-left border-none cursor-pointer"
+          style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0 2px 12px rgba(30,58,95,0.05)" }}>
+          <div className="flex items-center justify-center rounded-xl mb-2.5"
+            style={{ width: 36, height: 36, background: "#eef2ff" }}>
+            <FileHeart size={18} color="#5b6cf8" />
+          </div>
+          <p className="font-bold" style={{ fontSize: 13, color: NAVY }}>Health</p>
+          <p style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>
+            {latestReport ? "Latest report" : "No reports yet"}
+          </p>
+        </button>
+
+        <button onClick={() => navigate("/pause")} className="flex-1 rounded-[20px] p-4 text-left border-none cursor-pointer"
+          style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0 2px 12px rgba(30,58,95,0.05)" }}>
+          <div className="flex items-center justify-center rounded-xl mb-2.5"
+            style={{ width: 36, height: 36, background: activePause ? "#fee2e2" : GREEN_LIGHT }}>
+            <CalendarOff size={18} color={activePause ? "#ef4444" : GREEN} />
+          </div>
+          <p className="font-bold" style={{ fontSize: 13, color: NAVY }}>Pause</p>
+          <p style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{activePause ? "Paused" : "Running"}</p>
+        </button>
+
+        <button onClick={() => navigate("/profile")} className="flex-1 rounded-[20px] p-4 text-left border-none cursor-pointer"
+          style={{ background: "#fff", border: `1px solid ${BORDER}`, boxShadow: "0 2px 12px rgba(30,58,95,0.05)" }}>
+          <div className="flex items-center justify-center rounded-xl mb-2.5"
+            style={{ width: 36, height: 36, background: "#fdf4dc" }}>
+            <UserCircle2 size={18} color={GOLD} />
+          </div>
+          <p className="font-bold" style={{ fontSize: 13, color: NAVY }}>Profile</p>
+          <p style={{ fontSize: 11, color: MUTED, marginTop: 2 }}>{profile?.society ?? "My profile"}</p>
+        </button>
+      </div>
+
+      {/* Trainer / Society sections */}
+      <div className="px-4 pb-4 space-y-4">
+        {role === "trainer" && <TrainerPauses />}
+        {role !== "trainer" && <SocietyBatches />}
+      </div>
+    </div>
+  );
+
+  // ── Desktop layout (original) ───────────────────────────────────────────────
+  const DesktopLayout = () => (
+    <div className="space-y-6 py-0">
       <header>
         <h1 className="font-display text-3xl md:text-4xl text-foreground">Hi {firstName}, here's your overview</h1>
         <p className="mt-1 text-muted-foreground">A calm look at your fitness program today.</p>
@@ -122,7 +340,7 @@ export default function Dashboard() {
         <Card className="p-6 rounded-2xl shadow-card hover:shadow-elevated transition-shadow">
           <div className="flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-accent-foreground">
-              <CalendarOff className="h-5 w-5" />
+              <CalendarOffIcon className="h-5 w-5" />
             </span>
             <div>
               <p className="text-sm text-muted-foreground">Pause status</p>
@@ -198,17 +416,19 @@ export default function Dashboard() {
         </Card>
 
         {role === "trainer" && (
-          <div className="md:col-span-2">
-            <TrainerPauses />
-          </div>
+          <div className="md:col-span-2"><TrainerPauses /></div>
         )}
-
         {role !== "trainer" && (
-          <div className="md:col-span-2">
-            <SocietyBatches />
-          </div>
+          <div className="md:col-span-2"><SocietyBatches /></div>
         )}
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <div className="md:hidden"><MobileLayout /></div>
+      <div className="hidden md:block"><DesktopLayout /></div>
+    </>
   );
 }
