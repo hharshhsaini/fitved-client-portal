@@ -21,6 +21,9 @@ import {
   Stethoscope,
   Activity,
   HeartPulse,
+  Utensils,
+  BarChart2,
+  Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,6 +152,7 @@ export default function Landing() {
       <main>
         <Hero />
         <ZeroExcuse />
+        <TakeCare />
         <ProblemSolution />
         <Services />
         <Trainers />
@@ -273,16 +277,11 @@ const HERO_PHRASES = [
 /* ---------- HERO ---------- */
 function Hero() {
   const [phraseIndex, setPhraseIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const cycle = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setPhraseIndex((i) => (i + 1) % HERO_PHRASES.length);
-        setVisible(true);
-      }, 400);
-    }, 2200);
+      setPhraseIndex((i) => (i + 1) % HERO_PHRASES.length);
+    }, 2000);
     return () => clearInterval(cycle);
   }, []);
 
@@ -302,11 +301,11 @@ function Hero() {
           <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wider">
             <ShieldCheck className="h-3.5 w-3.5" /> Your Society, Your Time, Our Trainer
           </span>
-          <h1 className="mt-5 font-display md:text-6xl font-bold leading-[1.05] text-3xl">
+          <h1 className="mt-5 font-display md:text-6xl font-bold leading-[1.05] text-3xl overflow-hidden">
             Join us to{" "}
             <span
-              className="text-fv-orange transition-opacity duration-400"
-              style={{ opacity: visible ? 1 : 0 }}
+              key={phraseIndex}
+              className="inline-block text-fv-orange animate-slide-in-right"
             >
               {HERO_PHRASES[phraseIndex]}
             </span>
@@ -720,6 +719,69 @@ function Difference() {
           protein/kg optimization, anti-inflammatory nutrition, and Centenarian Decathlon training
           (inspired by Dr. Peter Attia's Outlive framework).
         </p>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- TAKE CARE ---------- */
+function TakeCare() {
+  const pillars = [
+    {
+      icon: Dumbbell,
+      title: "We make you physically fit",
+      desc: "Structured strength, mobility and cardio programs tailored to your body — delivered at your doorstep.",
+      color: "from-fv-navy to-[#2A4A7A]",
+    },
+    {
+      icon: Utensils,
+      title: "We fix your diet",
+      desc: "Personalised metabolic meal plans that fit your lifestyle — no crash diets, just sustainable nutrition.",
+      color: "from-fv-orange to-amber-500",
+    },
+    {
+      icon: BarChart2,
+      title: "We track 10+ health metrics",
+      desc: "Body age, visceral fat, muscle mass, bone density, BP, HbA1c and more — tracked and reviewed every week.",
+      color: "from-fv-navy to-[#2A4A7A]",
+    },
+    {
+      icon: Brain,
+      title: "We make you calm",
+      desc: "Breathwork, mindfulness and stress-reduction techniques woven into every session for a healthier mind.",
+      color: "from-fv-orange to-amber-500",
+    },
+  ];
+
+  return (
+    <section className="py-20 md:py-28 bg-fv-navy">
+      <div className="mx-auto max-w-6xl px-4">
+        <div className="text-center max-w-2xl mx-auto">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
+            We'll take care of you
+          </h2>
+          <p className="mt-3 text-white/60">
+            Every dimension of your health — covered.
+          </p>
+        </div>
+        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {pillars.map((p) => (
+            <div
+              key={p.title}
+              className={`rounded-2xl bg-gradient-to-br ${p.color} p-6 flex flex-col gap-4 shadow-elevated`}
+            >
+              <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/10 text-white">
+                <p.icon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-display font-bold text-white text-lg leading-snug">
+                  {p.title}
+                </h3>
+                <p className="mt-2 text-sm text-white/70 leading-relaxed">{p.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
