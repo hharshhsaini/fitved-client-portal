@@ -20,6 +20,7 @@ import Customers from "./pages/admin/Customers";
 import CustomerDetail from "./pages/admin/CustomerDetail";
 import Trainers from "./pages/admin/Trainers";
 import Societies from "./pages/admin/Societies";
+import Corporate from "./pages/Corporate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ const App = () => (
                 />
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/corporate" element={<Corporate />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PauseProvider>

@@ -161,7 +161,7 @@ export default function Landing() {
         <Testimonials />
         <Roadmap />
         <Locations />
-        <Pricing />
+
         <FAQ />
         <EnquiryForm />
       </main>
@@ -213,6 +213,12 @@ function Nav({
               {n.label}
             </button>
           ))}
+          <Link
+            to="/corporate"
+            className="rounded-md px-3 py-2 text-sm font-medium text-fv-text/70 hover:text-fv-navy transition-colors"
+          >
+            For Business
+          </Link>
           <Button
             onClick={() => scrollTo("contact")}
             className="ml-2 bg-fv-orange text-white hover:bg-fv-orange/90"
@@ -252,6 +258,13 @@ function Nav({
                 {n.label}
               </button>
             ))}
+            <Link
+              to="/corporate"
+              className="py-3 text-left text-base font-medium text-fv-navy border-b border-fv-navy/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              For Business
+            </Link>
             <Link
               to="/login"
               className="py-3 text-left text-base font-medium text-fv-navy/70"
@@ -1193,94 +1206,6 @@ function Locations() {
             </ul>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- PRICING ---------- */
-function Pricing() {
-  const plans = [
-    {
-      name: "Group Training",
-      price: "₹3,000",
-      period: "/month",
-      features: [
-        "3–4 sessions per week",
-        "Society batch format",
-        "Group accountability",
-        "Carry-forward sessions",
-      ],
-      cta: "Join a Batch",
-      highlight: false,
-    },
-    {
-      name: "Personal Training",
-      price: "₹11,999",
-      period: "/month",
-      features: [
-        "3 sessions per week",
-        "1-on-1 with trainer",
-        "Customized program",
-        "Progress reports",
-      ],
-      cta: "Book a Trainer",
-      highlight: true,
-    },
-  ];
-  return (
-    <section className="py-20 md:py-28 bg-white">
-      <div className="mx-auto max-w-4xl px-4">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="mt-3 text-fv-text/70">No hidden fees. No joining charges.</p>
-        </div>
-        <div className="mt-12 grid sm:grid-cols-2 gap-6">
-          {plans.map((p) => (
-            <div
-              key={p.name}
-              className={cn(
-                "rounded-2xl border p-8 flex flex-col shadow-card",
-                p.highlight
-                  ? "bg-fv-navy text-white border-fv-navy"
-                  : "bg-fv-neutral border-fv-navy/10 text-fv-navy"
-              )}
-            >
-              <p className={cn("text-sm font-semibold uppercase tracking-wider", p.highlight ? "text-fv-orange" : "text-fv-orange")}>
-                {p.name}
-              </p>
-              <div className="mt-3 flex items-end gap-1">
-                <span className={cn("text-xs mb-2", p.highlight ? "text-white/50" : "text-fv-text/50")}>starts at</span>
-                <span className="text-4xl font-bold font-display ml-1">{p.price}</span>
-                <span className={cn("text-sm mb-1", p.highlight ? "text-white/60" : "text-fv-text/60")}>{p.period}</span>
-              </div>
-              <ul className="mt-6 space-y-3 flex-1">
-                {p.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm">
-                    <Check className={cn("h-4 w-4 shrink-0", p.highlight ? "text-fv-orange" : "text-fv-orange")} />
-                    <span className={p.highlight ? "text-white/85" : "text-fv-text/80"}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button
-                onClick={() => scrollTo("contact")}
-                className={cn(
-                  "mt-8 h-12 font-semibold",
-                  p.highlight
-                    ? "bg-fv-orange text-white hover:bg-fv-orange/90"
-                    : "bg-fv-navy text-white hover:bg-fv-navy/90"
-                )}
-              >
-                {p.cta}
-              </Button>
-            </div>
-          ))}
-        </div>
-        <p className="mt-6 text-center text-sm text-fv-text/50">
-          All plans include a free trial session. No joining fee.
-        </p>
       </div>
     </section>
   );
