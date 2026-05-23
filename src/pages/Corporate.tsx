@@ -76,14 +76,18 @@ function CorporateNav() {
 // ── Hero ───────────────────────────────────────────────────────────────────────
 function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-fv-navy via-fv-navy to-[#2d5a8e] text-white">
-      {/* Decorative elements */}
-      <div className="pointer-events-none absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-10"
-        style={{ background: "radial-gradient(circle, #f0a720 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
-      <div className="pointer-events-none absolute bottom-0 left-0 w-96 h-96 rounded-full opacity-5"
-        style={{ background: "radial-gradient(circle, #f0a720 0%, transparent 70%)", transform: "translate(-30%, 30%)" }} />
+    <section className="relative overflow-hidden text-white">
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1549576392-b91db04e5088?w=1920&q=80')",
+        }}
+      />
+      {/* Dark navy overlay so text stays readable */}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(30,58,95,0.92) 0%, rgba(30,58,95,0.80) 50%, rgba(45,90,142,0.75) 100%)" }} />
 
-      <div className="relative mx-auto max-w-6xl px-4 pt-20 pb-24 md:pt-28 md:pb-32">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 pt-20 pb-24 md:pt-28 md:pb-32">
         <div className="max-w-3xl">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6 text-sm font-semibold"
@@ -113,7 +117,7 @@ function Hero() {
             <Button
               variant="outline"
               onClick={() => scrollTo("use-cases")}
-              className="h-13 px-8 rounded-full text-base border-white/30 text-white hover:bg-white/10 hover:text-white"
+              className="h-13 px-8 rounded-full text-base border-2 border-white text-white bg-white/10 hover:bg-white/20 hover:text-white"
             >
               See use cases
             </Button>
