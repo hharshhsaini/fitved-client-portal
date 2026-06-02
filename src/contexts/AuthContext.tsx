@@ -97,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           name,
           phone: normalized,
-          dob: dob.toISOString().slice(0, 10),
+          dob: `${dob.getFullYear()}-${String(dob.getMonth() + 1).padStart(2, "0")}-${String(dob.getDate()).padStart(2, "0")}`,
         },
       },
     });
