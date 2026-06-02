@@ -53,11 +53,8 @@ const WHATSAPP_URL = `https://wa.me/${PHONE.replace(/\D/g, "")}?text=${WHATSAPP_
 
 const NAV = [
   { id: "home", label: "Home" },
-  { id: "about", label: "About" },
   { id: "services", label: "Services" },
   { id: "results", label: "Results" },
-  { id: "testimonials", label: "Testimonials" },
-  { id: "contact", label: "Contact" },
 ];
 
 const leadSchema = z.object({
@@ -213,6 +210,12 @@ function Nav({
               {n.label}
             </button>
           ))}
+          <a
+            href="/online-training.html"
+            className="rounded-md px-3 py-2 text-sm font-medium text-fv-text/70 hover:text-fv-navy transition-colors"
+          >
+            Online Training
+          </a>
           <Link
             to="/corporate"
             className="rounded-md px-3 py-2 text-sm font-medium text-fv-text/70 hover:text-fv-navy transition-colors"
@@ -258,6 +261,13 @@ function Nav({
                 {n.label}
               </button>
             ))}
+            <a
+              href="/online-training.html"
+              className="py-3 text-left text-base font-medium text-fv-navy border-b border-fv-navy/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Online Training
+            </a>
             <Link
               to="/corporate"
               className="py-3 text-left text-base font-medium text-fv-navy border-b border-fv-navy/5"
@@ -535,7 +545,8 @@ function Services() {
       title: "Online Training",
       desc: "Live video sessions, personalized meal plans, weekly check-ins. For clients outside Bangalore or with unpredictable schedules.",
       ideal: "Remote professionals, frequent travelers",
-      cta: "Join Waitlist",
+      cta: "Learn More",
+      href: "/online-training.html",
     },
     {
       icon: Building2,
@@ -576,12 +587,21 @@ function Services() {
                 <p className="mt-3 text-xs text-fv-text/60">
                   <span className="font-semibold text-fv-navy">Ideal for:</span> {c.ideal}
                 </p>
-                <button
-                  onClick={() => scrollTo("contact")}
-                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-fv-orange hover:underline"
-                >
-                  {c.cta} <ArrowRight className="h-4 w-4" />
-                </button>
+                {(c as any).href ? (
+                  <a
+                    href={(c as any).href}
+                    className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-fv-orange hover:underline"
+                  >
+                    {c.cta} <ArrowRight className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => scrollTo("contact")}
+                    className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-fv-orange hover:underline"
+                  >
+                    {c.cta} <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
               </AccordionContent>
             </AccordionItem>
           ))}

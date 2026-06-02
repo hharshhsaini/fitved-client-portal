@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Training — FitVed</title>
+  <meta name="description" content="FitVed's live online training brings personalised strength, yoga & pilates directly to your screen. Book a free trial session today." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:      #1C1E64;
+      --navy-deep: #15174e;
+      --navy-mid:  #252880;
+      --gold:      #E1A10C;
+      --gold-light:#FEF3CC;
+      --gold-dim:  rgba(225,161,12,0.15);
+      --white:     #FFFFFF;
+      --bg:        #F5F7FF;
+      --text:      #1a1c2e;
+      --muted:     #6b6f9a;
+      --border:    rgba(28,30,100,0.10);
+      --radius:    12px;
+      --shadow:    0 2px 16px rgba(28,30,100,0.08);
+      --shadow-lg: 0 8px 40px rgba(28,30,100,0.13);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    img { display: block; max-width: 100%; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── Utility ───────────────────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.18;
+      letter-spacing: -0.02em;
+    }
+
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      margin-top: 14px;
+      max-width: 560px;
+      line-height: 1.65;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 100px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s;
+      border: none;
+      text-decoration: none;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-gold {
+      background: var(--gold);
+      color: var(--navy);
+      box-shadow: 0 4px 18px rgba(225,161,12,0.35);
+    }
+    .btn-gold:hover { box-shadow: 0 8px 28px rgba(225,161,12,0.45); }
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,0.5);
+    }
+    .btn-outline:hover { border-color: var(--white); background: rgba(255,255,255,0.08); }
+    .btn-sm { padding: 10px 22px; font-size: 14px; }
+
+    /* ── Fade-in animation ─────────────────────────────────────────── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .fade-up.delay-1 { transition-delay: 0.1s; }
+    .fade-up.delay-2 { transition-delay: 0.2s; }
+    .fade-up.delay-3 { transition-delay: 0.3s; }
+    .fade-up.delay-4 { transition-delay: 0.4s; }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* NAV                                                            */
+    /* ═══════════════════════════════════════════════════════════════ */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      letter-spacing: -0.03em;
+    }
+    .nav-logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      padding: 7px 14px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted);
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-links a:hover { color: var(--navy); background: var(--bg); }
+
+    .nav-cta { margin-left: 8px; }
+
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--navy);
+      border-radius: 2px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .mobile-menu {
+      display: none;
+      flex-direction: column;
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 16px 24px 20px;
+      gap: 4px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      padding: 11px 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--navy);
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-menu a:last-child { border-bottom: none; }
+    .mobile-menu .btn { margin-top: 10px; text-align: center; justify-content: center; }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* HERO                                                           */
+    /* ═══════════════════════════════════════════════════════════════ */
+    #hero {
+      position: relative;
+      background: var(--navy);
+      overflow: hidden;
+      padding: 100px 0 96px;
+    }
+
+    /* Background photo */
+    #hero .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1758599880805-3f000f47fa46?w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* Dark navy gradient over photo so text stays readable */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        105deg,
+        rgba(28,30,100,0.93) 0%,
+        rgba(28,30,100,0.82) 55%,
+        rgba(28,30,100,0.55) 100%
+      );
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Dot grid overlay */
+    #hero::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 60px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-dim);
+      border: 1px solid rgba(225,161,12,0.3);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 100px;
+      margin-bottom: 22px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse-dot 2s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero-headline {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+    .hero-headline .accent { color: var(--gold); }
+
+    .hero-sub {
+      font-size: 17px;
+      color: rgba(255,255,255,0.68);
+      line-height: 1.7;
+      margin-bottom: 36px;
+      max-width: 460px;
+    }
+
+    .hero-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+    .hero-trust {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .hero-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+    .hero-trust-item::before {
+      content: '✓';
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .hero-trust-sep {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+    }
+
+    /* Hero visual (right side) */
+    .hero-visual {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .hero-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 20px 22px;
+      backdrop-filter: blur(8px);
+    }
+    .hero-card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .hero-card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .hero-card-sub {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+
+    .hero-card-row {
+      display: flex;
+      gap: 12px;
+    }
+    .hero-card-row .hero-card { flex: 1; }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(225,161,12,0.2);
+      border: 1px solid rgba(225,161,12,0.4);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 12px;
+    }
+    .live-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--white);
+      margin-left: -8px;
+    }
+    .avatar:first-child { margin-left: 0; }
+    .avatar-a { background: #5b6cf8; }
+    .avatar-b { background: #2e9e5b; }
+    .avatar-c { background: var(--gold); }
+    .avatar-d { background: #e05b5b; }
+    .avatar-text {
+      margin-left: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.55);
+    }
+    .avatar-text strong { color: rgba(255,255,255,0.9); }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* WHAT'S INCLUDED                                               */
+    /* ═══════════════════════════════════════════════════════════════ */
+    #included {
+      padding: 96px 0;
+      background: var(--bg);
+    }
+
+    .section-header { margin-bottom: 56px; }
+    .section-header.centered { text-align: center; }
+    .section-header.centered .section-sub { margin: 14px auto 0; }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+
+    .feature-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--gold-dim);
+      border: 1px solid rgba(225,161,12,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .feature-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* SESSION TIMELINE                                               */
+    /* ═══════════════════════════════════════════════════════════════ */
+    #session {
+      padding: 96px 0;
+      background: var(--white);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+      margin-top: 56px;
+    }
+
+    /* connecting line */
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 30px;
+      left: calc(12.5% + 4px);
+      right: calc(12.5% + 4px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), rgba(225,161,12,0.2));
+      z-index: 0;
+    }
+
+    .timeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 0 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline-num {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--navy);
+      border: 3px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 20px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 0 0 5px rgba(225,161,12,0.1);
+    }
+
+    .timeline-time {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--gold-dim);
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-bottom: 10px;
+    }
+
+    .timeline-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+
+    .timeline-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* HOW TO GET STARTED                                            */
+    /* ═══════════════════════════════════════════════════════════════ */
+    #get-started {
+      padding: 96px 0;
+      background: var(--bg);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 56px;
+    }
+
+    .step-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 28px 32px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .step-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), rgba(225,161,12,0.3));
+    }
+
+    .step-number {
+      font-size: 56px;
+      font-weight: 800;
+      color: var(--gold-dim);
+      line-height: 1;
+      margin-bottom: 18px;
+      letter-spacing: -0.04em;
+      user-select: none;
+    }
+
+    .step-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .get-started-cta {
+      text-align: center;
+      margin-top: 52px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* CLOSING CTA                                                    */
+    /* ═══════════════════════════════════════════════════════════════ */
+    #cta {
+      padding: 100px 0;
+      background: var(--navy);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    #cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 60%, rgba(225,161,12,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 75% 30%, rgba(255,255,255,0.03) 0%, transparent 45%);
+      pointer-events: none;
+    }
+
+    .cta-inner { position: relative; z-index: 2; max-width: 640px; margin: 0 auto; }
+
+    .cta-headline {
+      font-size: clamp(28px, 4.5vw, 44px);
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+    .cta-headline .accent { color: var(--gold); }
+
+    .cta-sub {
+      font-size: 17px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .cta-fine {
+      margin-top: 20px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+    }
+    .cta-fine span { margin: 0 8px; opacity: 0.4; }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* FOOTER                                                         */
+    /* ═══════════════════════════════════════════════════════════════ */
+    footer {
+      background: var(--navy-deep);
+      padding: 52px 0 32px;
+      color: rgba(255,255,255,0.55);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 48px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 28px;
+    }
+
+    .footer-brand-name {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .footer-brand-name span { color: var(--gold); }
+
+    .footer-brand-desc {
+      font-size: 14px;
+      line-height: 1.65;
+      max-width: 280px;
+      margin-bottom: 18px;
+    }
+
+    .footer-col-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 14px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      transition: color 0.15s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .footer-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--gold-dim);
+      border: 1px solid rgba(225,161,12,0.25);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 100px;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════ */
+    /* RESPONSIVE                                                     */
+    /* ═══════════════════════════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+      .hero-visual { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .timeline {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .timeline::before { display: none; }
+      .timeline-step { flex-direction: row; text-align: left; gap: 20px; align-items: flex-start; }
+      .timeline-num { margin-bottom: 0; flex-shrink: 0; }
+      .timeline-content { flex: 1; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+      .footer-bottom { flex-direction: column; gap: 12px; text-align: center; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .nav-cta { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      #hero { padding: 72px 0 72px; }
+      #included, #session, #get-started { padding: 72px 0; }
+      #cta { padding: 72px 0; }
+      .hero-actions { flex-direction: column; align-items: flex-start; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+      .hero-trust { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .hero-trust-sep { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════ NAV ═════════════════════════════════════════ -->
+  <nav>
+    <div class="container">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">Fit<span>Ved</span></a>
+
+        <ul class="nav-links">
+          <li><a href="/#about">About</a></li>
+          <li><a href="/#services">Services</a></li>
+          <li><a href="#session">How It Works</a></li>
+          <li><a href="#cta">Contact</a></li>
+        </ul>
+
+        <a href="mailto:vish262025@gmail.com?subject=Book%20a%20Free%20Trial%20Session&body=Hi%20FitVed%2C%20I%27d%20like%20to%20book%20a%20free%20online%20trial%20session." class="btn btn-gold btn-sm nav-cta">
+          Book a Free Trial
+        </a>
+
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="/#about">About</a>
+      <a href="/#services">Services</a>
+      <a href="#session">How It Works</a>
+      <a href="#cta">Contact</a>
+      <a href="mailto:vish262025@gmail.com?subject=Book%20a%20Free%20Trial%20Session&body=Hi%20FitVed%2C%20I%27d%20like%20to%20book%20a%20free%20online%20trial%20session." class="btn btn-gold">Book a Free Trial</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════════ HERO ═════════════════════════════════════════ -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="container">
+      <div class="hero-inner" style="position:relative;z-index:2;">
+
+        <!-- Left: copy -->
+        <div>
+          <div class="hero-eyebrow fade-up">Online Training</div>
+
+          <h1 class="hero-headline fade-up delay-1">
+            Train Live.<br>
+            Train Smart.<br>
+            Train From <span class="accent">Anywhere.</span>
+          </h1>
+
+          <p class="hero-sub fade-up delay-2">
+            FitVed's online sessions bring the same personalised fusion fitness
+            — strength, yoga &amp; pilates — directly to your screen.
+            Live, coached, and built around your body.
+          </p>
+
+          <div class="hero-actions fade-up delay-3">
+            <a href="mailto:vish262025@gmail.com?subject=Book%20a%20Free%20Trial%20Session&body=Hi%20FitVed%2C%20I%27d%20like%20to%20book%20a%20free%20online%20trial%20session." class="btn btn-gold">
+              Book a Free Trial Session
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </a>
+            <a href="#session" class="btn btn-outline">See how it works</a>
+          </div>
+
+          <div class="hero-trust fade-up delay-4">
+            <div class="hero-trust-item">Live sessions</div>
+            <div class="hero-trust-sep"></div>
+            <div class="hero-trust-item">Zoom &amp; Meet</div>
+            <div class="hero-trust-sep"></div>
+            <div class="hero-trust-item">Cancel anytime</div>
+          </div>
+        </div>
+
+        <!-- Right: visual cards -->
+        <div class="hero-visual">
+
+          <div class="hero-card fade-up delay-1">
+            <div class="live-badge">Live now</div>
+            <div class="hero-card-title">Morning Strength + Yoga</div>
+            <div class="hero-card-sub">60 min · 1-on-1 with Coach Priya</div>
+            <div class="avatar-stack">
+              <div class="avatar avatar-a">P</div>
+              <div class="avatar avatar-b">S</div>
+              <div class="avatar avatar-c">R</div>
+              <div class="avatar avatar-d">M</div>
+              <div class="avatar-text"><strong>4 members</strong> in today's batch</div>
+            </div>
+          </div>
+
+          <div class="hero-card-row">
+            <div class="hero-card fade-up delay-2">
+              <div class="hero-card-label">Next session</div>
+              <div class="hero-card-title">7:00 AM</div>
+              <div class="hero-card-sub">Tomorrow · Core &amp; Pilates</div>
+            </div>
+            <div class="hero-card fade-up delay-3">
+              <div class="hero-card-label">Platform</div>
+              <div class="hero-card-title">Zoom / Meet</div>
+              <div class="hero-card-sub">Link sent 15 min before</div>
+            </div>
+          </div>
+
+          <div class="hero-card fade-up delay-4" style="border-color: rgba(225,161,12,0.3); background: rgba(225,161,12,0.07);">
+            <div class="hero-card-label" style="color: rgba(255,255,255,0.5);">Your trainer says</div>
+            <div class="hero-card-title">"Your form has improved a lot this week — let's push the next milestone today."</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ WHAT'S INCLUDED ═════════════════════════════ -->
+  <section id="included">
+    <div class="container">
+      <div class="section-header centered fade-up">
+        <div class="section-label">What's included</div>
+        <h2 class="section-title">What Every Online Session Includes</h2>
+        <p class="section-sub">
+          Not a pre-recorded video. Not a chatbot program.
+          A real trainer who knows your name and your goals.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card fade-up delay-1">
+          <div class="feature-icon">🎥</div>
+          <div class="feature-title">Live on Zoom / Google Meet</div>
+          <p class="feature-desc">
+            Real-time coaching, form correction, and motivation.
+            Not a recording. Your trainer is there with you, every single session.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-2">
+          <div class="feature-icon">📋</div>
+          <div class="feature-title">Program Built for Your Body</div>
+          <p class="feature-desc">
+            Sessions are designed around your fitness level, goals, and any injuries
+            or health conditions. No two programs are the same.
+          </p>
+        </div>
+
+        <div class="feature-card fade-up delay-3">
+          <div class="feature-icon">🔄</div>
+          <div class="feature-title">Flexible Scheduling</div>
+          <p class="feature-desc">
+            Choose your own time slots. Sessions carry forward if you need to
+            reschedule — your progress never gets wasted.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SESSION TIMELINE ════════════════════════════ -->
+  <section id="session">
+    <div class="container">
+      <div class="section-header centered fade-up">
+        <div class="section-label">Session structure</div>
+        <h2 class="section-title">A Typical 60-Minute Session</h2>
+        <p class="section-sub">
+          Every minute is intentional. Every session builds on the last.
+        </p>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-step fade-up delay-1">
+          <div class="timeline-num">01</div>
+          <div class="timeline-content">
+            <div class="timeline-time">0 – 10 min</div>
+            <div class="timeline-title">Warm-up &amp; Mobility</div>
+            <p class="timeline-desc">Joint prep, dynamic stretches, and breath awareness to wake the body up safely.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step fade-up delay-2">
+          <div class="timeline-num">02</div>
+          <div class="timeline-content">
+            <div class="timeline-time">10 – 35 min</div>
+            <div class="timeline-title">Strength or Yoga</div>
+            <p class="timeline-desc">Alternates by day — resistance training or a flowing yoga sequence, tailored to your level.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step fade-up delay-3">
+          <div class="timeline-num">03</div>
+          <div class="timeline-content">
+            <div class="timeline-time">35 – 50 min</div>
+            <div class="timeline-title">Core &amp; Pilates</div>
+            <p class="timeline-desc">Deep core activation, postural work, and mindful movement to build real stability.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step fade-up delay-4">
+          <div class="timeline-num">04</div>
+          <div class="timeline-content">
+            <div class="timeline-time">50 – 60 min</div>
+            <div class="timeline-title">Cool-down &amp; Breathwork</div>
+            <p class="timeline-desc">Static stretches, nervous system reset, and reflection on the session's progress.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW TO GET STARTED ══════════════════════════ -->
+  <section id="get-started">
+    <div class="container">
+      <div class="section-header centered fade-up">
+        <div class="section-label">Getting started</div>
+        <h2 class="section-title">Getting Started Takes 3 Minutes</h2>
+        <p class="section-sub">
+          No complicated onboarding. No waiting weeks for a slot. Just fill, match, and show up.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card fade-up delay-1">
+          <div class="step-number">01</div>
+          <div class="step-title">Fill out a short intake form</div>
+          <p class="step-desc">
+            Tell us your goals, fitness history, and any health conditions.
+            Takes about 3 minutes — and it's how we make sure the program actually fits you.
+          </p>
+        </div>
+
+        <div class="step-card fade-up delay-2">
+          <div class="step-number">02</div>
+          <div class="step-title">We design your program</div>
+          <p class="step-desc">
+            Your trainer reviews your profile and builds a personalised plan —
+            session structure, intensity, and focus areas chosen specifically for you.
+          </p>
+        </div>
+
+        <div class="step-card fade-up delay-3">
+          <div class="step-number">03</div>
+          <div class="step-title">Your first session is free</div>
+          <p class="step-desc">
+            Jump on a live call with your trainer. No commitment. No pressure.
+            Just show up, experience it, and decide if it's right for you.
+          </p>
+        </div>
+      </div>
+
+      <div class="get-started-cta fade-up">
+        <a href="mailto:vish262025@gmail.com?subject=Book%20a%20Free%20Trial%20Session&body=Hi%20FitVed%2C%20I%27d%20like%20to%20book%20a%20free%20online%20trial%20session." class="btn btn-gold">
+          Book Your Free Session
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CLOSING CTA ══════════════════════════════════ -->
+  <section id="cta">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="section-label fade-up">Start today</div>
+        <h2 class="cta-headline fade-up delay-1">
+          You be disciplined.<br>
+          We'll give you <span class="accent">better health.</span>
+        </h2>
+        <p class="cta-sub fade-up delay-2">
+          Your first session is free. Your trainer is live. Your results are real.
+        </p>
+        <div class="fade-up delay-3">
+          <a href="mailto:vish262025@gmail.com?subject=Book%20a%20Free%20Trial%20Session&body=Hi%20FitVed%2C%20I%27d%20like%20to%20book%20a%20free%20online%20trial%20session." class="btn btn-gold">
+            Book a Free Trial Session
+          </a>
+        </div>
+        <p class="cta-fine fade-up delay-4">
+          Live sessions via Zoom or Google Meet
+          <span>·</span>
+          Flexible timing
+          <span>·</span>
+          Cancel anytime
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ════════════════════════════════════════ -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand-name">Fit<span>Ved</span></div>
+          <p class="footer-brand-desc">
+            Society-based personal and group training in Bangalore —
+            strength, yoga &amp; pilates, delivered at your doorstep or screen.
+          </p>
+          <div class="footer-badge">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            First session free
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Quick links</div>
+          <ul class="footer-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/#services">Services</a></li>
+            <li><a href="/online-training.html">Online Training</a></li>
+            <li><a href="/corporate">For Business</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="mailto:vish262025@gmail.com">vish262025@gmail.com</a></li>
+            <li><a href="https://instagram.com/fitved.h" target="_blank" rel="noopener">@fitved.h</a></li>
+            <li><a href="https://wa.me/919890471383" target="_blank" rel="noopener">WhatsApp us</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2025 FitVed. All rights reserved.</span>
+        <span>Made with care in Bangalore 🇮🇳</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════ SCRIPTS ═══════════════════════════════════════ -->
+  <script>
+    // Hamburger toggle
+    const btn = document.getElementById('hamburgerBtn');
+    const menu = document.getElementById('mobileMenu');
+    btn.addEventListener('click', () => menu.classList.toggle('open'));
+
+    // Intersection Observer — fade-up
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
