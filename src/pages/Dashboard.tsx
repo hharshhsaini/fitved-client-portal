@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,9 @@ export default function Dashboard() {
   const { data: profile } = useProfile();
   const { activePause } = usePauseStore();
   const navigate = useNavigate();
+
+  // Trainers have their own dashboard
+  if (role === "trainer") return <Navigate to="/trainer" replace />;
 
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
   const hour = new Date().getHours();

@@ -21,6 +21,7 @@ import CustomerDetail from "./pages/admin/CustomerDetail";
 import Trainers from "./pages/admin/Trainers";
 import Societies from "./pages/admin/Societies";
 import Corporate from "./pages/Corporate";
+import TrainerDashboard from "./pages/TrainerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/trainer" element={<TrainerDashboard />} />
                 <Route path="/pause" element={<Pause />} />
                 <Route path="/plan" element={<Plan />} />
                 <Route path="/health" element={<Health />} />

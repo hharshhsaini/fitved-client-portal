@@ -110,14 +110,35 @@ export function ProfileTab({ userId }: { userId: string }) {
       if (add) {
         const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
         if (error) throw error;
+
+        // Auto-create trainer profile when granting trainer role
+        if (role === "trainer") {
+          const { data: existing } = await supabase
+            .from("trainers").select("id").eq("user_id", userId).maybeSingle();
+          if (!existing) {
+            const { error: tErr } = await supabase.from("trainers").insert({
+              user_id: userId,
+              name: profile?.name ?? name ?? "Unnamed Trainer",
+              contact: profile?.phone ?? phone ?? null,
+              active: true,
+            });
+            if (tErr) throw new Error(`Role granted but trainer profile failed: ${tErr.message}`);
+          }
+        }
       } else {
         const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      toast.success("Roles updated");
+    onSuccess: (_, { role, add }) => {
+      toast.success(
+        role === "trainer" && add
+          ? "Trainer role granted — trainer profile created automatically"
+          : "Roles updated"
+      );
       qc.invalidateQueries({ queryKey: ["customer-roles", userId] });
+      qc.invalidateQueries({ queryKey: ["trainers"] });
+      qc.invalidateQueries({ queryKey: ["trainers-active"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Role change failed"),
   });

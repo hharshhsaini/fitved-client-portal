@@ -23,20 +23,29 @@ const clientItems = [
   { title: "Profile", url: "/profile", icon: UserCircle2 },
 ];
 
+const trainerItems = [
+  { title: "Dashboard", url: "/trainer", icon: LayoutDashboard },
+  { title: "Profile", url: "/profile", icon: UserCircle2 },
+];
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { role } = useAuth();
 
-  const items = [...clientItems];
+  let items = role === "trainer" ? [...trainerItems] : [...clientItems];
   if (role === "admin") {
+    items = [...clientItems];
     items.push({ title: "Customers", url: "/admin/customers", icon: Users });
     items.push({ title: "Trainers", url: "/admin/trainers", icon: Dumbbell });
     items.push({ title: "Societies", url: "/admin/societies", icon: Building2 });
   }
 
-  const isActive = (path: string) => (path === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(path));
+  const isActive = (path: string) =>
+    (path === "/dashboard" || path === "/trainer")
+      ? pathname === path
+      : pathname.startsWith(path);
 
   return (
     <Sidebar collapsible="icon" className="border-r">

@@ -6,8 +6,9 @@ import {
   CalendarOff,
   UserCircle2,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
-const NAV_TABS = [
+const CLIENT_TABS = [
   { path: "/dashboard", Icon: LayoutDashboard, label: "Home" },
   { path: "/plan",      Icon: CreditCard,       label: "Plan" },
   { path: "/health",    Icon: FileHeart,         label: "Health" },
@@ -15,9 +16,17 @@ const NAV_TABS = [
   { path: "/profile",   Icon: UserCircle2,       label: "Profile" },
 ];
 
+const TRAINER_TABS = [
+  { path: "/trainer",  Icon: LayoutDashboard, label: "Home" },
+  { path: "/profile",  Icon: UserCircle2,     label: "Profile" },
+];
+
 export function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { role } = useAuth();
+
+  const NAV_TABS = role === "trainer" ? TRAINER_TABS : CLIENT_TABS;
 
   return (
     <nav
