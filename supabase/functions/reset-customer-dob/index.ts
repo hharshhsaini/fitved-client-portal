@@ -52,14 +52,22 @@ Deno.serve(async (req) => {
     }
 
     const password = dobToPassword(dob);
-    const { error: updErr } = await admin.auth.admin.updateUserById(user_id, { password });
+    const { error: updErr } = await admin.auth.admin.updateUserById(user_id, {
+      password,
+      user_metadata: { dob },
+    });
     if (updErr) {
       return new Response(JSON.stringify({ error: updErr.message }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    await admin.from("profiles").update({ dob }).eq("id", user_id);
+    const { error: profileErr } = await admin.from("profiles").update({ dob }).eq("id", user_id);
+    if (profileErr) {
+      return new Response(JSON.stringify({ error: `Profile update failed: ${profileErr.message}` }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ ok: true }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
