@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,7 +11,31 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { usePauseStore } from "@/stores/pauseStore";
 import { formatDate, daysBetween } from "@/lib/dates";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Count how many of the client's training days fall within [from, to] inclusive
+function countSessionsInRange(from: Date, to: Date, trainingDays: string[]): number {
+  const DAY_MAP: Record<string, number> = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+  };
+  const trainingNums = trainingDays
+    .map((d) => DAY_MAP[d.slice(0, 3)])
+    .filter((n) => n !== undefined);
+
+  let count = 0;
+  const cur = new Date(from);
+  cur.setHours(0, 0, 0, 0);
+  const end = new Date(to);
+  end.setHours(0, 0, 0, 0);
+
+  while (cur <= end) {
+    if (trainingNums.includes(cur.getDay())) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  return count;
+}
 
 const NAVY   = "#1E3A5F";
 const MUTED  = "#8a8f9e";
@@ -21,17 +46,41 @@ const RED    = "#ef4444";
 const RED_LIGHT  = "#fee2e2";
 
 export default function Pause() {
+  const { user } = useAuth();
   const { activePause, history, pause, resume } = usePauseStore();
   const [range, setRange] = useState<DateRange | undefined>();
 
   const days = range?.from && range?.to
     ? daysBetween(range.from.toISOString(), range.to.toISOString()) : 0;
 
+  // Fetch training days from the user's active plan
+  const { data: trainingDays = [] } = useQuery({
+    queryKey: ["pause-plan-training-days", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plans").select("training_days").eq("user_id", user!.id)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      return (data?.training_days ?? []) as string[];
+    },
+  });
+
+  // Sessions that actually fall in the selected range
+  const sessionCount = range?.from && range?.to
+    ? countSessionsInRange(range.from, range.to, trainingDays)
+    : 0;
+
+  const tooFewSessions = range?.from && range?.to && sessionCount < 2;
+
   const handlePause = async () => {
     if (!range?.from || !range?.to) { toast.error("Please select a start and end date"); return; }
+    if (sessionCount < 2) {
+      toast.error("Class pauses apply only when you'll miss 2 or more sessions.");
+      return;
+    }
     try {
       await pause(range.from.toISOString(), range.to.toISOString());
-      toast.success(`Classes paused for ${days} day${days === 1 ? "" : "s"}`);
+      toast.success(`Classes paused for ${days} days (${sessionCount} sessions)`);
       setRange(undefined);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Could not pause");
@@ -62,7 +111,65 @@ export default function Pause() {
           </h2>
         </div>
 
-        {/* Status card */}
+        {/* Schedule a pause — shown first when not paused */}
+        {!isPaused && (
+          <div className="mx-4 mb-4 rounded-[20px] p-4"
+            style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+            <p className="font-bold mb-1" style={{ fontSize: 14, color: NAVY }}>Schedule a pause</p>
+            <p style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>Pick the start and end date for your break.</p>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn("w-full justify-start text-left font-normal h-11")}
+                  style={{
+                    border: `2px solid ${range?.from ? NAVY : "#c8d4e3"}`,
+                    color: range?.from ? NAVY : MUTED,
+                    background: "#f8fafd",
+                    fontWeight: range?.from ? 600 : 400,
+                  }}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" style={{ color: NAVY, opacity: 0.7 }} />
+                  {range?.from ? (
+                    range.to ? <>{format(range.from, "PP")} — {format(range.to, "PP")}</> : format(range.from, "PP")
+                  ) : (
+                    <span>Pick a date range</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range" selected={range} onSelect={setRange} numberOfMonths={1}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+
+            {tooFewSessions && (
+              <p className="text-sm mt-2" style={{ color: RED }}>
+                Class pauses apply only when you'll miss 2 or more sessions.
+              </p>
+            )}
+            {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                Pausing <span className="font-medium text-foreground">{sessionCount} sessions</span> ({days} days).
+              </p>
+            )}
+
+            <button
+              onClick={handlePause}
+              disabled={!range?.from || !range?.to || !!tooFewSessions}
+              className="mt-3 w-full rounded-2xl border-none cursor-pointer disabled:opacity-50"
+              style={{ background: RED, padding: "13px", fontSize: 14, fontWeight: 700, color: "#fff" }}
+            >
+              Pause My Classes
+            </button>
+          </div>
+        )}
+
+        {/* Status card — below schedule section */}
         <div className="mx-4 mb-4 rounded-3xl text-center"
           style={{
             background: "#fff", padding: "30px 24px",
@@ -92,53 +199,6 @@ export default function Pause() {
             </button>
           ) : null}
         </div>
-
-        {/* Schedule a pause */}
-        {!isPaused && (
-          <div className="mx-4 mb-4 rounded-[20px] p-4"
-            style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
-            <p className="font-bold mb-1" style={{ fontSize: 14, color: NAVY }}>Schedule a pause</p>
-            <p style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>Pick the start and end date for your break.</p>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn("w-full justify-start text-left font-normal h-11", !range?.from && "text-muted-foreground")}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {range?.from ? (
-                    range.to ? <>{format(range.from, "PP")} — {format(range.to, "PP")}</> : format(range.from, "PP")
-                  ) : (
-                    <span>Pick a date range</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="range" selected={range} onSelect={setRange} numberOfMonths={1}
-                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
-                  initialFocus className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-
-            {days > 0 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Pausing for <span className="font-medium text-foreground">{days} day{days === 1 ? "" : "s"}</span>.
-              </p>
-            )}
-
-            <button
-              onClick={handlePause}
-              disabled={!range?.from || !range?.to}
-              className="mt-3 w-full rounded-2xl border-none cursor-pointer disabled:opacity-50"
-              style={{ background: RED, padding: "13px", fontSize: 14, fontWeight: 700, color: "#fff" }}
-            >
-              Pause My Classes
-            </button>
-          </div>
-        )}
 
         {/* Past pauses */}
         {history.length > 0 && (
@@ -233,13 +293,18 @@ export default function Pause() {
               </Popover>
             </div>
             <div className="flex-1">
-              {days > 0 && (
+              {tooFewSessions && (
+                <p className="text-sm text-destructive">
+                  Class pauses apply only when you'll miss 2 or more sessions.
+                </p>
+              )}
+              {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  You're pausing <span className="font-medium text-foreground">{days} day{days === 1 ? "" : "s"}</span>.
+                  Pausing <span className="font-medium text-foreground">{sessionCount} sessions</span> ({days} days).
                 </p>
               )}
             </div>
-            <Button onClick={handlePause} disabled={!range?.from || !range?.to || !!activePause} className="h-11">
+            <Button onClick={handlePause} disabled={!range?.from || !range?.to || !!tooFewSessions || !!activePause} className="h-11">
               <PauseCircle className="mr-2 h-4 w-4" /> Pause my classes
             </Button>
           </div>

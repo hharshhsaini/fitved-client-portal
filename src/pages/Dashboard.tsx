@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Bell, ChevronRight, Check,
+  ChevronRight, Check,
   FileHeart, CalendarOff, UserCircle2,
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
@@ -44,7 +44,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
-  const initials  = firstName.slice(0, 2).toUpperCase();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning ✨" : hour < 17 ? "Good afternoon ✨" : "Good evening ✨";
 
@@ -122,28 +121,11 @@ export default function Dashboard() {
           style={{ bottom: -20, right: 60, width: 80, height: 80, background: "rgba(255,255,255,0.05)" }} />
 
         {/* Greeting row */}
-        <div className="flex items-start justify-between mb-5 relative">
-          <div>
-            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>{greeting}</p>
-            <h1 className="font-display text-white mt-0.5" style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em" }}>
-              {firstName}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <button
-              className="relative flex items-center justify-center rounded-full border-none"
-              style={{ width: 36, height: 36, background: "rgba(255,255,255,0.12)" }}
-            >
-              <Bell size={16} color="rgba(255,255,255,0.8)" />
-              <span className="absolute rounded-full" style={{ top: 7, right: 8, width: 6, height: 6, background: GOLD }} />
-            </button>
-            <div
-              className="flex items-center justify-center rounded-full font-display font-bold"
-              style={{ width: 36, height: 36, background: `${GOLD}33`, border: `2px solid ${GOLD}`, fontSize: 13, color: GOLD }}
-            >
-              {initials}
-            </div>
-          </div>
+        <div className="mb-5 relative">
+          <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13 }}>{greeting}</p>
+          <h1 className="font-display text-white mt-0.5" style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.02em" }}>
+            {firstName}
+          </h1>
         </div>
 
         {/* Sessions + progress ring */}
@@ -158,7 +140,6 @@ export default function Dashboard() {
                 style={{ fontSize: 12, color: GOLD, background: "rgba(240,167,32,0.2)", padding: "3px 10px" }}>
                 {daysLeft} days left
               </span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{progress}% done</span>
             </div>
           </div>
           <ProgressRing progress={progress} size={110} strokeWidth={9} color={GOLD} trackColor="rgba(255,255,255,0.12)">

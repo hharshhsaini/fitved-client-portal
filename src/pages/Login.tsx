@@ -25,6 +25,7 @@ export default function Login() {
   const [custName, setCustName] = useState("");
   const [custPhone, setCustPhone] = useState("");
   const [custDob, setCustDob] = useState<Date | undefined>(undefined);
+  const [dobOpen, setDobOpen] = useState(false);
 
   // Staff state
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -171,7 +172,7 @@ export default function Login() {
                 </div>
                 <div className="space-y-2">
                   <Label>Date of birth</Label>
-                  <Popover>
+                  <Popover open={dobOpen} onOpenChange={setDobOpen}>
                     <PopoverTrigger asChild>
                       <Button
                         type="button"
@@ -186,11 +187,11 @@ export default function Login() {
                       <Calendar
                         mode="single"
                         selected={custDob}
-                        onSelect={setCustDob}
-                        captionLayout="dropdown-buttons"
+                        onSelect={(d) => { setCustDob(d); setDobOpen(false); }}
+                        captionLayout="dropdown"
                         fromYear={1925}
                         toYear={new Date().getFullYear()}
-                        defaultMonth={custDob ?? new Date(1980, 0, 1)}
+                        defaultMonth={custDob ?? new Date(1990, 0, 1)}
                         disabled={(d) => d > new Date() || d < new Date("1925-01-01")}
                         initialFocus
                         className={cn("p-3 pointer-events-auto")}
