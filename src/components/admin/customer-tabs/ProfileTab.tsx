@@ -70,7 +70,7 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const resetDob = useMutation({
     mutationFn: async (date: Date) => {
-      const iso = date.toISOString().slice(0, 10);
+      const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
       const { data, error } = await supabase.functions.invoke("reset-customer-dob", {
         body: { user_id: userId, dob: iso },
       });
@@ -220,7 +220,7 @@ export function ProfileTab({ userId }: { userId: string }) {
                 mode="single"
                 selected={newDob}
                 onSelect={setNewDob}
-                captionLayout="dropdown-buttons"
+                captionLayout="dropdown"
                 fromYear={1925}
                 toYear={new Date().getFullYear()}
                 defaultMonth={newDob ?? (profile?.dob ? new Date(profile.dob) : new Date(1980, 0, 1))}
