@@ -58,7 +58,7 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
         body: {
           name,
           phone: normalizePhone(phone),
-          dob: dob!.toISOString().slice(0, 10),
+          dob: `${dob!.getFullYear()}-${String(dob!.getMonth() + 1).padStart(2, "0")}-${String(dob!.getDate()).padStart(2, "0")}`,
           society_id: societyId || null,
           trainer_id: trainerId || null,
           time_slot: timeSlot || null,
@@ -122,7 +122,7 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
                   mode="single"
                   selected={dob}
                   onSelect={setDob}
-                  captionLayout="dropdown-buttons"
+                  captionLayout="dropdown"
                   fromYear={1925}
                   toYear={new Date().getFullYear()}
                   defaultMonth={dob ?? new Date(1980, 0, 1)}

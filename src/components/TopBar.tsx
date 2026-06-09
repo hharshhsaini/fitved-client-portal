@@ -1,4 +1,4 @@
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,10 +40,6 @@ export function TopBar() {
       {role === "admin" && (
         <Badge variant="secondary" className="hidden sm:inline-flex">Admin</Badge>
       )}
-      <Button variant="ghost" size="icon" aria-label="Notifications" className="relative">
-        <Bell className="h-5 w-5" />
-        <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-      </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-10 gap-2 px-2">

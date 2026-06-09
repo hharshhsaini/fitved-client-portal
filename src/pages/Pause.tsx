@@ -45,10 +45,26 @@ const GREEN_LIGHT = "#e6f7ed";
 const RED    = "#ef4444";
 const RED_LIGHT  = "#fee2e2";
 
+// Format a Date as a local YYYY-MM-DD string (avoids UTC shift from toISOString)
+function toLocalISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export default function Pause() {
   const { user } = useAuth();
   const { activePause, history, pause, resume } = usePauseStore();
   const [range, setRange] = useState<DateRange | undefined>();
+  const [calOpen, setCalOpen] = useState(false);
+  const [calOpenDesktop, setCalOpenDesktop] = useState(false);
+
+  // Update the range and auto-close the picker once a full range is chosen
+  const handleRangeSelect = (r: DateRange | undefined) => {
+    setRange(r);
+    if (r?.from && r?.to) {
+      setCalOpen(false);
+      setCalOpenDesktop(false);
+    }
+  };
 
   const days = range?.from && range?.to
     ? daysBetween(range.from.toISOString(), range.to.toISOString()) : 0;
@@ -79,7 +95,7 @@ export default function Pause() {
       return;
     }
     try {
-      await pause(range.from.toISOString(), range.to.toISOString());
+      await pause(toLocalISODate(range.from), toLocalISODate(range.to));
       toast.success(`Classes paused for ${days} days (${sessionCount} sessions)`);
       setRange(undefined);
     } catch (e: unknown) {
@@ -118,7 +134,7 @@ export default function Pause() {
             <p className="font-bold mb-1" style={{ fontSize: 14, color: NAVY }}>Schedule a pause</p>
             <p style={{ fontSize: 12, color: MUTED, marginBottom: 14 }}>Pick the start and end date for your break.</p>
 
-            <Popover>
+            <Popover open={calOpen} onOpenChange={setCalOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -140,7 +156,7 @@ export default function Pause() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
-                  mode="range" selected={range} onSelect={setRange} numberOfMonths={1}
+                  mode="range" selected={range} onSelect={handleRangeSelect} numberOfMonths={1}
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   initialFocus className={cn("p-3 pointer-events-auto")}
                 />
@@ -269,7 +285,7 @@ export default function Pause() {
           <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end">
             <div className="space-y-2">
               <p className="text-sm font-medium">Date range</p>
-              <Popover>
+              <Popover open={calOpenDesktop} onOpenChange={setCalOpenDesktop}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -285,7 +301,7 @@ export default function Pause() {
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
-                    mode="range" selected={range} onSelect={setRange} numberOfMonths={2}
+                    mode="range" selected={range} onSelect={handleRangeSelect} numberOfMonths={2}
                     disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                     initialFocus className={cn("p-3 pointer-events-auto")}
                   />

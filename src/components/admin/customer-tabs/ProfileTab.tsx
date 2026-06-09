@@ -51,7 +51,6 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [society, setSociety] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
   const [trainerId, setTrainerId] = useState<string>("");
   const [societyId, setSocietyId] = useState<string>("");
@@ -61,7 +60,6 @@ export function ProfileTab({ userId }: { userId: string }) {
     if (profile) {
       setName(profile.name ?? "");
       setPhone(profile.phone ?? "");
-      setSociety(profile.society ?? "");
       setTimeSlot(profile.time_slot ?? "");
       setTrainerId(profile.trainer_id ?? "");
       setSocietyId(profile.society_id ?? "");
@@ -87,10 +85,14 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const save = useMutation({
     mutationFn: async () => {
+      // Keep the legacy society text column in sync with the selected society
+      const societyName = societyId
+        ? (societies.find((s) => s.id === societyId)?.name ?? null)
+        : null;
       const { error } = await supabase.from("profiles").update({
         name: name || null,
         phone: phone || null,
-        society: society || null,
+        society: societyName,
         time_slot: timeSlot || null,
         trainer_id: trainerId || null,
         society_id: societyId || null,
@@ -153,10 +155,6 @@ export function ProfileTab({ userId }: { userId: string }) {
         <div className="space-y-1.5">
           <Label>Phone</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Society</Label>
-          <Input value={society} onChange={(e) => setSociety(e.target.value)} />
         </div>
         <div className="space-y-1.5">
           <Label>Time slot</Label>
