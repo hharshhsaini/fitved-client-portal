@@ -1,11 +1,20 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { homeForRole, type AppRole } from "@/lib/routes";
 
-export function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) {
-  const { user, role, loading } = useAuth();
+interface Props {
+  children: React.ReactNode;
+  /** Roles allowed to view this route. Omit to allow any signed-in user. */
+  allow?: AppRole[];
+}
+
+export function ProtectedRoute({ children, allow }: Props) {
+  const { user, role, loading, roleLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Wait for BOTH session and role before rendering anything —
+  // prevents the flash of the wrong dashboard while the role loads.
+  if (loading || (user && roleLoading)) {
     return (
       <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">
         Loading…
@@ -14,6 +23,10 @@ export function ProtectedRoute({ children, requireAdmin = false }: { children: R
   }
 
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
-  if (requireAdmin && role !== "admin") return <Navigate to="/dashboard" replace />;
+
+  if (allow && role && !allow.includes(role)) {
+    return <Navigate to={homeForRole(role)} replace />;
+  }
+
   return <>{children}</>;
 }

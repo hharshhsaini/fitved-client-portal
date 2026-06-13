@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 interface Trainer {
@@ -23,6 +25,7 @@ interface Trainer {
 
 export default function Trainers() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Trainer | null>(null);
   const [name, setName] = useState("");
@@ -40,6 +43,26 @@ export default function Trainers() {
       const { data, error } = await supabase.from("trainers").select("*").order("name");
       if (error) throw error;
       return data as Trainer[];
+    },
+  });
+
+  // Upcoming trainer off-times — the admin's heads-up for coverage planning
+  const todayISO = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+  const { data: offTimes = [] } = useQuery({
+    queryKey: ["admin-trainer-off-times"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("trainer_off_times")
+        .select("id, trainer_id, from_date, to_date, time_slot, reason")
+        .gte("to_date", todayISO)
+        .order("from_date");
+      return (data ?? []) as {
+        id: string; trainer_id: string; from_date: string; to_date: string;
+        time_slot: string | null; reason: string | null;
+      }[];
     },
   });
 
@@ -186,6 +209,10 @@ export default function Trainers() {
                   <TableCell><Badge variant="secondary">{count}</Badge></TableCell>
                   <TableCell><Badge variant={t.active ? "secondary" : "outline"}>{t.active ? "active" : "inactive"}</Badge></TableCell>
                   <TableCell className="text-right">
+                    <Button size="sm" variant="ghost" title="View as this trainer"
+                      onClick={() => navigate(`/trainer?as=${t.id}`)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => startEdit(t)}><Pencil className="h-4 w-4" /></Button>
                     <Button size="sm" variant="ghost" onClick={() => {
                       if (confirm(`Delete ${t.name}?`)) remove.mutate(t.id);
@@ -197,6 +224,51 @@ export default function Trainers() {
           </TableBody>
         </Table>
       </Card>
+
+      {/* Upcoming trainer off-times — coverage heads-up */}
+      {offTimes.length > 0 && (
+        <Card className="rounded-2xl shadow-card p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-warning/15 text-warning-foreground">
+              <CalendarOff className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-display text-lg">Upcoming trainer off-times</p>
+              <p className="text-sm text-muted-foreground">
+                {offTimes.length} scheduled — check batch coverage for these days
+              </p>
+            </div>
+          </div>
+          <ul className="divide-y divide-border">
+            {offTimes.map((o) => {
+              const t = trainers.find((tr) => tr.id === o.trainer_id);
+              const sameDay = o.from_date === o.to_date;
+              const isNow = o.from_date <= todayISO;
+              return (
+                <li key={o.id} className="flex items-start justify-between py-3 gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm">{t?.name ?? "Unknown trainer"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {sameDay
+                        ? format(new Date(o.from_date + "T12:00:00"), "PPP")
+                        : `${format(new Date(o.from_date + "T12:00:00"), "PP")} → ${format(new Date(o.to_date + "T12:00:00"), "PP")}`}
+                    </p>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                      {o.time_slot
+                        ? <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {o.time_slot}</span>
+                        : <span>All slots</span>}
+                      {o.reason && <span className="truncate">· {o.reason}</span>}
+                    </div>
+                  </div>
+                  <Badge variant={isNow ? "default" : "secondary"} className="shrink-0">
+                    {isNow ? "Off now" : "Upcoming"}
+                  </Badge>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">

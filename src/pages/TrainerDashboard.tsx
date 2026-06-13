@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
   Building2, Users, Clock, ChevronRight, ArrowLeft,
   CalendarOff, Plus, Trash2, UserCircle2, MapPin, X,
+  Phone as PhoneIcon, Eye, ShieldAlert, LogOut,
 } from "lucide-react";
+import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -29,10 +32,17 @@ const RED_LIGHT   = "#fee2e2";
 const BG          = "#f4f2ee";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface TrainerRow { id: string; name: string; specialization: string | null; }
+interface TrainerRow { id: string; name: string; specialization: string | null; active: boolean; }
 interface SocietyRow { id: string; name: string; address: string | null; }
 interface BatchRow   { time_slot: string | null; client_count: number; }
-interface ClientRow  { id: string; name: string | null; phone: string | null; time_slot: string | null; }
+interface ClientRow  { id: string; name: string | null; phone: string | null; society_id: string | null; time_slot: string | null; }
+
+/** Build tel: / wa.me links from a stored phone number */
+function phoneLinks(phone: string) {
+  const digits = phone.replace(/\D/g, "");
+  const intl = digits.length === 10 ? `91${digits}` : digits;
+  return { tel: `tel:+${intl}`, wa: `https://wa.me/${intl}` };
+}
 interface OffTimeRow {
   id: string; from_date: string; to_date: string;
   time_slot: string | null; reason: string | null;
@@ -42,8 +52,13 @@ type MobileTab = "societies" | "offtime";
 type OffMode   = "days" | "slot";
 
 export default function TrainerDashboard() {
-  const { user } = useAuth();
+  const { user, role, signOut } = useAuth();
   const qc = useQueryClient();
+  const [searchParams] = useSearchParams();
+
+  // Admin "view as trainer": /trainer?as=<trainer_id>. Read-only.
+  const viewAsId = role === "admin" ? searchParams.get("as") : null;
+  const isViewAs = !!viewAsId;
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [tab, setTab]                         = useState<MobileTab>("societies");
@@ -57,14 +72,15 @@ export default function TrainerDashboard() {
   const [singleCalOpen, setSingleCalOpen]     = useState(false);
 
   // ── Queries ───────────────────────────────────────────────────────────────
-  const { data: trainer } = useQuery<TrainerRow | null>({
-    queryKey: ["my-trainer", user?.id],
+  const { data: trainer, isLoading: trainerLoading } = useQuery<TrainerRow | null>({
+    queryKey: ["my-trainer", user?.id, viewAsId],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("trainers").select("id, name, specialization")
-        .eq("user_id", user!.id).maybeSingle();
-      return data ?? null;
+      const q = supabase.from("trainers").select("id, name, specialization, active");
+      const { data } = viewAsId
+        ? await q.eq("id", viewAsId).maybeSingle()
+        : await q.eq("user_id", user!.id).maybeSingle();
+      return (data as TrainerRow | null) ?? null;
     },
   });
 
@@ -80,43 +96,45 @@ export default function TrainerDashboard() {
     },
   });
 
-  const { data: batchMap = {} } = useQuery<Record<string, BatchRow[]>>({
-    queryKey: ["trainer-batches", trainer?.id],
+  // Roster via column-safe RPC — trainers can never read client DOB or plan data.
+  const { data: allClients = [], isLoading: clientsLoading } = useQuery<ClientRow[]>({
+    queryKey: ["trainer-clients", trainer?.id],
     enabled: !!trainer,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("society_id, time_slot")
-        .eq("trainer_id", trainer!.id)
-        .not("society_id", "is", null);
-      const map: Record<string, Record<string, number>> = {};
-      for (const row of (data ?? [])) {
-        const sid = row.society_id!;
-        const slot = row.time_slot ?? "Unassigned";
-        if (!map[sid]) map[sid] = {};
-        map[sid][slot] = (map[sid][slot] ?? 0) + 1;
-      }
-      const result: Record<string, BatchRow[]> = {};
-      for (const [sid, slots] of Object.entries(map)) {
-        result[sid] = Object.entries(slots).map(([time_slot, client_count]) => ({ time_slot, client_count }));
-      }
-      return result;
-    },
-  });
-
-  const { data: clients = [], isLoading: clientsLoading } = useQuery<ClientRow[]>({
-    queryKey: ["trainer-society-clients", trainer?.id, selectedSociety?.id],
-    enabled: !!trainer && !!selectedSociety,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("id, name, phone, time_slot")
-        .eq("trainer_id", trainer!.id)
-        .eq("society_id", selectedSociety!.id)
-        .order("time_slot").order("name");
+      const { data, error } = await (supabase as any).rpc(
+        "get_trainer_clients",
+        viewAsId ? { _trainer_id: viewAsId } : {}
+      );
+      if (error) throw error;
       return (data ?? []) as ClientRow[];
     },
   });
+
+  // Batches per society, derived client-side from the roster
+  const batchMap = useMemo<Record<string, BatchRow[]>>(() => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const c of allClients) {
+      if (!c.society_id) continue;
+      const slot = c.time_slot ?? "Unassigned";
+      if (!map[c.society_id]) map[c.society_id] = {};
+      map[c.society_id][slot] = (map[c.society_id][slot] ?? 0) + 1;
+    }
+    const result: Record<string, BatchRow[]> = {};
+    for (const [sid, slots] of Object.entries(map)) {
+      result[sid] = Object.entries(slots).map(([time_slot, client_count]) => ({ time_slot, client_count }));
+    }
+    return result;
+  }, [allClients]);
+
+  const clients = useMemo(
+    () =>
+      selectedSociety
+        ? allClients
+            .filter((c) => c.society_id === selectedSociety.id)
+            .sort((a, b) => (a.time_slot ?? "").localeCompare(b.time_slot ?? "") || (a.name ?? "").localeCompare(b.name ?? ""))
+        : [],
+    [allClients, selectedSociety]
+  );
 
   const today = new Date().toISOString().slice(0, 10);
   const { data: offTimes = [] } = useQuery<OffTimeRow[]>({
@@ -183,6 +201,65 @@ export default function TrainerDashboard() {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to remove"),
   });
+
+  // ── Account states (orphan role / deactivated) ───────────────────────────
+  if (trainerLoading) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-sm text-muted-foreground">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!trainer) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center px-6">
+        <div className="max-w-sm w-full rounded-3xl bg-white p-8 text-center"
+          style={{ border: `1px solid ${BORDER}`, boxShadow: "0 4px 16px rgba(30,58,95,0.07)" }}>
+          <div className="mx-auto mb-4 grid place-items-center rounded-full"
+            style={{ width: 64, height: 64, background: "rgba(240,167,32,0.15)" }}>
+            <ShieldAlert size={28} color={GOLD} />
+          </div>
+          <p className="font-display" style={{ fontSize: 20, fontWeight: 600, color: NAVY }}>
+            {isViewAs ? "Trainer not found" : role === "admin" ? "Pick a trainer to view" : "Account setup pending"}
+          </p>
+          <p style={{ fontSize: 13, color: MUTED, marginTop: 8, lineHeight: 1.6 }}>
+            {isViewAs
+              ? "No trainer profile exists for this ID."
+              : role === "admin"
+              ? "Use the eye icon in Admin → Trainers to view the app as a specific trainer."
+              : "Your trainer profile hasn't been set up yet. Please contact your admin to complete the setup."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!trainer.active && !isViewAs) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center px-6">
+        <div className="max-w-sm w-full rounded-3xl bg-white p-8 text-center"
+          style={{ border: `1px solid ${BORDER}`, boxShadow: "0 4px 16px rgba(30,58,95,0.07)" }}>
+          <div className="mx-auto mb-4 grid place-items-center rounded-full"
+            style={{ width: 64, height: 64, background: RED_LIGHT }}>
+            <ShieldAlert size={28} color={RED} />
+          </div>
+          <p className="font-display" style={{ fontSize: 20, fontWeight: 600, color: NAVY }}>
+            Account inactive
+          </p>
+          <p style={{ fontSize: 13, color: MUTED, marginTop: 8, lineHeight: 1.6 }}>
+            Your trainer account has been deactivated. If you believe this is a mistake, please contact your admin.
+          </p>
+          <button
+            onClick={() => signOut()}
+            className="mt-6 w-full rounded-2xl border-none cursor-pointer inline-flex items-center justify-center gap-2"
+            style={{ background: NAVY, padding: "12px", fontSize: 14, fontWeight: 700, color: "#fff" }}>
+            <LogOut size={15} /> Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const hour      = new Date().getHours();
@@ -321,6 +398,22 @@ export default function TrainerDashboard() {
                       <p style={{ fontSize: 12, color: MUTED }}>{c.phone}</p>
                     )}
                   </div>
+                  {c.phone && (
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a href={phoneLinks(c.phone).tel}
+                        className="grid place-items-center rounded-full"
+                        style={{ width: 32, height: 32, background: "rgba(30,58,95,0.07)" }}>
+                        <PhoneIcon size={14} color={NAVY} />
+                      </a>
+                      <a href={phoneLinks(c.phone).wa} target="_blank" rel="noopener noreferrer"
+                        className="grid place-items-center rounded-full"
+                        style={{ width: 32, height: 32, background: GREEN_LIGHT }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill={GREEN}>
+                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                        </svg>
+                      </a>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -440,10 +533,10 @@ export default function TrainerDashboard() {
 
         <button
           onClick={() => addOff.mutate()}
-          disabled={addOff.isPending}
+          disabled={addOff.isPending || isViewAs}
           className="mt-3 w-full rounded-2xl border-none cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
           style={{ background: NAVY, padding: "13px", fontSize: 14, fontWeight: 700, color: "#fff" }}>
-          <Plus size={16} /> {addOff.isPending ? "Saving…" : "Save off time"}
+          <Plus size={16} /> {addOff.isPending ? "Saving…" : isViewAs ? "Read only" : "Save off time"}
         </button>
       </div>
 
@@ -480,13 +573,15 @@ export default function TrainerDashboard() {
                       )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => removeOff.mutate(o.id)}
-                    className="ml-2 flex-shrink-0 border-none bg-transparent cursor-pointer p-1 rounded-lg"
-                    style={{ color: RED }}
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  {!isViewAs && (
+                    <button
+                      onClick={() => removeOff.mutate(o.id)}
+                      className="ml-2 flex-shrink-0 border-none bg-transparent cursor-pointer p-1 rounded-lg"
+                      style={{ color: RED }}
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -501,6 +596,17 @@ export default function TrainerDashboard() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
+      {/* Admin view-as banner */}
+      {isViewAs && (
+        <div className="flex items-center gap-2 px-4 py-2.5"
+          style={{ background: "rgba(240,167,32,0.15)", borderBottom: "1px solid rgba(240,167,32,0.3)" }}>
+          <Eye size={15} color="#a07010" />
+          <p style={{ fontSize: 13, color: "#a07010", fontWeight: 600 }}>
+            Viewing as {trainer.name} — read only
+          </p>
+        </div>
+      )}
+
       {/* ── Mobile Layout ──────────────────────────────────────────── */}
       <div className="md:hidden" style={{ background: BG, minHeight: "100%" }}>
 
@@ -564,7 +670,16 @@ export default function TrainerDashboard() {
         {tab === "societies" && (
           selectedSociety
             ? <ClientList society={selectedSociety} />
-            : <SocietiesList />
+            : (
+              <>
+                <SocietiesList />
+                {!isViewAs && (
+                  <div className="mx-4 mt-4">
+                    <TrainerPauses />
+                  </div>
+                )}
+              </>
+            )
         )}
         {tab === "offtime" && <OffTimeForm />}
 
@@ -686,6 +801,22 @@ export default function TrainerDashboard() {
                             <p className="font-medium text-sm truncate">{c.name ?? "Unnamed"}</p>
                             {c.phone && <p className="text-xs text-muted-foreground">{c.phone}</p>}
                           </div>
+                          {c.phone && (
+                            <div className="flex items-center gap-1.5">
+                              <a href={phoneLinks(c.phone).tel} title="Call"
+                                className="grid place-items-center rounded-full hover:opacity-80"
+                                style={{ width: 28, height: 28, background: "rgba(30,58,95,0.07)" }}>
+                                <PhoneIcon size={13} color={NAVY} />
+                              </a>
+                              <a href={phoneLinks(c.phone).wa} target="_blank" rel="noopener noreferrer" title="WhatsApp"
+                                className="grid place-items-center rounded-full hover:opacity-80"
+                                style={{ width: 28, height: 28, background: GREEN_LIGHT }}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill={GREEN}>
+                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                                </svg>
+                              </a>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -766,9 +897,9 @@ export default function TrainerDashboard() {
                 placeholder="Reason (optional)"
                 className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary mt-3" />
 
-              <Button onClick={() => addOff.mutate()} disabled={addOff.isPending} className="w-full mt-4">
+              <Button onClick={() => addOff.mutate()} disabled={addOff.isPending || isViewAs} className="w-full mt-4">
                 <Plus className="mr-2 h-4 w-4" />
-                {addOff.isPending ? "Saving…" : "Save off time"}
+                {addOff.isPending ? "Saving…" : isViewAs ? "Read only" : "Save off time"}
               </Button>
             </div>
 
@@ -801,11 +932,13 @@ export default function TrainerDashboard() {
                             {o.reason && <span className="text-xs text-muted-foreground">· {o.reason}</span>}
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm"
-                          onClick={() => removeOff.mutate(o.id)}
-                          className="text-destructive hover:text-destructive h-8 w-8 p-0">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {!isViewAs && (
+                          <Button variant="ghost" size="sm"
+                            onClick={() => removeOff.mutate(o.id)}
+                            className="text-destructive hover:text-destructive h-8 w-8 p-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </li>
                     );
                   })}
@@ -814,6 +947,9 @@ export default function TrainerDashboard() {
             )}
           </div>
         </div>
+
+        {/* Client pauses */}
+        {!isViewAs && <TrainerPauses />}
       </div>
     </>
   );

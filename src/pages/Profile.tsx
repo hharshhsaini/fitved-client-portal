@@ -14,6 +14,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import TrainerProfile from "./TrainerProfile";
 
 const GOLD       = "#f0a720";
 const GOLD_LIGHT = "#fef3d0";
@@ -22,7 +23,7 @@ const MUTED      = "#8a8f9e";
 const BORDER     = "rgba(30,58,95,0.08)";
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: profile, isLoading } = useProfile();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -39,6 +40,9 @@ export default function Profile() {
       return data;
     },
   });
+
+  // Trainers get their own profile view (no society/plan/trainer fields)
+  if (role === "trainer") return <TrainerProfile />;
 
   const openDialog = () => {
     setName(profile?.name ?? "");

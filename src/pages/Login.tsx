@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { homeForRole } from "@/lib/routes";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,12 @@ import { isValidPhone, isValidDob, normalizePhone } from "@/lib/phoneAuth";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn, signUp, signInWithPhone, signUpWithPhone } = useAuth();
+  const { user, role, loading, roleLoading, signIn, signUp, signInWithPhone, signUpWithPhone } = useAuth();
+
+  // Already signed in? Send them to their home instead of showing a dead-end login form.
+  if (!loading && !roleLoading && user) {
+    return <Navigate to={homeForRole(role)} replace />;
+  }
 
   // Customer state
   const [custMode, setCustMode] = useState<"signin" | "signup">("signin");

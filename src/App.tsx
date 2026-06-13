@@ -39,52 +39,24 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/trainer" element={<TrainerDashboard />} />
-                <Route path="/pause" element={<Pause />} />
-                <Route path="/plan" element={<Plan />} />
-                <Route path="/health" element={<Health />} />
+                {/* Client pages — trainers are redirected to /trainer */}
+                <Route path="/dashboard" element={<ProtectedRoute allow={["client", "admin"]}><Dashboard /></ProtectedRoute>} />
+                <Route path="/pause" element={<ProtectedRoute allow={["client", "admin"]}><Pause /></ProtectedRoute>} />
+                <Route path="/plan" element={<ProtectedRoute allow={["client", "admin"]}><Plan /></ProtectedRoute>} />
+                <Route path="/health" element={<ProtectedRoute allow={["client", "admin"]}><Health /></ProtectedRoute>} />
+
+                {/* Shared */}
                 <Route path="/profile" element={<Profile />} />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <Admin />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/customers"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <Customers />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/customers/:id"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <CustomerDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/trainers"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <Trainers />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/societies"
-                  element={
-                    <ProtectedRoute requireAdmin>
-                      <Societies />
-                    </ProtectedRoute>
-                  }
-                />
+
+                {/* Trainer pages — clients are redirected to /dashboard */}
+                <Route path="/trainer" element={<ProtectedRoute allow={["trainer", "admin"]}><TrainerDashboard /></ProtectedRoute>} />
+
+                {/* Admin pages */}
+                <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><Admin /></ProtectedRoute>} />
+                <Route path="/admin/customers" element={<ProtectedRoute allow={["admin"]}><Customers /></ProtectedRoute>} />
+                <Route path="/admin/customers/:id" element={<ProtectedRoute allow={["admin"]}><CustomerDetail /></ProtectedRoute>} />
+                <Route path="/admin/trainers" element={<ProtectedRoute allow={["admin"]}><Trainers /></ProtectedRoute>} />
+                <Route path="/admin/societies" element={<ProtectedRoute allow={["admin"]}><Societies /></ProtectedRoute>} />
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />
