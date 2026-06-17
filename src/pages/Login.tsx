@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { homeForRole } from "@/lib/routes";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -20,11 +20,6 @@ import { isValidPhone, isValidDob, normalizePhone } from "@/lib/phoneAuth";
 export default function Login() {
   const navigate = useNavigate();
   const { user, role, loading, roleLoading, signIn, signUp, signInWithPhone, signUpWithPhone } = useAuth();
-
-  // Already signed in? Send them to their home instead of showing a dead-end login form.
-  if (!loading && !roleLoading && user) {
-    return <Navigate to={homeForRole(role)} replace />;
-  }
 
   // Customer state
   const [custMode, setCustMode] = useState<"signin" | "signup">("signin");
@@ -92,7 +87,9 @@ export default function Login() {
         const { error } = await signIn(email, password);
         if (error) { toast.error(error); return; }
         toast.success("Welcome back!");
-        navigate("/dashboard");
+        // Don't hardcode a destination — the guard at the top of this page
+        // redirects to homeForRole(role) once the role loads
+        // (admin → /admin, trainer → /trainer, client → /dashboard).
       } else {
         const { error } = await signUp(email, password, name);
         if (error) { toast.error(error); return; }
@@ -112,13 +109,22 @@ export default function Login() {
     else toast.success("Password reset link sent");
   };
 
+  // Already signed in? Send them to their home instead of showing a dead-end
+  // login form. Placed AFTER all hooks so the hook order stays stable across
+  // renders (returning early before the useState calls crashes React).
+  if (!loading && !roleLoading && user) {
+    return <Navigate to={homeForRole(role)} replace />;
+  }
+
   return (
     <div className="min-h-screen w-full grid lg:grid-cols-2">
       <div className="relative hidden lg:flex flex-col justify-between p-12 bg-gradient-soft overflow-hidden">
         <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
         <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-accent/40 blur-3xl" />
         <div className="relative">
-          <FitvedLogo />
+          <Link to="/" aria-label="Go to homepage" className="inline-block">
+            <FitvedLogo />
+          </Link>
           <p className="mt-2 pl-1 text-xs uppercase tracking-[0.28em] text-primary/80">Fitness for grownups</p>
         </div>
         <div className="relative space-y-6">
@@ -137,7 +143,9 @@ export default function Login() {
       <div className="flex items-center justify-center p-6 sm:p-10">
         <Card className="w-full max-w-md p-8 shadow-elevated rounded-2xl border-border/60">
           <div className="lg:hidden mb-6 flex flex-col items-center gap-1">
-            <FitvedLogo />
+            <Link to="/" aria-label="Go to homepage">
+              <FitvedLogo />
+            </Link>
             <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Fitness for grownups</p>
           </div>
 

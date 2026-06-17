@@ -5,6 +5,10 @@ import {
   FileHeart,
   CalendarOff,
   UserCircle2,
+  Gauge,
+  Users,
+  Dumbbell,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -21,12 +25,20 @@ const TRAINER_TABS = [
   { path: "/profile",  Icon: UserCircle2,     label: "Profile" },
 ];
 
+const ADMIN_TABS = [
+  { path: "/admin",           Icon: Gauge,       label: "Overview" },
+  { path: "/admin/customers", Icon: Users,       label: "Clients" },
+  { path: "/admin/trainers",  Icon: Dumbbell,    label: "Trainers" },
+  { path: "/admin/societies", Icon: Building2,   label: "Societies" },
+  { path: "/profile",         Icon: UserCircle2, label: "Profile" },
+];
+
 export function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useAuth();
 
-  const NAV_TABS = role === "trainer" ? TRAINER_TABS : CLIENT_TABS;
+  const NAV_TABS = role === "trainer" ? TRAINER_TABS : role === "admin" ? ADMIN_TABS : CLIENT_TABS;
 
   return (
     <nav

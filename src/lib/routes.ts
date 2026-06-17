@@ -6,6 +6,7 @@ export function homeForRole(role: AppRole | null): string {
     case "trainer":
       return "/trainer";
     case "admin":
+      return "/admin";
     default:
       return "/dashboard";
   }

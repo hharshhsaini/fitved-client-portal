@@ -15,7 +15,7 @@ import Pause from "./pages/Pause";
 import Plan from "./pages/Plan";
 import Health from "./pages/Health";
 import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/admin/Dashboard";
 import Customers from "./pages/admin/Customers";
 import CustomerDetail from "./pages/admin/CustomerDetail";
 import Trainers from "./pages/admin/Trainers";
@@ -52,7 +52,7 @@ const App = () => (
                 <Route path="/trainer" element={<ProtectedRoute allow={["trainer", "admin"]}><TrainerDashboard /></ProtectedRoute>} />
 
                 {/* Admin pages */}
-                <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><Admin /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/admin/customers" element={<ProtectedRoute allow={["admin"]}><Customers /></ProtectedRoute>} />
                 <Route path="/admin/customers/:id" element={<ProtectedRoute allow={["admin"]}><CustomerDetail /></ProtectedRoute>} />
                 <Route path="/admin/trainers" element={<ProtectedRoute allow={["admin"]}><Trainers /></ProtectedRoute>} />

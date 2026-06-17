@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2 } from "lucide-react";
+import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2, Gauge } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,14 +36,17 @@ export function AppSidebar() {
 
   let items = role === "trainer" ? [...trainerItems] : [...clientItems];
   if (role === "admin") {
-    items = [...clientItems];
-    items.push({ title: "Customers", url: "/admin/customers", icon: Users });
-    items.push({ title: "Trainers", url: "/admin/trainers", icon: Dumbbell });
-    items.push({ title: "Societies", url: "/admin/societies", icon: Building2 });
+    items = [
+      { title: "Overview", url: "/admin", icon: Gauge },
+      { title: "Customers", url: "/admin/customers", icon: Users },
+      { title: "Trainers", url: "/admin/trainers", icon: Dumbbell },
+      { title: "Societies", url: "/admin/societies", icon: Building2 },
+      { title: "Profile", url: "/profile", icon: UserCircle2 },
+    ];
   }
 
   const isActive = (path: string) =>
-    (path === "/dashboard" || path === "/trainer")
+    (path === "/dashboard" || path === "/trainer" || path === "/admin")
       ? pathname === path
       : pathname.startsWith(path);
 
@@ -69,7 +72,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
                       <NavLink
                         to={item.url}
-                        end={item.url === "/dashboard"}
+                        end={item.url === "/dashboard" || item.url === "/admin"}
                         className="flex items-center gap-3 rounded-lg transition-colors"
                       >
                         <item.icon className="h-5 w-5 shrink-0" />
