@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronRight, Check, Gift,
+  ChevronRight, Check, Gift, Flame,
   FileHeart, CalendarOff, UserCircle2,
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
@@ -29,8 +29,22 @@ const BORDER     = "rgba(30,58,95,0.08)";
 const GREEN      = "#2e9e5b";
 const GREEN_LIGHT = "#e6f7ed";
 const BLUE_SOFT  = "#4d9dff";  // base classes (sessions left)
+const RED        = "#d23b34";  // expiring / expired urgency
+const GOLD_DARK  = "#5a3c05";  // text on gold buttons
+
+// Direct-pay UPI deep link (opens GPay/PhonePe/Paytm prefilled).
+const UPI_VPA  = "vish26nov@okicici";
+const UPI_NAME = "FitVed";
+const buildUpiLink = (amount: number) =>
+  `upi://pay?pa=${UPI_VPA}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent("FitVed plan renewal")}`;
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Today as a local YYYY-MM-DD string (avoids the UTC off-by-one). */
+function todayLocalISO() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 /** Returns 0=Mon … 6=Sun */
 function getTodayIdx() {
@@ -106,6 +120,16 @@ export default function Dashboard() {
   const blueW   = capacity > 0 ? (sessionsLeft / capacity) * 100 : 0;
   const orangeW = capacity > 0 ? (carryForward / capacity) * 100 : 0;
 
+  // ── Renewal urgency ───────────────────────────────────────────────────────
+  const todayISO    = todayLocalISO();
+  const expired     = !!plan && plan.end_date < todayISO;
+  const daysToEnd   = plan ? Math.max(0, daysBetween(todayISO, plan.end_date) - 1) : 0;
+  const daysSinceEnd = plan ? Math.max(0, daysBetween(plan.end_date, todayISO) - 1) : 0;
+  const expiring    = !!plan && !expired && (daysToEnd <= 3 || sessionsLeft <= 1);
+  const renewUrgent = expiring || expired;
+  const upiAmount   = plan ? Math.round(Number(plan.amount)) : 0;
+  const upiLink     = buildUpiLink(upiAmount);
+
   const trainingDays: string[] = (plan?.training_days ?? []).map((d: string) => d.slice(0, 3));
   const todayIdx     = getTodayIdx();
   const nextTrainingDay = WEEK_DAYS.find((d, i) => i >= todayIdx && trainingDays.includes(d))
@@ -124,7 +148,69 @@ export default function Dashboard() {
   const MobileLayout = () => (
     <div style={{ background: "#f4f2ee", minHeight: "100%" }}>
 
+      {/* Renewal urgency card (expiring / expired) */}
+      {renewUrgent && plan && (
+        <div
+          onClick={() => navigate("/plan")}
+          role="button"
+          tabIndex={0}
+          className="mx-4 mt-3 rounded-[28px] overflow-hidden relative cursor-pointer"
+          style={{ background: RED, padding: "22px 24px 22px" }}
+        >
+          <div className="pointer-events-none absolute rounded-full"
+            style={{ top: -40, right: -40, width: 140, height: 140, background: "rgba(255,255,255,0.08)" }} />
+
+          {expired ? (
+            <>
+              <div className="flex items-center gap-2 mb-2 relative">
+                <Clock size={16} color="#fff" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                  Plan ended {formatDate(plan.end_date).replace(/,?\s*\d{4}$/, "")}
+                  {daysSinceEnd > 0 ? ` · ${daysSinceEnd} day${daysSinceEnd === 1 ? "" : "s"} ago` : " · today"}
+                </span>
+              </div>
+              <h1 className="font-display text-white relative" style={{ fontSize: 23, fontWeight: 600, lineHeight: 1.25 }}>
+                Your momentum is waiting
+              </h1>
+              <p className="relative" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 8, lineHeight: 1.5 }}>
+                You completed all {baseTotal} sessions — real consistency. Pick up right where you left off before the habit fades.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-3 relative">
+                <Flame size={17} color="#fff" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Final session coming up</span>
+              </div>
+              <span className="font-display font-bold text-white relative" style={{ fontSize: 46, lineHeight: 1 }}>{sessionsLeft}</span>
+              <p className="relative" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
+                session{sessionsLeft === 1 ? "" : "s"} left
+              </p>
+              <div className="relative" style={{ marginTop: 12 }}>
+                <div className="rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.2)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${progress}%`, background: "#fff" }} />
+                </div>
+              </div>
+              <p className="relative" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 12, lineHeight: 1.5 }}>
+                {sessionsUsed} of {baseTotal} done — you've shown up week after week. Don't lose the rhythm now.
+              </p>
+            </>
+          )}
+
+          <a
+            href={upiLink}
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex items-center justify-center gap-1.5 rounded-2xl"
+            style={{ background: GOLD, padding: "13px", marginTop: 16, fontSize: 14, fontWeight: 700, color: GOLD_DARK, textDecoration: "none" }}
+          >
+            {expired ? "Renew now" : "Renew & keep it going"} · ₹{upiAmount.toLocaleString("en-IN")}
+            <ArrowRight size={16} color={GOLD_DARK} />
+          </a>
+        </div>
+      )}
+
       {/* Hero gradient card — tap to view plan */}
+      {!renewUrgent && (
       <div
         onClick={() => navigate("/plan")}
         role="button"
@@ -189,6 +275,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      )}
 
       {/* This week */}
       <div className="px-5 pt-5 pb-1">
@@ -336,6 +423,24 @@ export default function Dashboard() {
           </div>
           {plan ? (
             <>
+              {renewUrgent && (
+                <div className="mt-4 rounded-xl p-4 flex items-center justify-between gap-3"
+                  style={{ background: "rgba(210,59,52,0.08)", border: `1px solid ${RED}` }}>
+                  <div>
+                    <p className="font-semibold" style={{ color: RED }}>
+                      {expired ? `Plan ended ${formatDate(plan.end_date)}` : "Final session coming up"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {expired ? "Renew to pick up your momentum where you left off." : "Renew now so you don't break your rhythm."}
+                    </p>
+                  </div>
+                  <a href={upiLink}
+                    className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
+                    style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
+                    Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              )}
               <div className="mt-5 space-y-3">
                 <div className="flex rounded-full overflow-hidden h-2 bg-muted">
                   <div className="h-full" style={{ width: `${blueW}%`, background: BLUE_SOFT }} />
