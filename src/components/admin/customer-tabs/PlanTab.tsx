@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,12 @@ export function PlanTab({ userId }: { userId: string }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
   const [status, setStatus] = useState<PlanStatus>("active");
+  // Extra training days added to the base end date to compensate for pauses.
+  // Tracked as state so it survives re-renders and folds into the recompute.
+  const [pauseExtraDays, setPauseExtraDays] = useState(0);
+  // When a plan loads, its stored end_date may already include a pause
+  // extension. Skip the next auto-recompute so we don't overwrite it.
+  const skipRecompute = useRef(false);
 
   useEffect(() => {
     if (plan) {
@@ -60,19 +66,24 @@ export function PlanTab({ userId }: { userId: string }) {
       setPaymentMethod(plan.payment_method ?? "");
       setAutoRenew(plan.auto_renew);
       setStatus(plan.status as PlanStatus);
+      setPauseExtraDays(0);
+      skipRecompute.current = true; // preserve the stored (possibly extended) end
     } else {
       setStartDate(new Date().toISOString().slice(0, 10));
     }
   }, [plan]);
 
-  // Auto-recompute end + renewal whenever start/sessions/days change
+  // Auto-recompute end + renewal whenever start/sessions/days/pause-extension
+  // change — but not on the render right after a plan loads.
   useEffect(() => {
+    if (skipRecompute.current) { skipRecompute.current = false; return; }
     if (!startDate || !trainingDays.length || !totalSessions) return;
-    const end = calculatePlanEndDate(startDate, totalSessions, trainingDays);
+    const base = calculatePlanEndDate(startDate, totalSessions, trainingDays);
+    const end = pauseExtraDays > 0 ? extendEndDateBySessions(base, pauseExtraDays, trainingDays) : base;
     const renewal = calculatePlanRenewalDate(end, trainingDays);
     setEndDate(isoDate(end));
     setRenewalDate(isoDate(renewal));
-  }, [startDate, totalSessions, trainingDays]);
+  }, [startDate, totalSessions, trainingDays, pauseExtraDays]);
 
   const toggleDay = (day: string, on: boolean) => {
     setTrainingDays((prev) =>
@@ -90,17 +101,13 @@ export function PlanTab({ userId }: { userId: string }) {
   }, [pauses, trainingDays]);
 
   const recalcWithPauses = () => {
-    if (!endDate || !trainingDays.length) return;
+    if (!trainingDays.length) return;
     if (lostFromPauses === 0) {
       toast.info("No training days lost to pauses — nothing to extend.");
       return;
     }
-    // Recompute base end (without extension) from start, then extend
-    const baseEnd = calculatePlanEndDate(startDate, totalSessions, trainingDays);
-    const extended = extendEndDateBySessions(baseEnd, lostFromPauses, trainingDays);
-    const renewal = calculatePlanRenewalDate(extended, trainingDays);
-    setEndDate(isoDate(extended));
-    setRenewalDate(isoDate(renewal));
+    // Record the extension; the recompute effect applies it to the base end.
+    setPauseExtraDays(lostFromPauses);
     toast.success(`Extended by ${lostFromPauses} training day(s) for pauses`);
   };
 
@@ -120,17 +127,26 @@ export function PlanTab({ userId }: { userId: string }) {
         status,
       };
       if (plan) {
-        const { error } = await supabase.from("plans").update(payload).eq("id", plan.id);
+        const { data, error } = await supabase.from("plans").update(payload).eq("id", plan.id).select();
         if (error) throw error;
+        if (!data || data.length === 0) {
+          throw new Error("Nothing was updated — the plan row wasn't found or you don't have permission to change it.");
+        }
+        return data[0];
       } else {
-        const { error } = await supabase.from("plans").insert(payload);
+        const { data, error } = await supabase.from("plans").insert(payload).select();
         if (error) throw error;
+        return data?.[0] ?? null;
       }
     },
-    onSuccess: () => {
+    onSuccess: (saved) => {
       toast.success(plan ? "Plan updated" : "Plan created");
+      // Write the saved row straight into the cache so the Plan tab shows the
+      // new values immediately on remount — invalidate alone left it stale.
+      if (saved) qc.setQueryData(["customer-plan", userId], saved);
       qc.invalidateQueries({ queryKey: ["customer-plan", userId] });
       qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });

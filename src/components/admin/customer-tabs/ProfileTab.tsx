@@ -14,6 +14,44 @@ import { cn } from "@/lib/utils";
 
 type AppRole = "client" | "trainer" | "admin";
 
+// ── Time-slot helpers ───────────────────────────────────────────────
+// Native <input type="time"> uses 24h "HH:MM"; we store a friendly
+// "7:00 AM – 8:00 AM" string in profiles.time_slot.
+
+function to12h(hhmm: string): string {
+  if (!hhmm) return "";
+  const [hStr, mStr] = hhmm.split(":");
+  let h = parseInt(hStr, 10);
+  if (Number.isNaN(h)) return "";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${(mStr ?? "00").padStart(2, "0")} ${ampm}`;
+}
+
+function to24h(label: string): string {
+  const m = label.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!m) return "";
+  let h = parseInt(m[1], 10);
+  const ap = m[3]?.toUpperCase();
+  if (ap === "PM" && h < 12) h += 12;
+  if (ap === "AM" && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${m[2]}`;
+}
+
+function parseSlot(slot: string): { start: string; end: string } {
+  if (!slot) return { start: "", end: "" };
+  const parts = slot.split(/[–—-]/).map((s) => s.trim());
+  if (parts.length < 2) return { start: "", end: "" };
+  let [a, b] = parts;
+  // Shared meridiem, e.g. "7:00 – 8:00 AM" → borrow AM/PM for the start.
+  if (!/AM|PM/i.test(a)) {
+    const mer = b.match(/AM|PM/i)?.[0];
+    if (mer) a = `${a} ${mer}`;
+  }
+  return { start: to24h(a), end: to24h(b) };
+}
+
 export function ProfileTab({ userId }: { userId: string }) {
   const qc = useQueryClient();
 
@@ -51,7 +89,9 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [timeSlot, setTimeSlot] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
+  const [rawSlot, setRawSlot] = useState("");
   const [trainerId, setTrainerId] = useState<string>("");
   const [societyId, setSocietyId] = useState<string>("");
   const [newDob, setNewDob] = useState<Date | undefined>(undefined);
@@ -60,11 +100,17 @@ export function ProfileTab({ userId }: { userId: string }) {
     if (profile) {
       setName(profile.name ?? "");
       setPhone(profile.phone ?? "");
-      setTimeSlot(profile.time_slot ?? "");
+      const slot = profile.time_slot ?? "";
+      setRawSlot(slot);
+      const parsed = parseSlot(slot);
+      setStartTime(parsed.start);
+      setEndTime(parsed.end);
       setTrainerId(profile.trainer_id ?? "");
       setSocietyId(profile.society_id ?? "");
     }
   }, [profile]);
+
+  const composedSlot = startTime && endTime ? `${to12h(startTime)} – ${to12h(endTime)}` : "";
 
   const resetDob = useMutation({
     mutationFn: async (date: Date) => {
@@ -93,7 +139,7 @@ export function ProfileTab({ userId }: { userId: string }) {
         name: name || null,
         phone: phone || null,
         society: societyName,
-        time_slot: timeSlot || null,
+        time_slot: composedSlot || null,
         trainer_id: trainerId || null,
         society_id: societyId || null,
       }).eq("id", userId);
@@ -156,10 +202,45 @@ export function ProfileTab({ userId }: { userId: string }) {
           <Label>Phone</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
-        <div className="space-y-1.5">
-          <Label>Time slot</Label>
-          <Input value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Time slot</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            type="time"
+            value={startTime}
+            onChange={(e) => setStartTime(e.target.value)}
+            className="w-auto"
+            aria-label="Slot start time"
+          />
+          <span className="text-muted-foreground">–</span>
+          <Input
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            className="w-auto"
+            aria-label="Slot end time"
+          />
+          {(startTime || endTime) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={() => { setStartTime(""); setEndTime(""); }}
+            >
+              Clear
+            </Button>
+          )}
         </div>
+        {composedSlot ? (
+          <p className="text-xs text-muted-foreground">Saves as <span className="font-medium text-foreground">{composedSlot}</span></p>
+        ) : !startTime && !endTime && rawSlot ? (
+          <p className="text-xs text-amber-600">Existing value “{rawSlot}” couldn’t be read — pick a start &amp; end to standardize it.</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Pick the class start and end time.</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
