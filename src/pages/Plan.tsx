@@ -4,9 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, CheckCircle2, CalendarDays } from "lucide-react";
+import { CreditCard, CheckCircle2, CalendarDays, Gift, ArrowRight } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePauseStore } from "@/stores/pauseStore";
+import { calculatePlanEndDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -16,10 +18,15 @@ const MUTED      = "#8a8f9e";
 const BORDER     = "rgba(30,58,95,0.08)";
 const GREEN      = "#2e9e5b";
 const GREEN_LIGHT = "#e6f7ed";
+const GOLD_LIGHT = "#fef3d0";
+const GOLD_TEXT  = "#7a5200";
+const GOLD_SUB   = "#9a7423";
+const GOLD_DEEP  = "#b07d10";
 const WEEK_DAYS  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function Plan() {
   const { user } = useAuth();
+  const { history, activePause } = usePauseStore();
 
   const { data: plan, refetch } = useQuery({
     queryKey: ["plan", user?.id],
@@ -94,10 +101,28 @@ export default function Plan() {
   const sessionsLeft  = plan.total_sessions - sessionsUsed;
   const trainingDays: string[] = (plan.training_days ?? []).map((d: string) => d.slice(0, 3));
 
+  // ── Carry-forward reward ─────────────────────────────────────────────
+  // Classes carried forward = training days lost to pauses within the plan
+  // period. The plan only stores the current end date, so we compute the
+  // "original" (no-pause) end and compare it to the (extended) end.
+  const planDaysFull: string[] = plan.training_days ?? [];
+  const allPauses = [...history, ...(activePause ? [activePause] : [])];
+  const carriedClasses = allPauses.reduce((sum, p) => {
+    const from = p.from > plan.start_date ? p.from : plan.start_date;
+    const to   = p.to   < plan.end_date   ? p.to   : plan.end_date;
+    if (from > to) return sum;
+    return sum + countTrainingDaysInRange(from, to, planDaysFull);
+  }, 0);
+  const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
+  const originalEndISO = isoDate(baseEnd);
+  const projectedEndISO = isoDate(extendEndDateBySessions(baseEnd, carriedClasses, planDaysFull));
+  const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
+  const showReward     = carriedClasses > 0;
+
   const dateCards = [
-    { label: "Started", val: formatDate(plan.start_date).replace(/,?\s*\d{4}$/, "") },
-    { label: "Ends",    val: formatDate(plan.end_date).replace(/,?\s*\d{4}$/, "") },
-    { label: "Renews",  val: formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, "") },
+    { label: "Started", val: formatDate(plan.start_date).replace(/,?\s*\d{4}$/, ""), accent: false },
+    { label: "Ends",    val: formatDate(newEndISO).replace(/,?\s*\d{4}$/, ""),       accent: showReward },
+    { label: "Renews",  val: formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, ""), accent: false },
   ];
 
   return (
@@ -147,13 +172,49 @@ export default function Plan() {
           </div>
         </div>
 
+        {/* Carry-forward reward */}
+        {showReward && (
+          <div className="mx-4 mb-3.5 rounded-3xl"
+            style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD}`, padding: 16 }}>
+            <div className="flex gap-3 items-start">
+              <div className="flex items-center justify-center rounded-xl flex-shrink-0"
+                style={{ width: 38, height: 38, background: GOLD }}>
+                <Gift size={20} color="#fff" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold" style={{ fontSize: 15, color: GOLD_TEXT }}>
+                  You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
+                </p>
+                <p style={{ fontSize: 12, color: GOLD_SUB, marginTop: 3, lineHeight: 1.45 }}>
+                  because you missed these classes — FitVed added every one back to your plan.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl mt-3" style={{ background: "#fff", padding: "11px 14px" }}>
+              <div>
+                <p style={{ fontSize: 11, color: MUTED }}>Was ending</p>
+                <p style={{ fontSize: 15, color: MUTED, textDecoration: "line-through", marginTop: 2 }}>
+                  {formatDate(originalEndISO).replace(/,?\s*\d{4}$/, "")}
+                </p>
+              </div>
+              <ArrowRight size={18} color={GOLD} />
+              <div className="text-right">
+                <p style={{ fontSize: 11, color: GOLD_DEEP }}>Now ends</p>
+                <p className="font-bold" style={{ fontSize: 15, color: NAVY, marginTop: 2 }}>
+                  {formatDate(newEndISO).replace(/,?\s*\d{4}$/, "")}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Date trio */}
         <div className="flex gap-2.5 mx-4 mb-3.5">
-          {dateCards.map(({ label, val }) => (
+          {dateCards.map(({ label, val, accent }) => (
             <div key={label} className="flex-1 rounded-[18px] text-center"
-              style={{ background: "#fff", padding: "14px 12px", border: `1px solid ${BORDER}`, boxShadow: "0 2px 8px rgba(30,58,95,0.05)" }}>
+              style={{ background: "#fff", padding: "14px 12px", border: `1px solid ${accent ? GOLD : BORDER}`, boxShadow: "0 2px 8px rgba(30,58,95,0.05)" }}>
               <p className="font-bold" style={{ fontSize: 15, color: NAVY }}>{val}</p>
-              <p style={{ fontSize: 11, color: MUTED, marginTop: 3 }}>{label}</p>
+              <p style={{ fontSize: 11, color: accent ? GOLD_DEEP : MUTED, marginTop: 3 }}>{label}</p>
             </div>
           ))}
         </div>
@@ -297,6 +358,35 @@ export default function Plan() {
             </div>
           </dl>
         </Card>
+
+        {showReward && (
+          <Card className="p-6 rounded-2xl shadow-card" style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD}` }}>
+            <div className="flex items-start gap-4">
+              <span className="grid h-12 w-12 place-items-center rounded-2xl flex-shrink-0" style={{ background: GOLD }}>
+                <Gift className="h-6 w-6 text-white" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-display text-xl" style={{ color: GOLD_TEXT }}>
+                  You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
+                </p>
+                <p className="text-sm mt-1" style={{ color: GOLD_SUB }}>
+                  because you missed these classes — FitVed added every one back to your plan.
+                </p>
+                <div className="mt-4 flex items-center gap-4 flex-wrap">
+                  <div>
+                    <p className="text-xs" style={{ color: MUTED }}>Was ending</p>
+                    <p className="font-medium line-through" style={{ color: MUTED }}>{formatDate(originalEndISO)}</p>
+                  </div>
+                  <ArrowRight className="h-5 w-5" style={{ color: GOLD }} />
+                  <div>
+                    <p className="text-xs" style={{ color: GOLD_DEEP }}>Now ends</p>
+                    <p className="font-medium" style={{ color: NAVY }}>{formatDate(newEndISO)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
 
         <Card className="p-6 rounded-2xl shadow-card">
           <h2 className="font-display text-xl">Billing history</h2>

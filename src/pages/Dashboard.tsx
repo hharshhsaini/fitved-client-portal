@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ChevronRight, Check,
+  ChevronRight, Check, Gift,
   FileHeart, CalendarOff, UserCircle2,
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
@@ -29,7 +29,6 @@ const BORDER     = "rgba(30,58,95,0.08)";
 const GREEN      = "#2e9e5b";
 const GREEN_LIGHT = "#e6f7ed";
 const BLUE_SOFT  = "#4d9dff";  // base classes (sessions left)
-const ORANGE     = "#ff8a3d";  // carried-forward classes
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -125,9 +124,12 @@ export default function Dashboard() {
   const MobileLayout = () => (
     <div style={{ background: "#f4f2ee", minHeight: "100%" }}>
 
-      {/* Hero gradient card */}
+      {/* Hero gradient card — tap to view plan */}
       <div
-        className="mx-4 mt-3 rounded-[28px] overflow-hidden relative"
+        onClick={() => navigate("/plan")}
+        role="button"
+        tabIndex={0}
+        className="mx-4 mt-3 rounded-[28px] overflow-hidden relative cursor-pointer"
         style={{
           background: `linear-gradient(145deg, ${NAVY} 0%, ${NAVY_LIGHT} 100%)`,
           padding: "22px 24px 28px",
@@ -151,7 +153,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between relative">
           <div className="flex flex-col gap-1">
             <span className="font-display font-bold text-white" style={{ fontSize: 52, lineHeight: 1 }}>
-              {plan ? capacity : "—"}
+              {plan ? baseTotal : "—"}
             </span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>total sessions</span>
             <div className="flex flex-col items-start gap-1 mt-2.5">
@@ -160,9 +162,11 @@ export default function Dashboard() {
                 {plan ? sessionsLeft : 0} sessions left
               </span>
               {carryForward > 0 && (
-                <span className="font-semibold" style={{ fontSize: 11, color: ORANGE, paddingLeft: 2 }}>
-                  +{carryForward} carried forward
-                </span>
+                <Link to="/plan" onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 rounded-full font-bold mt-0.5"
+                  style={{ fontSize: 11, color: GOLD, background: "rgba(240,167,32,0.2)", padding: "4px 10px" }}>
+                  <Gift size={12} /> {carryForward} bonus <ChevronRight size={12} />
+                </Link>
               )}
             </div>
           </div>
@@ -175,11 +179,13 @@ export default function Dashboard() {
         <div className="mt-5 relative">
           <div className="flex rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.12)" }}>
             <div className="h-full" style={{ width: `${blueW}%`, background: BLUE_SOFT, transition: "width 1s ease" }} />
-            <div className="h-full" style={{ width: `${orangeW}%`, background: ORANGE, transition: "width 1s ease" }} />
+            <div className="h-full" style={{ width: `${orangeW}%`, background: GOLD, transition: "width 1s ease" }} />
           </div>
           <div className="flex justify-between mt-1.5">
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{sessionsUsed} used</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{capacity} total</span>
+            <span style={{ fontSize: 11, color: carryForward > 0 ? GOLD : "rgba(255,255,255,0.4)" }}>
+              {carryForward > 0 ? `+${carryForward} bonus` : `${baseTotal} total`}
+            </span>
           </div>
         </div>
       </div>
@@ -320,7 +326,10 @@ export default function Dashboard() {
               <div className="flex flex-col items-end gap-1">
                 <Badge variant="secondary">{sessionsLeft} sessions left</Badge>
                 {carryForward > 0 && (
-                  <span className="text-xs font-medium" style={{ color: ORANGE }}>+{carryForward} carried forward</span>
+                  <Link to="/plan" className="inline-flex items-center gap-1 text-xs font-semibold rounded-full"
+                    style={{ color: GOLD, background: "rgba(240,167,32,0.18)", padding: "2px 8px" }}>
+                    <Gift className="h-3 w-3" /> {carryForward} bonus
+                  </Link>
                 )}
               </div>
             )}
@@ -330,7 +339,7 @@ export default function Dashboard() {
               <div className="mt-5 space-y-3">
                 <div className="flex rounded-full overflow-hidden h-2 bg-muted">
                   <div className="h-full" style={{ width: `${blueW}%`, background: BLUE_SOFT }} />
-                  <div className="h-full" style={{ width: `${orangeW}%`, background: ORANGE }} />
+                  <div className="h-full" style={{ width: `${orangeW}%`, background: GOLD }} />
                 </div>
                 <div className="flex justify-between text-sm">
                   <div>
