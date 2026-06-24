@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Users, IndianRupee, Wallet, AlertTriangle, UserCog,
-  CalendarOff, Clock, Phone, CheckCircle2, ChevronRight,
+  CalendarOff, CalendarX, Clock, Phone, CheckCircle2, ChevronRight,
 } from "lucide-react";
 
 const RENEWAL_WINDOW = 14; // days ahead to surface expiring plans
@@ -35,6 +35,7 @@ type RenewalRow = { userId: string; name: string; phone: string | null; society:
 type GapRow = { userId: string; name: string; phone: string | null; missing: string[] };
 type PausedRow = { userId: string; name: string; society: string; timeSlot: string | null; from: string; to: string };
 type OffRow = { id: string; trainer: string; from: string; to: string; slot: string | null; reason: string | null };
+type LapsedRow = { userId: string; name: string; phone: string | null; society: string; endDate: string; amount: number };
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -107,6 +108,25 @@ export default function AdminDashboard() {
         }))
         .sort((a, b) => a.endDate.localeCompare(b.endDate));
 
+      // Not renewed = each client's most recent plan has already ended,
+      // so they have no current coverage and haven't been renewed.
+      const latestPlan = new Map<string, any>();
+      for (const p of plans) {
+        const cur = latestPlan.get(p.user_id);
+        if (!cur || p.end_date > cur.end_date) latestPlan.set(p.user_id, p);
+      }
+      const notRenewed: LapsedRow[] = [...latestPlan.values()]
+        .filter((p) => p.end_date < todayISO && p.status !== "paused")
+        .map((p) => ({
+          userId: p.user_id,
+          name: profName.get(p.user_id) ?? "—",
+          phone: profPhone.get(p.user_id) ?? null,
+          society: profSoc.get(p.user_id) ?? "—",
+          endDate: p.end_date,
+          amount: Number(p.amount),
+        }))
+        .sort((a, b) => b.endDate.localeCompare(a.endDate)); // most recently lapsed first
+
       const usersWithPlan = new Set(plans.map((p) => p.user_id));
       const gaps: GapRow[] = profiles
         .map((p) => {
@@ -140,7 +160,7 @@ export default function AdminDashboard() {
         reason: o.reason ?? null,
       }));
 
-      return { activeClients, mrr, collectedThisMonth, renewals, gaps, paused, offTimes };
+      return { activeClients, mrr, collectedThisMonth, renewals, notRenewed, gaps, paused, offTimes };
     },
   });
 
@@ -207,6 +227,39 @@ export default function AdminDashboard() {
             ))}
           </>
         )}
+      </Section>
+
+      {/* ── Not renewed ──────────────────────────────────────────────── */}
+      <Section
+        icon={CalendarX}
+        title="Not renewed"
+        subtitle="Plans that have ended without a renewal"
+        count={data?.notRenewed.length ?? 0}
+        accent="warning"
+        loading={isLoading}
+      >
+        {data?.notRenewed.map((r) => {
+          const links = phoneLinks(r.phone);
+          const ago = Math.round((parseISO(todayISO).getTime() - parseISO(r.endDate).getTime()) / 86400000);
+          return (
+            <button
+              key={r.userId}
+              onClick={() => navigate(`/admin/customers/${r.userId}`)}
+              className="w-full flex items-center justify-between gap-3 py-3 text-left hover:bg-muted/40 rounded-lg px-2 -mx-2 transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="font-medium text-sm truncate">{r.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  {r.society} · {inr(r.amount)} · ended {format(parseISO(r.endDate), "d MMM")}
+                </p>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <Badge variant="destructive" className="whitespace-nowrap">{ago}d ago</Badge>
+                {links && <ContactButtons links={links} />}
+              </div>
+            </button>
+          );
+        })}
       </Section>
 
       {/* ── Onboarding gaps ──────────────────────────────────────────── */}
