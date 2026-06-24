@@ -3,13 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   ChevronRight, Check,
   FileHeart, CalendarOff, UserCircle2,
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
+import { countTrainingDaysInRange } from "@/lib/sessionPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,8 @@ const MUTED      = "#8a8f9e";
 const BORDER     = "rgba(30,58,95,0.08)";
 const GREEN      = "#2e9e5b";
 const GREEN_LIGHT = "#e6f7ed";
+const BLUE_SOFT  = "#4d9dff";  // base classes (sessions left)
+const ORANGE     = "#ff8a3d";  // carried-forward classes
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -40,7 +42,7 @@ function getTodayIdx() {
 export default function Dashboard() {
   const { user, role } = useAuth();
   const { data: profile } = useProfile();
-  const { activePause } = usePauseStore();
+  const { activePause, history } = usePauseStore();
   const navigate = useNavigate();
 
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
@@ -84,9 +86,26 @@ export default function Dashboard() {
   const totalDays   = plan ? daysBetween(plan.start_date, plan.end_date) : 0;
   const elapsedDays = plan ? daysBetween(plan.start_date, new Date().toISOString()) : 0;
   const progress    = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
-  const daysLeft    = Math.max(0, totalDays - elapsedDays);
   const sessionsUsed  = plan ? Math.round((plan.total_sessions * progress) / 100) : 0;
-  const sessionsLeft  = plan ? plan.total_sessions - sessionsUsed : 0;
+  const sessionsLeft  = plan ? Math.max(0, plan.total_sessions - sessionsUsed) : 0;
+
+  // Carry-forward = training days lost to pauses DURING the current plan period
+  // (each pause range clamped to the plan's start/end). These are missed sessions
+  // pushed to the end of the plan — shown separately, not folded into "sessions left".
+  const allPauses = [...history, ...(activePause ? [activePause] : [])];
+  const carryForward = plan
+    ? allPauses.reduce((sum, p) => {
+        const from = p.from > plan.start_date ? p.from : plan.start_date;
+        const to   = p.to   < plan.end_date   ? p.to   : plan.end_date;
+        if (from > to) return sum; // pause doesn't overlap the current plan window
+        return sum + countTrainingDaysInRange(from, to, plan.training_days ?? []);
+      }, 0)
+    : 0;
+  const baseTotal  = plan?.total_sessions ?? 0;
+  const capacity   = baseTotal + carryForward;            // all classes incl. carried
+  // Bar segment widths (track scaled to full capacity; attended portion stays empty)
+  const blueW   = capacity > 0 ? (sessionsLeft / capacity) * 100 : 0;
+  const orangeW = capacity > 0 ? (carryForward / capacity) * 100 : 0;
 
   const trainingDays: string[] = (plan?.training_days ?? []).map((d: string) => d.slice(0, 3));
   const todayIdx     = getTodayIdx();
@@ -132,14 +151,19 @@ export default function Dashboard() {
         <div className="flex items-center justify-between relative">
           <div className="flex flex-col gap-1">
             <span className="font-display font-bold text-white" style={{ fontSize: 52, lineHeight: 1 }}>
-              {plan ? sessionsLeft : "—"}
+              {plan ? capacity : "—"}
             </span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>sessions left</span>
-            <div className="flex items-center gap-2 mt-2.5">
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>total sessions</span>
+            <div className="flex flex-col items-start gap-1 mt-2.5">
               <span className="rounded-full font-semibold"
-                style={{ fontSize: 12, color: GOLD, background: "rgba(240,167,32,0.2)", padding: "3px 10px" }}>
-                {daysLeft} days left
+                style={{ fontSize: 12, color: BLUE_SOFT, background: "rgba(77,157,255,0.18)", padding: "3px 10px" }}>
+                {plan ? sessionsLeft : 0} sessions left
               </span>
+              {carryForward > 0 && (
+                <span className="font-semibold" style={{ fontSize: 11, color: ORANGE, paddingLeft: 2 }}>
+                  +{carryForward} carried forward
+                </span>
+              )}
             </div>
           </div>
           <ProgressRing progress={progress} size={110} strokeWidth={9} color={GOLD} trackColor="rgba(255,255,255,0.12)">
@@ -147,14 +171,15 @@ export default function Dashboard() {
           </ProgressRing>
         </div>
 
-        {/* Progress bar */}
+        {/* Sessions bar — blue = base classes left, orange = carried forward */}
         <div className="mt-5 relative">
-          <div className="rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.12)" }}>
-            <div className="h-full rounded-full" style={{ width: `${progress}%`, background: GOLD, transition: "width 1s ease" }} />
+          <div className="flex rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.12)" }}>
+            <div className="h-full" style={{ width: `${blueW}%`, background: BLUE_SOFT, transition: "width 1s ease" }} />
+            <div className="h-full" style={{ width: `${orangeW}%`, background: ORANGE, transition: "width 1s ease" }} />
           </div>
           <div className="flex justify-between mt-1.5">
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{sessionsUsed} used</span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{plan?.total_sessions ?? 0} total</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{capacity} total</span>
           </div>
         </div>
       </div>
@@ -291,12 +316,22 @@ export default function Dashboard() {
                 <p className="font-display text-xl">{plan ? `${plan.total_sessions} sessions` : "Not assigned"}</p>
               </div>
             </div>
-            {plan && <Badge variant="secondary">{daysLeft} days left</Badge>}
+            {plan && (
+              <div className="flex flex-col items-end gap-1">
+                <Badge variant="secondary">{sessionsLeft} sessions left</Badge>
+                {carryForward > 0 && (
+                  <span className="text-xs font-medium" style={{ color: ORANGE }}>+{carryForward} carried forward</span>
+                )}
+              </div>
+            )}
           </div>
           {plan ? (
             <>
               <div className="mt-5 space-y-3">
-                <Progress value={progress} className="h-2" />
+                <div className="flex rounded-full overflow-hidden h-2 bg-muted">
+                  <div className="h-full" style={{ width: `${blueW}%`, background: BLUE_SOFT }} />
+                  <div className="h-full" style={{ width: `${orangeW}%`, background: ORANGE }} />
+                </div>
                 <div className="flex justify-between text-sm">
                   <div>
                     <p className="text-muted-foreground">Started</p>
