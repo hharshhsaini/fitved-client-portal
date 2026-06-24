@@ -183,8 +183,8 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-between mt-1.5">
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>{sessionsUsed} used</span>
-            <span style={{ fontSize: 11, color: carryForward > 0 ? GOLD : "rgba(255,255,255,0.4)" }}>
-              {carryForward > 0 ? `+${carryForward} bonus` : `${baseTotal} total`}
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+              {plan ? `Renews ${formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, "")}` : "—"}
             </span>
           </div>
         </div>
