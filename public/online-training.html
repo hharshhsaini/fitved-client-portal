@@ -334,6 +334,47 @@
       background: rgba(255,255,255,0.2);
     }
 
+    /* City batch ticker — scrolling marquee, "global reach" cue */
+    .hero-ticker {
+      position: relative;
+      z-index: 2;
+      margin-top: 56px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.02);
+      overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+    }
+    .hero-ticker-track {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      animation: ticker-scroll 48s linear infinite;
+    }
+    .hero-ticker:hover .hero-ticker-track { animation-play-state: paused; }
+    .hero-ticker-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 30px;
+      font-size: 13px;
+    }
+    .hero-ticker-item .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      animation: pulse-dot 1.6s infinite;
+    }
+    .hero-ticker-item .city { font-weight: 600; color: var(--white); }
+    .hero-ticker-item .time { color: rgba(255,255,255,0.45); }
+    @keyframes ticker-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    #live-city { transition: opacity 0.2s ease; }
+
+    /* Top ticker — identical glass look to the bottom band, near the hero top */
+    .hero-ticker--top { margin-top: -60px; margin-bottom: 36px; }
+    .hero-ticker--top .hero-ticker-track { animation-duration: 55s; }
+
     /* Hero visual (right side) */
     .hero-visual {
       display: flex;
@@ -819,6 +860,11 @@
   <!-- ═══════════════ HERO ═════════════════════════════════════════ -->
   <section id="hero">
     <div class="hero-bg"></div>
+
+    <div class="hero-ticker hero-ticker--top" aria-label="Live class batches around the world">
+      <div class="hero-ticker-track" id="topTickerTrack"></div>
+    </div>
+
     <div class="container">
       <div class="hero-inner" style="position:relative;z-index:2;">
 
@@ -859,7 +905,7 @@
         <div class="hero-visual">
 
           <div class="hero-card fade-up delay-1">
-            <div class="live-badge">Live now</div>
+            <div class="live-badge">Live now · <span id="live-city">Dubai</span></div>
             <div class="hero-card-title">Morning Strength + Yoga</div>
             <div class="hero-card-sub">60 min · 1-on-1 with Coach Priya</div>
             <div class="avatar-stack">
@@ -891,6 +937,10 @@
 
         </div>
       </div>
+    </div>
+
+    <div class="hero-ticker" aria-label="Live class batches around the world">
+      <div class="hero-ticker-track" id="tickerTrack"></div>
     </div>
   </section>
 
@@ -1126,6 +1176,33 @@
     }, { threshold: 0.12 });
 
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // City batch ticker — 10 cities, duplicated for a seamless loop
+    (function () {
+      const batches = [
+        ['London', '6–7 PM'], ['Dubai', '7–8 PM'], ['Mumbai', '6–7 AM'], ['Singapore', '7–8 AM'],
+        ['Toronto', '7–8 AM'], ['New York', '6–7 PM'], ['Sydney', '6–7 AM'], ['Berlin', '8–9 PM'],
+        ['San Francisco', '7–8 AM'], ['Pune', '6–7 AM'],
+      ];
+      const item = ([c, t]) => `<span class="hero-ticker-item"><span class="dot"></span><span class="city">${c}</span><span class="time">${t}</span></span>`;
+      const html = batches.map(item).join('');
+      ['tickerTrack', 'topTickerTrack'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html + html;
+      });
+    })();
+
+    // Rotating "Live now · {city}" on the hero card
+    const liveCityEl = document.getElementById('live-city');
+    if (liveCityEl) {
+      const cities = ['Dubai', 'London', 'Mumbai', 'Singapore', 'Toronto', 'Pune'];
+      let i = 0;
+      setInterval(() => {
+        i = (i + 1) % cities.length;
+        liveCityEl.style.opacity = '0';
+        setTimeout(() => { liveCityEl.textContent = cities[i]; liveCityEl.style.opacity = '1'; }, 200);
+      }, 2800);
+    }
   </script>
 </body>
 </html>
