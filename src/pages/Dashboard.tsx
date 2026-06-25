@@ -124,7 +124,7 @@ export default function Dashboard() {
   const todayISO    = todayLocalISO();
   const expired     = !!plan && plan.end_date < todayISO;
   const daysToEnd   = plan ? Math.max(0, daysBetween(todayISO, plan.end_date) - 1) : 0;
-  const daysSinceEnd = plan ? Math.max(0, daysBetween(plan.end_date, todayISO) - 1) : 0;
+  const daysSinceRenewal = plan ? Math.max(0, daysBetween(plan.renewal_date, todayISO) - 1) : 0;
   const expiring    = !!plan && !expired && (daysToEnd <= 3 || sessionsLeft <= 1);
   const renewUrgent = expiring || expired;
   const upiAmount   = plan ? Math.round(Number(plan.amount)) : 0;
@@ -165,8 +165,8 @@ export default function Dashboard() {
               <div className="flex items-center gap-2 mb-2 relative">
                 <Clock size={16} color="#fff" />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                  Plan ended {formatDate(plan.end_date).replace(/,?\s*\d{4}$/, "")}
-                  {daysSinceEnd > 0 ? ` · ${daysSinceEnd} day${daysSinceEnd === 1 ? "" : "s"} ago` : " · today"}
+                  Plan to be renewed on {formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, "")}
+                  {daysSinceRenewal > 0 ? ` · ${daysSinceRenewal} day${daysSinceRenewal === 1 ? "" : "s"} ago` : " · today"}
                 </span>
               </div>
               <h1 className="font-display text-white relative" style={{ fontSize: 23, fontWeight: 600, lineHeight: 1.25 }}>
@@ -428,7 +428,7 @@ export default function Dashboard() {
                   style={{ background: "rgba(210,59,52,0.08)", border: `1px solid ${RED}` }}>
                   <div>
                     <p className="font-semibold" style={{ color: RED }}>
-                      {expired ? `Plan ended ${formatDate(plan.end_date)}` : "Final session coming up"}
+                      {expired ? `Plan to be renewed on ${formatDate(plan.renewal_date)}` : "Final session coming up"}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {expired ? "Renew to pick up your momentum where you left off." : "Renew now so you don't break your rhythm."}

@@ -8,7 +8,7 @@ import { CreditCard, CheckCircle2, CalendarDays, Gift, ArrowRight } from "lucide
 import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePauseStore } from "@/stores/pauseStore";
-import { calculatePlanEndDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -114,9 +114,10 @@ export default function Plan() {
     return sum + countTrainingDaysInRange(from, to, planDaysFull);
   }, 0);
   const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
-  const originalEndISO = isoDate(baseEnd);
   const projectedEndISO = isoDate(extendEndDateBySessions(baseEnd, carriedClasses, planDaysFull));
   const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
+  const oldRenewalISO  = isoDate(calculatePlanRenewalDate(baseEnd, planDaysFull));
+  const newRenewalISO  = isoDate(calculatePlanRenewalDate(newEndISO, planDaysFull));
   const showReward     = carriedClasses > 0;
 
   const dateCards = [
@@ -192,16 +193,16 @@ export default function Plan() {
             </div>
             <div className="flex items-center justify-between rounded-xl mt-3" style={{ background: "#fff", padding: "11px 14px" }}>
               <div>
-                <p style={{ fontSize: 11, color: MUTED }}>Was ending</p>
+                <p style={{ fontSize: 11, color: MUTED }}>Old renewal date</p>
                 <p style={{ fontSize: 15, color: MUTED, textDecoration: "line-through", marginTop: 2 }}>
-                  {formatDate(originalEndISO).replace(/,?\s*\d{4}$/, "")}
+                  {formatDate(oldRenewalISO).replace(/,?\s*\d{4}$/, "")}
                 </p>
               </div>
               <ArrowRight size={18} color={GOLD} />
               <div className="text-right">
-                <p style={{ fontSize: 11, color: GOLD_DEEP }}>Now ends</p>
+                <p style={{ fontSize: 11, color: GOLD_DEEP }}>New renewal date</p>
                 <p className="font-bold" style={{ fontSize: 15, color: NAVY, marginTop: 2 }}>
-                  {formatDate(newEndISO).replace(/,?\s*\d{4}$/, "")}
+                  {formatDate(newRenewalISO).replace(/,?\s*\d{4}$/, "")}
                 </p>
               </div>
             </div>
@@ -374,13 +375,13 @@ export default function Plan() {
                 </p>
                 <div className="mt-4 flex items-center gap-4 flex-wrap">
                   <div>
-                    <p className="text-xs" style={{ color: MUTED }}>Was ending</p>
-                    <p className="font-medium line-through" style={{ color: MUTED }}>{formatDate(originalEndISO)}</p>
+                    <p className="text-xs" style={{ color: MUTED }}>Old renewal date</p>
+                    <p className="font-medium line-through" style={{ color: MUTED }}>{formatDate(oldRenewalISO)}</p>
                   </div>
                   <ArrowRight className="h-5 w-5" style={{ color: GOLD }} />
                   <div>
-                    <p className="text-xs" style={{ color: GOLD_DEEP }}>Now ends</p>
-                    <p className="font-medium" style={{ color: NAVY }}>{formatDate(newEndISO)}</p>
+                    <p className="text-xs" style={{ color: GOLD_DEEP }}>New renewal date</p>
+                    <p className="font-medium" style={{ color: NAVY }}>{formatDate(newRenewalISO)}</p>
                   </div>
                 </div>
               </div>
