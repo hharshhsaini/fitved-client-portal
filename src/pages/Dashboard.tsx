@@ -256,7 +256,7 @@ export default function Dashboard() {
               )}
             </div>
           </div>
-          <ProgressRing progress={progress} size={110} strokeWidth={9} color={GOLD} trackColor="rgba(255,255,255,0.12)">
+          <ProgressRing progress={progress} size={110} strokeWidth={9} color={BLUE_SOFT} trackColor="rgba(255,255,255,0.12)">
             <span className="font-bold text-white" style={{ fontSize: 18 }}>{progress}%</span>
           </ProgressRing>
         </div>

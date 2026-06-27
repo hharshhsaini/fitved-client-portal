@@ -126,7 +126,6 @@ export default function Plan() {
 
   const dateCards = [
     { label: "Started", val: formatDate(plan.start_date).replace(/,?\s*\d{4}$/, ""), accent: false },
-    { label: "Ends",    val: formatDate(newEndISO).replace(/,?\s*\d{4}$/, ""),       accent: showReward },
     { label: "Renews",  val: formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, ""), accent: false },
   ];
 
@@ -341,10 +340,6 @@ export default function Plan() {
             <div>
               <dt className="text-sm text-muted-foreground">Plan started</dt>
               <dd className="mt-1 font-medium">{formatDate(plan.start_date)}</dd>
-            </div>
-            <div>
-              <dt className="text-sm text-muted-foreground">Plan ends (last session)</dt>
-              <dd className="mt-1 font-medium">{formatDate(plan.end_date)}</dd>
             </div>
             <div>
               <dt className="text-sm text-muted-foreground">Next plan starts</dt>
