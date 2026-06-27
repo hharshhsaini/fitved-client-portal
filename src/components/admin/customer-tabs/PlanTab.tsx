@@ -45,6 +45,7 @@ export function PlanTab({ userId }: { userId: string }) {
   const [endDate, setEndDate] = useState("");
   const [renewalDate, setRenewalDate] = useState("");
   const [amount, setAmount] = useState<number>(7499);
+  const [discount, setDiscount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
   const [status, setStatus] = useState<PlanStatus>("active");
@@ -63,6 +64,7 @@ export function PlanTab({ userId }: { userId: string }) {
       setEndDate(plan.end_date);
       setRenewalDate(plan.renewal_date);
       setAmount(Number(plan.amount));
+      setDiscount(Number(plan.discount ?? 0));
       setPaymentMethod(plan.payment_method ?? "");
       setAutoRenew(plan.auto_renew);
       setStatus(plan.status as PlanStatus);
@@ -122,6 +124,7 @@ export function PlanTab({ userId }: { userId: string }) {
         end_date: endDate,
         renewal_date: renewalDate,
         amount,
+        discount,
         payment_method: paymentMethod || null,
         auto_renew: autoRenew,
         status,
@@ -172,8 +175,37 @@ export function PlanTab({ userId }: { userId: string }) {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Amount (₹)</Label>
-          <Input type="number" value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+          <Label>Pricing (₹)</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                placeholder="Base amount"
+              />
+              <span className="text-[11px] text-muted-foreground">Base amount</span>
+            </div>
+            <div className="space-y-1">
+              <Input
+                type="number"
+                min={0}
+                value={discount}
+                onChange={(e) => setDiscount(Math.max(0, Number(e.target.value)))}
+                placeholder="Discount"
+              />
+              <span className="text-[11px] text-muted-foreground">Discount</span>
+            </div>
+          </div>
+          {discount > 0 && (
+            <p className="text-xs text-muted-foreground">
+              Net payable:{" "}
+              <span className="font-medium text-foreground">
+                ₹{Math.max(0, amount - discount).toLocaleString("en-IN")}
+              </span>
+              {discount > amount && <span className="text-destructive"> (discount exceeds amount)</span>}
+            </p>
+          )}
         </div>
       </div>
 

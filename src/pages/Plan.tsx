@@ -94,6 +94,10 @@ export default function Plan() {
     );
   }
 
+  const discount    = Number(plan.discount ?? 0);
+  const netAmount   = Math.max(0, Number(plan.amount) - discount);
+  const hasDiscount = discount > 0;
+
   const totalDays   = daysBetween(plan.start_date, plan.end_date);
   const elapsedDays = daysBetween(plan.start_date, new Date().toISOString());
   const progress    = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
@@ -147,11 +151,16 @@ export default function Plan() {
 
           <div className="flex items-start justify-between relative">
             <div>
-              <p className="font-display font-bold text-white" style={{ fontSize: 34, lineHeight: 1 }}>
-                ₹{Number(plan.amount).toLocaleString("en-IN")}
+              {hasDiscount && (
+                <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", textDecoration: "line-through", lineHeight: 1 }}>
+                  ₹{Number(plan.amount).toLocaleString("en-IN")}
+                </p>
+              )}
+              <p className="font-display font-bold text-white" style={{ fontSize: 34, lineHeight: 1, marginTop: hasDiscount ? 3 : 0 }}>
+                ₹{netAmount.toLocaleString("en-IN")}
               </p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>
-                per cycle · {plan.total_sessions} sessions
+                {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle · {plan.total_sessions} sessions
               </p>
             </div>
             <span className="rounded-full font-bold" style={{ background: GREEN_LIGHT, color: GREEN, fontSize: 12, padding: "4px 12px" }}>
@@ -312,8 +321,13 @@ export default function Plan() {
                 <Badge className="mb-2 bg-primary-soft text-primary hover:bg-primary-soft">
                   {plan.total_sessions} sessions
                 </Badge>
-                <p className="font-display text-2xl">₹{Number(plan.amount).toLocaleString("en-IN")}</p>
-                <p className="text-sm text-muted-foreground">per cycle</p>
+                {hasDiscount && (
+                  <p className="text-sm text-muted-foreground line-through">₹{Number(plan.amount).toLocaleString("en-IN")}</p>
+                )}
+                <p className="font-display text-2xl">₹{netAmount.toLocaleString("en-IN")}</p>
+                <p className="text-sm text-muted-foreground">
+                  {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle
+                </p>
               </div>
             </div>
             <Badge variant="secondary" className="flex items-center gap-1">

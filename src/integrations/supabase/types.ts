@@ -127,6 +127,7 @@ export type Database = {
           amount: number
           auto_renew: boolean
           created_at: string
+          discount: number
           end_date: string
           id: string
           payment_method: string | null
@@ -142,6 +143,7 @@ export type Database = {
           amount: number
           auto_renew?: boolean
           created_at?: string
+          discount?: number
           end_date: string
           id?: string
           payment_method?: string | null
@@ -157,6 +159,7 @@ export type Database = {
           amount?: number
           auto_renew?: boolean
           created_at?: string
+          discount?: number
           end_date?: string
           id?: string
           payment_method?: string | null
