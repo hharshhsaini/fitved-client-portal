@@ -320,6 +320,44 @@ export type Database = {
           },
         ]
       }
+      trainer_off_times: {
+        Row: {
+          created_at: string
+          from_date: string
+          id: string
+          reason: string | null
+          time_slot: string | null
+          to_date: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_date: string
+          id?: string
+          reason?: string | null
+          time_slot?: string | null
+          to_date: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          from_date?: string
+          id?: string
+          reason?: string | null
+          time_slot?: string | null
+          to_date?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_off_times_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "trainers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trainers: {
         Row: {
           active: boolean

@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { toast } from "sonner";
 import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { ProgressRing } from "@/components/ui/progress-ring";
+import { ClassCalendar } from "@/components/dashboard/ClassCalendar";
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const GOLD       = "#f0a720";
@@ -58,6 +60,14 @@ export default function Dashboard() {
   const { activePause, history } = usePauseStore();
   const navigate = useNavigate();
 
+  // Class-calendar expand state — controllable from the calendar and the next-session card.
+  const [calExpanded, setCalExpanded] = useState(false);
+  const calRef = useRef<HTMLDivElement>(null);
+  const expandCalendar = () => {
+    setCalExpanded(true);
+    requestAnimationFrame(() => calRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  };
+
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning ✨" : hour < 17 ? "Good afternoon ✨" : "Good evening ✨";
@@ -92,6 +102,19 @@ export default function Dashboard() {
       const { data } = await supabase
         .from("profiles").select("name").eq("id", profile!.trainer_id!).maybeSingle();
       return data?.name ?? null;
+    },
+  });
+
+  // Trainer off-days for this client's trainer — surfaced on the class calendar.
+  const { data: offTimes = [] } = useQuery({
+    queryKey: ["trainer-off-times", profile?.trainer_id],
+    enabled: !!profile?.trainer_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_off_times")
+        .select("from_date,to_date,time_slot")
+        .eq("trainer_id", profile!.trainer_id!);
+      return data ?? [];
     },
   });
 
@@ -277,45 +300,21 @@ export default function Dashboard() {
       </div>
       )}
 
-      {/* This week */}
-      <div className="px-5 pt-5 pb-1">
-        <p className="font-semibold uppercase mb-3"
-          style={{ fontSize: 13, color: MUTED, letterSpacing: "0.08em" }}>
-          This week
-        </p>
-        <div className="flex gap-2">
-          {WEEK_DAYS.map((d, i) => {
-            const isTraining = trainingDays.length > 0 && trainingDays.includes(d);
-            const isPast     = i < todayIdx;
-            const isToday    = i === todayIdx;
-            return (
-              <div key={d} className="flex-1 flex flex-col items-center gap-1.5 rounded-2xl py-2.5"
-                style={{
-                  background: isTraining ? (isPast ? GOLD_LIGHT : NAVY) : "#fff",
-                  border: isToday
-                    ? `2px solid ${GOLD}`
-                    : `1px solid ${isTraining ? (isPast ? GOLD : "transparent") : BORDER}`,
-                }}>
-                <span style={{
-                  fontSize: 10, fontWeight: 600,
-                  color: isTraining ? (isPast ? GOLD : "rgba(255,255,255,0.7)") : MUTED,
-                }}>
-                  {d[0]}
-                </span>
-                {isTraining && (
-                  <div className="flex items-center justify-center rounded-full"
-                    style={{ width: 20, height: 20, background: isPast ? GOLD : "rgba(255,255,255,0.15)" }}>
-                    {isPast
-                      ? <Check size={11} color="#fff" strokeWidth={3} />
-                      : <div className="rounded-full" style={{ width: 5, height: 5, background: "rgba(255,255,255,0.6)" }} />
-                    }
-                  </div>
-                )}
-              </div>
-            );
-          })}
+      {/* My classes calendar */}
+      {plan && (
+        <div ref={calRef}>
+          <ClassCalendar
+            startDate={plan.start_date}
+            endDate={plan.end_date}
+            trainingDays={plan.training_days ?? []}
+            pauses={allPauses}
+            offTimes={offTimes}
+            customerSlot={profile?.time_slot ?? null}
+            expanded={calExpanded}
+            onExpandedChange={setCalExpanded}
+          />
         </div>
-      </div>
+      )}
 
       {/* Next session banner */}
       <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
@@ -323,7 +322,7 @@ export default function Dashboard() {
           background: "#fff", border: `1px solid ${BORDER}`,
           padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
         }}>
-        <div>
+        <div onClick={expandCalendar} role="button" className="cursor-pointer flex-1">
           <p className="uppercase font-semibold"
             style={{ fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>
             Next session
