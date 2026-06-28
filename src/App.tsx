@@ -18,6 +18,7 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
 import Customers from "./pages/admin/Customers";
 import CustomerDetail from "./pages/admin/CustomerDetail";
+import AdminPlans from "./pages/admin/Plans";
 import Trainers from "./pages/admin/Trainers";
 import Societies from "./pages/admin/Societies";
 import Corporate from "./pages/Corporate";
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><AdminDashboard /></ProtectedRoute>} />
                 <Route path="/admin/customers" element={<ProtectedRoute allow={["admin"]}><Customers /></ProtectedRoute>} />
                 <Route path="/admin/customers/:id" element={<ProtectedRoute allow={["admin"]}><CustomerDetail /></ProtectedRoute>} />
+                <Route path="/admin/plans" element={<ProtectedRoute allow={["admin"]}><AdminPlans /></ProtectedRoute>} />
                 <Route path="/admin/trainers" element={<ProtectedRoute allow={["admin"]}><Trainers /></ProtectedRoute>} />
                 <Route path="/admin/societies" element={<ProtectedRoute allow={["admin"]}><Societies /></ProtectedRoute>} />
               </Route>

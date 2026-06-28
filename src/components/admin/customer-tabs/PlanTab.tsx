@@ -14,6 +14,7 @@ import {
   calculatePlanEndDate, calculatePlanRenewalDate,
   countTrainingDaysInRange, extendEndDateBySessions, isoDate,
 } from "@/lib/sessionPlan";
+import { CustomPlanPrices } from "./CustomPlanPrices";
 
 type PlanStatus = "active" | "paused" | "cancelled";
 
@@ -288,6 +289,8 @@ export function PlanTab({ userId }: { userId: string }) {
       <Button onClick={() => save.mutate()} disabled={save.isPending}>
         {save.isPending ? "Saving…" : plan ? "Update plan" : "Create plan"}
       </Button>
+
+      <CustomPlanPrices userId={userId} />
     </div>
   );
 }

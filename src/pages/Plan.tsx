@@ -7,7 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { CreditCard, CheckCircle2, CalendarDays, Gift, ArrowRight } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
 import { usePauseStore } from "@/stores/pauseStore";
+import { ExplorePlansDialog } from "@/components/plan/ExplorePlansDialog";
 import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,7 +28,9 @@ const WEEK_DAYS  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function Plan() {
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   const { history, activePause } = usePauseStore();
+  const customerName = profile?.name ?? "";
 
   const { data: plan, refetch } = useQuery({
     queryKey: ["plan", user?.id],
@@ -228,6 +232,13 @@ export default function Plan() {
           ))}
         </div>
 
+        {/* Explore other plans */}
+        {user && (
+          <div className="mx-4 mb-3.5">
+            <ExplorePlansDialog userId={user.id} customerName={customerName} customerPhone={profile?.phone ?? ""} />
+          </div>
+        )}
+
         {/* Training days */}
         <div className="mx-4 mb-3.5 rounded-[20px] p-4"
           style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
@@ -345,6 +356,11 @@ export default function Plan() {
               <dt className="text-sm text-muted-foreground">Next plan starts</dt>
               <dd className="mt-1 font-medium text-primary">{formatDate(plan.renewal_date)}</dd>
             </div>
+            {user && (
+              <div className="sm:col-span-3">
+                <ExplorePlansDialog userId={user.id} customerName={customerName} customerPhone={profile?.phone ?? ""} />
+              </div>
+            )}
             <div className="sm:col-span-3">
               <dt className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5" /> Training days

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2, Gauge } from "lucide-react";
+import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2, Gauge, Package } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -39,6 +39,7 @@ export function AppSidebar() {
     items = [
       { title: "Overview", url: "/admin", icon: Gauge },
       { title: "Customers", url: "/admin/customers", icon: Users },
+      { title: "Plans", url: "/admin/plans", icon: Package },
       { title: "Trainers", url: "/admin/trainers", icon: Dumbbell },
       { title: "Societies", url: "/admin/societies", icon: Building2 },
       { title: "Profile", url: "/profile", icon: UserCircle2 },

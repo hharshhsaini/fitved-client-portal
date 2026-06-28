@@ -122,6 +122,80 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_options: {
+        Row: {
+          active: boolean
+          badge: string | null
+          created_at: string
+          duration_months: number
+          id: string
+          name: string
+          price: number
+          sort_order: number
+          total_sessions: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          duration_months: number
+          id?: string
+          name: string
+          price: number
+          sort_order?: number
+          total_sessions?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          badge?: string | null
+          created_at?: string
+          duration_months?: number
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          total_sessions?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      plan_price_overrides: {
+        Row: {
+          created_at: string
+          id: string
+          plan_option_id: string
+          price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan_option_id: string
+          price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan_option_id?: string
+          price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_price_overrides_plan_option_id_fkey"
+            columns: ["plan_option_id"]
+            isOneToOne: false
+            referencedRelation: "plan_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           amount: number
