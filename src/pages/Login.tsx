@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Navigate, Link } from "react-router-dom";
+import { useNavigate, Navigate, Link, useLocation } from "react-router-dom";
 import { homeForRole } from "@/lib/routes";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -19,10 +19,17 @@ import { isValidPhone, isValidDob, normalizePhone } from "@/lib/phoneAuth";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, role, loading, roleLoading, signIn, signUp, signInWithPhone, signUpWithPhone } = useAuth();
 
+  // Open in create-account mode when arriving via /signup (or ?signup / ?mode=signup),
+  // so a shared link lands customers straight on the create form.
+  const params = new URLSearchParams(location.search);
+  const wantSignup =
+    location.pathname === "/signup" || params.has("signup") || params.get("mode") === "signup";
+
   // Customer state
-  const [custMode, setCustMode] = useState<"signin" | "signup">("signin");
+  const [custMode, setCustMode] = useState<"signin" | "signup">(wantSignup ? "signup" : "signin");
   const [custName, setCustName] = useState("");
   const [custPhone, setCustPhone] = useState("");
   const [custDob, setCustDob] = useState<Date | undefined>(undefined);
