@@ -173,6 +173,7 @@ export default function Dashboard() {
   // ── Renewal urgency ───────────────────────────────────────────────────────
   const todayISO    = todayLocalISO();
   const planEnded   = plan?.status === "cancelled" || plan?.status === "completed" || plan?.status === "paused";
+  const hasActivePlan = plan && plan.status === "active";
   const expired     = !!plan && (plan.end_date < todayISO || planEnded);
   const daysToEnd   = plan ? Math.max(0, daysBetween(todayISO, plan.end_date) - 1) : 0;
   const daysSinceRenewal = plan ? Math.max(0, daysBetween(plan.renewal_date, todayISO) - 1) : 0;
@@ -331,7 +332,7 @@ export default function Dashboard() {
       )}
 
       {/* My classes calendar */}
-      {plan && (
+      {hasActivePlan && (
         <div ref={calRef}>
           <ClassCalendar
             startDate={plan.start_date}
@@ -347,12 +348,13 @@ export default function Dashboard() {
       )}
 
       {/* Next session banner */}
-      <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
-        style={{
-          background: "#fff", border: `1px solid ${BORDER}`,
-          padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
-        }}>
-        <div onClick={expandCalendar} role="button" className="cursor-pointer flex-1">
+      {hasActivePlan && (
+        <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
+          style={{
+            background: "#fff", border: `1px solid ${BORDER}`,
+            padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
+          }}>
+          <div onClick={expandCalendar} role="button" className="cursor-pointer flex-1">
           <p className="uppercase font-semibold"
             style={{ fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>
             Next session
@@ -366,13 +368,14 @@ export default function Dashboard() {
             {trainerName ?? "Your trainer"} · {profile?.society ?? "Your society"}
           </p>
         </div>
-        <Link to="/plan">
-          <div className="flex items-center justify-center rounded-full"
-            style={{ width: 44, height: 44, background: GOLD_LIGHT, flexShrink: 0 }}>
-            <ChevronRight size={18} color={GOLD} />
-          </div>
-        </Link>
-      </div>
+          <Link to="/plan">
+            <div className="flex items-center justify-center rounded-full"
+              style={{ width: 44, height: 44, background: GOLD_LIGHT, flexShrink: 0 }}>
+              <ChevronRight size={18} color={GOLD} />
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Quick cards */}
       <div className="flex gap-2.5 px-4 pb-4 pt-1">
@@ -435,10 +438,10 @@ export default function Dashboard() {
               </span>
               <div>
                 <p className="text-sm text-muted-foreground">Your plan</p>
-                <p className="font-display text-xl">{plan ? formatPlanName(plan.total_sessions) : "—"}</p>
+                <p className="font-display text-xl">{hasActivePlan ? formatPlanName(plan.total_sessions) : plan ? "Plan ended" : "—"}</p>
               </div>
             </div>
-            {plan && (
+            {hasActivePlan && (
               <div className="flex flex-col items-end gap-1">
                 <Badge variant="secondary">{sessionsLeft} sessions left</Badge>
                 {carryForward > 0 && (
@@ -450,7 +453,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          {plan ? (
+          {hasActivePlan ? (
             <>
               {renewUrgent && (
                 <div className="mt-4 rounded-xl p-4 flex items-center justify-between gap-3"
@@ -493,6 +496,29 @@ export default function Dashboard() {
                 <Link to="/plan">View plan details <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
             </>
+          ) : plan ? (
+            <>
+              {/* Expired/Ended Plan renewal alert */}
+              <div className="mt-4 rounded-xl p-4 flex items-center justify-between gap-3"
+                style={{ background: "rgba(210,59,52,0.08)", border: `1px solid ${RED}` }}>
+                <div>
+                  <p className="font-semibold" style={{ color: RED }}>
+                    Your plan has completed
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Renew now to continue your fitness journey and get back on track.
+                  </p>
+                </div>
+                <a href={upiLink}
+                  className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
+                  style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
+                  Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+              <Button asChild variant="ghost" className="mt-4 px-0 text-primary hover:text-primary hover:bg-transparent">
+                <Link to="/plan">View plan details <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
+            </>
           ) : (
             <p className="mt-5 text-sm text-muted-foreground">No plan assigned yet — your trainer will set this up.</p>
           )}
@@ -524,7 +550,7 @@ export default function Dashboard() {
         </Card>
 
         {/* My classes calendar — includes trainer off-day indicators */}
-        {plan && (
+        {hasActivePlan && (
           <Card className="p-2 rounded-2xl shadow-card md:col-span-2">
             <ClassCalendar
               startDate={plan.start_date}
