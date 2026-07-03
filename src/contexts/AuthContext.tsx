@@ -13,7 +13,7 @@ interface AuthContextValue {
   loading: boolean;
   roleLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, name: string, contact: string) => Promise<{ error: string | null }>;
   signInWithPhone: (phone: string, dob: Date) => Promise<{ error: string | null }>;
   signUpWithPhone: (name: string, phone: string, dob: Date) => Promise<{ error: string | null }>;
   signInAdmin: (phone: string, passwordText: string) => Promise<{ error: string | null }>;
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null };
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, name: string) => {
+  const signUp = useCallback(async (email: string, password: string, name: string, contact: string) => {
     const { data: existingTrainer } = await supabase
       .from("trainers")
       .select("id")
@@ -166,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: name,
         email: email,
         password: password,
+        contact: contact || null,
       });
 
     if (pendingErr) {
