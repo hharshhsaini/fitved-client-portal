@@ -56,7 +56,7 @@ export function TopBar() {
     },
   });
 
-  const handleApprove = async (userId: string, name: string, email: string, passwordText: string) => {
+  const handleApprove = async (userId: string, name: string, email: string, passwordText: string, contact?: string | null) => {
     setBusyId(userId);
     try {
       const { error } = await supabase.rpc("approve_trainer", {
@@ -64,6 +64,7 @@ export function TopBar() {
         p_name: name,
         p_email: email,
         p_password: passwordText,
+        p_contact: contact || null,
       });
       if (error) {
         toast.error("Approval failed: " + error.message);
@@ -138,6 +139,7 @@ export function TopBar() {
                       <div className="min-w-0 flex-1 mr-3">
                         <p className="text-sm font-medium truncate text-foreground">{t.name}</p>
                         <p className="text-xs text-muted-foreground truncate">{t.email}</p>
+                        {t.contact && <p className="text-xs text-muted-foreground truncate">Phone: {t.contact}</p>}
                         <p className="text-[10px] text-muted-foreground mt-1">Pwd: <span className="font-mono bg-muted px-1 py-0.5 rounded">{t.password}</span></p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -146,7 +148,7 @@ export function TopBar() {
                           variant="ghost"
                           className="h-8 w-8 p-0 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                           disabled={busyId === t.user_id}
-                          onClick={() => handleApprove(t.user_id, t.name, t.email, t.password)}
+                          onClick={() => handleApprove(t.user_id, t.name, t.email, t.password, t.contact)}
                         >
                           <Check className="h-4.5 w-4.5" />
                         </Button>
