@@ -63,7 +63,7 @@ export function PlanTab({ userId }: { userId: string }) {
   const [autoRenew, setAutoRenew] = useState(true);
   const [status, setStatus] = useState<PlanStatus>("active");
   useEffect(() => {
-    if (plan) {
+    if (plan && plan.status === "active") {
       setTotalSessions(plan.total_sessions);
       setTrainingDays(plan.training_days ?? []);
       setStartDate(plan.start_date);
@@ -75,7 +75,17 @@ export function PlanTab({ userId }: { userId: string }) {
       setAutoRenew(plan.auto_renew);
       setStatus(normalizeStatus(plan.status));
     } else {
+      // Clear inputs for new plan creation if no plan exists or latest plan has ended
+      setTotalSessions(12);
+      setTrainingDays([]);
       setStartDate(new Date().toISOString().slice(0, 10));
+      setEndDate("");
+      setRenewalDate("");
+      setAmount(3499);
+      setDiscount(0);
+      setPaymentMethod("");
+      setAutoRenew(true);
+      setStatus("active");
     }
   }, [plan]);
 
@@ -131,7 +141,7 @@ export function PlanTab({ userId }: { userId: string }) {
         auto_renew: autoRenew,
         status,
       };
-      if (plan) {
+      if (plan && plan.status === "active") {
         const { data, error } = await supabase.from("plans").update(payload).eq("id", plan.id).select();
         if (error) throw error;
         if (!data || data.length === 0) {
@@ -483,11 +493,11 @@ export function PlanTab({ userId }: { userId: string }) {
       </div>
 
       <Button onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : plan ? "Update plan" : "Create plan"}
+        {save.isPending ? "Saving…" : (plan && plan.status === "active") ? "Update plan" : "Create plan"}
       </Button>
 
       {/* Manual renewal — the only way a plan rolls into its next cycle */}
-      {plan && (
+      {plan && plan.status === "active" && (
         <div className="rounded-lg border p-4 space-y-2" style={{ borderColor: "rgba(240,167,32,0.5)", background: "rgba(240,167,32,0.06)" }}>
           <p className="font-medium text-sm">Renew plan (next cycle)</p>
           <p className="text-xs text-muted-foreground">

@@ -59,18 +59,22 @@ export default function Plan() {
     }
   };
 
-  if (!plan) {
+  const isActive = plan && plan.status === "active";
+
+  if (!isActive) {
     return (
       <>
         {/* Mobile empty state */}
         <div className="md:hidden" style={{ background: "#f4f2ee", minHeight: "100%" }}>
           <div style={{ padding: "8px 20px 16px" }}>
-            <p style={{ color: MUTED, fontSize: 13 }}>Active subscription</p>
+            <p style={{ color: MUTED, fontSize: 13 }}>Subscription status</p>
             <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: NAVY }}>Your plan</h2>
           </div>
           <div className="mx-4 rounded-[20px] p-8 text-center"
             style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
-            <p style={{ color: MUTED, fontSize: 14 }}>No plan assigned yet — your trainer will set this up.</p>
+            <p style={{ color: MUTED, fontSize: 14 }}>
+              {plan ? "Your plan has ended. Please renew to continue your classes." : "No plan assigned yet — your trainer will set this up."}
+            </p>
           </div>
         </div>
         {/* Desktop empty state */}
@@ -80,7 +84,9 @@ export default function Plan() {
             <p className="mt-1 text-muted-foreground">All the details about your current Fitved plan.</p>
           </header>
           <Card className="p-8 rounded-2xl shadow-card text-center">
-            <p className="text-muted-foreground">No plan assigned yet — your trainer will set this up.</p>
+            <p className="text-muted-foreground">
+              {plan ? "Your plan has ended. Please renew to continue your classes." : "No plan assigned yet — your trainer will set this up."}
+            </p>
           </Card>
         </div>
       </>
