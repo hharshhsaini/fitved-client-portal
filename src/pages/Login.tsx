@@ -40,6 +40,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
 
   // Admin state
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -123,8 +124,8 @@ export default function Login() {
       return;
     }
 
-    if (!email || !password) {
-      toast.error("Please enter email and password");
+    if (!email || !password || (mode === "signup" && (!name || !contact))) {
+      toast.error(mode === "signup" ? "Please fill in all fields" : "Please enter email and password");
       return;
     }
     setBusy(true);
@@ -137,7 +138,7 @@ export default function Login() {
         // redirects to homeForRole(role) once the role loads
         // (admin → /admin, trainer → /trainer, client → /dashboard).
       } else {
-        const { error } = await signUp(email, password, name);
+        const { error } = await signUp(email, password, name, contact);
         if (error) { toast.error(error); return; }
         toast.success("Account created — check your email to confirm.");
       }
@@ -311,10 +312,23 @@ export default function Login() {
                 ) : (
                   <>
                     {mode === "signup" && (
-                      <div className="space-y-2">
-                        <Label htmlFor="name">Full name</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
-                      </div>
+                      <>
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Full name</Label>
+                          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="sphone-signup">Mobile number</Label>
+                          <Input
+                            id="sphone-signup"
+                            type="tel"
+                            inputMode="numeric"
+                            value={contact}
+                            onChange={(e) => setContact(normalizePhone(e.target.value).slice(0, 10))}
+                            placeholder="10-digit mobile number"
+                          />
+                        </div>
+                      </>
                     )}
                     <div className="space-y-2">
                       <Label htmlFor="email">Email</Label>

@@ -192,6 +192,7 @@ export type Database = {
       }
       pending_trainers: {
         Row: {
+          contact: string | null
           created_at: string
           email: string
           id: string
@@ -200,6 +201,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          contact?: string | null
           created_at?: string
           email: string
           id?: string
@@ -208,6 +210,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          contact?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -607,6 +610,7 @@ export type Database = {
           p_name: string
           p_password: string
           p_user_id: string
+          p_contact?: string | null
         }
         Returns: undefined
       }
