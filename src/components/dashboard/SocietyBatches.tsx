@@ -20,7 +20,7 @@ export function SocietyBatches() {
     queryKey: ["society-batches", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_my_society_batches");
+      const { data, error } = await (supabase as any).rpc("get_my_society_batches", { _client_id: user!.id });
       if (error) throw error;
       return (data ?? []) as BatchRow[];
     },

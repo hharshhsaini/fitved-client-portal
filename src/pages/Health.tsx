@@ -21,7 +21,7 @@ export default function Health() {
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("health_reports").select("*").eq("user_id", user!.id)
+        .from("health_reports").select("*").eq("client_id", user!.id)
         .order("report_date", { ascending: false });
       return data ?? [];
     },

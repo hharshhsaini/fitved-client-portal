@@ -20,7 +20,7 @@ import { isValidPhone, isValidDob, normalizePhone } from "@/lib/phoneAuth";
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, role, loading, roleLoading, signIn, signUp, signInWithPhone, signUpWithPhone } = useAuth();
+  const { user, role, loading, roleLoading, signIn, signUp, signInWithPhone, signUpWithPhone, signInAdmin } = useAuth();
 
   // Open in create-account mode when arriving via /signup (or ?signup / ?mode=signup),
   // so a shared link lands customers straight on the create form.
@@ -40,6 +40,11 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+
+  // Admin state
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [staffPhone, setStaffPhone] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
 
   const [busy, setBusy] = useState(false);
 
@@ -62,7 +67,12 @@ export default function Login() {
       if (custMode === "signin") {
         const { error } = await signInWithPhone(custPhone, custDob!);
         if (error) {
-          toast.error(error.includes("Invalid") ? "Phone or birthday doesn't match" : error);
+          if (error.includes("Invalid login credentials") || error.toLowerCase().includes("invalid")) {
+            toast.error("Account not found or incorrect birthday. Please create an account.");
+            setCustMode("signup");
+            return;
+          }
+          toast.error(error);
           return;
         }
         toast.success("Welcome back!");
@@ -70,7 +80,12 @@ export default function Login() {
       } else {
         const { error } = await signUpWithPhone(custName.trim(), custPhone, custDob!);
         if (error) {
-          toast.error(error.includes("registered") ? "This phone is already registered" : error);
+          if (error.includes("registered") || error.toLowerCase().includes("already")) {
+            toast.error("You already have an account! Please sign in.");
+            setCustMode("signin");
+            return;
+          }
+          toast.error(error);
           return;
         }
         toast.success("Account created — signing you in…");
@@ -84,6 +99,30 @@ export default function Login() {
 
   const handleStaff = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAdminMode) {
+      if (!isValidPhone(staffPhone)) {
+        toast.error("Please enter a valid 10-digit phone number");
+        return;
+      }
+      if (!adminPassword) {
+        toast.error("Please enter password");
+        return;
+      }
+      setBusy(true);
+      try {
+        const { error } = await signInAdmin(staffPhone, adminPassword);
+        if (error) {
+          toast.error(error);
+          return;
+        }
+        toast.success("Welcome back, Admin!");
+        navigate("/admin");
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+
     if (!email || !password) {
       toast.error("Please enter email and password");
       return;
@@ -236,43 +275,82 @@ export default function Login() {
 
             <TabsContent value="staff" className="mt-5">
               <h2 className="font-display text-2xl text-foreground">
-                {mode === "signin" ? "Staff sign in" : "Create staff account"}
+                {isAdminMode ? "Admin sign in" : mode === "signin" ? "Staff sign in" : "Create staff account"}
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">For trainers and admins.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {isAdminMode ? "Sign in with your phone and birthday." : "For trainers and admins."}
+              </p>
 
               <form onSubmit={handleStaff} className="mt-5 space-y-4">
-                {mode === "signup" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full name</Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    {mode === "signin" && (
-                      <button type="button" className="text-xs text-primary hover:underline" onClick={handleForgot}>
-                        Forgot password?
-                      </button>
+                {isAdminMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="sphone">Phone number</Label>
+                      <Input
+                        id="sphone"
+                        type="tel"
+                        inputMode="numeric"
+                        value={staffPhone}
+                        onChange={(e) => setStaffPhone(normalizePhone(e.target.value).slice(0, 10))}
+                        placeholder="10-digit mobile number"
+                        autoComplete="tel"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="apassword">Password</Label>
+                      <Input
+                        id="apassword"
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {mode === "signup" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full name</Label>
+                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                      </div>
                     )}
-                  </div>
-                  <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === "signin" ? "current-password" : "new-password"} />
-                </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="password">Password</Label>
+                        {mode === "signin" && (
+                          <button type="button" className="text-xs text-primary hover:underline" onClick={handleForgot}>
+                            Forgot password?
+                          </button>
+                        )}
+                      </div>
+                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === "signin" ? "current-password" : "new-password"} />
+                    </div>
+                  </>
+                )}
                 <Button type="submit" className="w-full h-11 text-base" disabled={busy}>
-                  {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
+                  {busy ? "Please wait…" : isAdminMode || mode === "signin" ? "Sign in" : "Create account"}
                 </Button>
               </form>
 
-              <p className="mt-4 text-center text-sm text-muted-foreground">
-                {mode === "signin" ? "Need a staff account?" : "Already have an account?"}{" "}
-                <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="text-primary font-medium hover:underline">
-                  {mode === "signin" ? "Create one" : "Sign in"}
+              <div className="mt-4 flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                {!isAdminMode && (
+                  <p>
+                    {mode === "signin" ? "Need a staff account?" : "Already have an account?"}{" "}
+                    <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="text-primary font-medium hover:underline">
+                      {mode === "signin" ? "Create one" : "Sign in"}
+                    </button>
+                  </p>
+                )}
+                <button onClick={() => setIsAdminMode(!isAdminMode)} className="text-primary font-medium hover:underline">
+                  {isAdminMode ? "Sign in as Trainer" : "Sign in as Admin"}
                 </button>
-              </p>
+              </div>
             </TabsContent>
           </Tabs>
         </Card>

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/dates";
+import { recalculatePlanDates } from "@/stores/pauseStore";
 
 export function PausesTab({ userId }: { userId: string }) {
   const qc = useQueryClient();
@@ -20,26 +21,30 @@ export function PausesTab({ userId }: { userId: string }) {
   const { data: pauses = [] } = useQuery({
     queryKey: ["customer-pauses", userId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("pauses").select("*").eq("user_id", userId)
+      const { data } = await (supabase.from("pauses") as any).select("*").eq("client_id", userId)
         .order("from_date", { ascending: false });
       return data ?? [];
     },
   });
 
-  // Keep both the admin list and the plan tab's carry-forward calc in sync.
+  // Keep the admin list, the plan tab's carry-forward calc, and the
+  // customer-facing plan queries in sync.
   const invalidatePauses = () => {
     qc.invalidateQueries({ queryKey: ["customer-pauses", userId] });
     qc.invalidateQueries({ queryKey: ["customer-pauses-for-plan", userId] });
+    qc.invalidateQueries({ queryKey: ["customer-plan", userId] });
+    qc.invalidateQueries({ queryKey: ["plan", userId] });
+    qc.invalidateQueries({ queryKey: ["pauses", userId] });
   };
 
   const create = useMutation({
     mutationFn: async () => {
       if (from > to) throw new Error("From date must be on or before To date");
-      const { error } = await supabase.from("pauses").insert({
-        user_id: userId, from_date: from, to_date: to, status: "active",
+      const { error } = await (supabase.from("pauses") as any).insert({
+        user_id: userId, client_id: userId, from_date: from, to_date: to, status: "active",
       });
       if (error) throw error;
+      await recalculatePlanDates(userId);
     },
     onSuccess: () => {
       toast.success("Pause added");
@@ -53,6 +58,7 @@ export function PausesTab({ userId }: { userId: string }) {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("pauses").update({ status: "completed" }).eq("id", id);
       if (error) throw error;
+      await recalculatePlanDates(userId);
     },
     onSuccess: () => { toast.success("Pause ended"); invalidatePauses(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
@@ -66,6 +72,7 @@ export function PausesTab({ userId }: { userId: string }) {
         .update({ from_date: editFrom, to_date: editTo })
         .eq("id", editingId!);
       if (error) throw error;
+      await recalculatePlanDates(userId);
     },
     onSuccess: () => { toast.success("Pause updated"); setEditingId(null); invalidatePauses(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Update failed"),
@@ -75,6 +82,7 @@ export function PausesTab({ userId }: { userId: string }) {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("pauses").delete().eq("id", id);
       if (error) throw error;
+      await recalculatePlanDates(userId);
     },
     onSuccess: () => { toast.success("Pause deleted"); invalidatePauses(); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),

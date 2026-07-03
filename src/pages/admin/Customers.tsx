@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UserPlus, Search } from "lucide-react";
+import { formatPlanName } from "@/lib/sessionPlan";
 import { AddCustomerDialog } from "@/components/admin/AddCustomerDialog";
 
 interface CustomerRow {
@@ -50,7 +51,7 @@ export default function Customers() {
           phone: p.phone,
           society: soc?.name ?? null,
           trainer_name: trainer?.name ?? null,
-          plan_type: plan ? `${plan.total_sessions} sessions` : null,
+          plan_type: plan ? formatPlanName(plan.total_sessions) : null,
           plan_status: plan?.status ?? null,
         };
       });

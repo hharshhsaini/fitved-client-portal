@@ -9,6 +9,15 @@ export type Weekday = typeof WEEKDAYS[number];
 export const SESSION_OPTIONS = [8, 12, 36, 72] as const;
 export type SessionCount = typeof SESSION_OPTIONS[number];
 
+export function formatPlanName(sessions: number | null | undefined): string {
+  if (!sessions) return "Not assigned";
+  if (sessions === 8) return "8 sessions · Trial / Recovery";
+  if (sessions === 12) return "1 month · 12 sessions";
+  if (sessions === 36) return "3 months · 36 sessions";
+  if (sessions === 72) return "6 months · 72 sessions";
+  return `${sessions} sessions`;
+}
+
 function weekdayName(d: Date): Weekday {
   return d.toLocaleDateString("en-US", { weekday: "long" }) as Weekday;
 }

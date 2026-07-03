@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
@@ -64,10 +64,23 @@ export function ProfileTab({ userId }: { userId: string }) {
   });
 
   const { data: trainers = [] } = useQuery({
-    queryKey: ["trainers-active"],
+    queryKey: ["trainers-active-with-societies"],
     queryFn: async () => {
-      const { data } = await supabase.from("trainers").select("id, name, active").eq("active", true).order("name");
-      return data ?? [];
+      const { data } = await supabase.from("trainers")
+        .select("id, name, active, trainer_societies(society_id)")
+        .eq("active", true)
+        .order("name");
+      
+      // Deduplicate by name to fix any accidental duplicate rows
+      const unique = [];
+      const seen = new Set();
+      for (const t of (data || [])) {
+        if (!seen.has(t.name)) {
+          seen.add(t.name);
+          unique.push(t);
+        }
+      }
+      return unique;
     },
   });
 
@@ -89,6 +102,7 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [rawSlot, setRawSlot] = useState("");
@@ -100,6 +114,7 @@ export function ProfileTab({ userId }: { userId: string }) {
     if (profile) {
       setName(profile.name ?? "");
       setPhone(profile.phone ?? "");
+      setEmail((profile as any).email ?? "");
       const slot = profile.time_slot ?? "";
       setRawSlot(slot);
       const parsed = parseSlot(slot);
@@ -110,16 +125,35 @@ export function ProfileTab({ userId }: { userId: string }) {
     }
   }, [profile]);
 
+  const availableTrainers = useMemo(() => {
+    if (!societyId) return [];
+    return trainers.filter((t: any) => 
+      t.trainer_societies?.some((ts: any) => ts.society_id === societyId)
+    );
+  }, [trainers, societyId]);
+
+  useEffect(() => {
+    // If society changes and the current trainer is not in the new society's list, clear the trainer
+    if (societyId && trainerId && availableTrainers.length > 0) {
+      if (!availableTrainers.some(t => t.id === trainerId)) {
+        setTrainerId("");
+      }
+    } else if (!societyId && trainerId) {
+      setTrainerId("");
+    }
+  }, [societyId, availableTrainers, trainerId]);
+
   const composedSlot = startTime && endTime ? `${to12h(startTime)} – ${to12h(endTime)}` : "";
 
   const resetDob = useMutation({
     mutationFn: async (date: Date) => {
       const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-      const { data, error } = await supabase.functions.invoke("reset-customer-dob", {
-        body: { user_id: userId, dob: iso },
-      });
+      // DOB doubles as the customer's password — a plain profiles update is
+      // all the custom phone+DOB login checks against.
+      const { data, error } = await supabase.from("profiles")
+        .update({ dob: iso }).eq("id", userId).select("id");
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (!data || data.length === 0) throw new Error("Customer profile not found — birthday was not changed.");
     },
     onSuccess: () => {
       toast.success("Birthday reset — customer's password is now their new birthday");
@@ -138,6 +172,7 @@ export function ProfileTab({ userId }: { userId: string }) {
       const { error } = await supabase.from("profiles").update({
         name: name || null,
         phone: phone || null,
+        email: email || null,
         society: societyName,
         time_slot: composedSlot || null,
         trainer_id: trainerId || null,
@@ -205,6 +240,12 @@ export function ProfileTab({ userId }: { userId: string }) {
       </div>
 
       <div className="space-y-1.5">
+        <Label>Email</Label>
+        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="customer@email.com" />
+        <p className="text-xs text-muted-foreground">Customer's email — set by the customer from their profile.</p>
+      </div>
+
+      <div className="space-y-1.5">
         <Label>Time slot</Label>
         <div className="flex items-center gap-2">
           <Input
@@ -245,25 +286,25 @@ export function ProfileTab({ userId }: { userId: string }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Assigned trainer</Label>
-          <Select value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Label>Society</Label>
+          <Select value={societyId || "none"} onValueChange={(v) => setSocietyId(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Select society first" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No trainer</SelectItem>
-              {trainers.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name ?? "Unnamed"}</SelectItem>
+              <SelectItem value="none">No society</SelectItem>
+              {societies.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Society</Label>
-          <Select value={societyId || "none"} onValueChange={(v) => setSocietyId(v === "none" ? "" : v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Label>Assigned trainer</Label>
+          <Select disabled={!societyId} value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder={societyId ? "Select trainer" : "Select society first"} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No society</SelectItem>
-              {societies.map((s) => (
-                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              <SelectItem value="none">No trainer</SelectItem>
+              {availableTrainers.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name ?? "Unnamed"}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -274,26 +315,7 @@ export function ProfileTab({ userId }: { userId: string }) {
         {save.isPending ? "Saving…" : "Save profile"}
       </Button>
 
-      <div className="border-t pt-5 space-y-3">
-        <Label>Roles</Label>
-        <div className="flex flex-wrap gap-2">
-          {(["client", "trainer", "admin"] as AppRole[]).map((r) => {
-            const has = roles.includes(r);
-            return (
-              <Button
-                key={r}
-                size="sm"
-                variant={has ? "default" : "outline"}
-                onClick={() => toggleRole.mutate({ role: r, add: !has })}
-                disabled={toggleRole.isPending}
-              >
-                {has ? `✓ ${r}` : `+ ${r}`}
-              </Button>
-            );
-          })}
-        </div>
-        <p className="text-xs text-muted-foreground">Click to toggle. A user can have multiple roles.</p>
-      </div>
+
 
       <div className="border-t pt-5 space-y-3">
         <Label>Reset birthday (password)</Label>

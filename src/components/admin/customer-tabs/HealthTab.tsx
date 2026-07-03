@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export function HealthTab({ userId }: { userId: string }) {
     queryKey: ["customer-reports", userId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("health_reports").select("*").eq("user_id", userId)
+        .from("health_reports").select("*").eq("client_id", userId)
         .order("report_date", { ascending: false });
       return data ?? [];
     },
@@ -31,7 +31,7 @@ export function HealthTab({ userId }: { userId: string }) {
       const { error: upErr } = await supabase.storage.from("health-reports").upload(path, file);
       if (upErr) throw upErr;
       const { error } = await supabase.from("health_reports").insert({
-        user_id: userId, title, report_date: date, file_path: path,
+        client_id: userId, title, report_date: date, file_path: path,
       });
       if (error) throw error;
     },
@@ -42,6 +42,29 @@ export function HealthTab({ userId }: { userId: string }) {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Upload failed"),
   });
+
+  // Auto-delete reports older than 30 days from database and storage
+  useEffect(() => {
+    const cleanup = async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const { data } = await supabase
+        .from("health_reports")
+        .select("*")
+        .lt("report_date", thirtyDaysAgo.toISOString());
+
+      if (data && data.length > 0) {
+        for (const r of data) {
+          if (r.file_path) {
+            await supabase.storage.from("health-reports").remove([r.file_path]);
+          }
+          await supabase.from("health_reports").delete().eq("id", r.id);
+        }
+        qc.invalidateQueries({ queryKey: ["customer-reports", userId] });
+      }
+    };
+    cleanup();
+  }, [userId, qc]);
 
   const view = async (path: string) => {
     const { data, error } = await supabase.storage.from("health-reports").createSignedUrl(path, 60);

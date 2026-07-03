@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { Mail, MapPin, Phone, Clock, UserRound, Pencil } from "lucide-react";
+import { Mail, MapPin, Phone, Clock, UserRound, Pencil, ChevronDown, Receipt } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -29,17 +29,47 @@ export default function Profile() {
   const [open, setOpen] = useState(false);
   const [name, setName]         = useState("");
   const [phone, setPhone]       = useState("");
+  const [email, setEmail]       = useState("");
   const [society, setSociety]   = useState("");
+  const [societyId, setSocietyId] = useState("");
   const [timeSlot, setTimeSlot] = useState("");
 
+  // profiles.trainer_id references trainers.id — look the name up there.
   const { data: trainer } = useQuery({
     queryKey: ["trainer", profile?.trainer_id],
     enabled: !!profile?.trainer_id,
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("name").eq("id", profile!.trainer_id!).maybeSingle();
+      const { data } = await supabase.from("trainers").select("name").eq("id", profile!.trainer_id!).maybeSingle();
       return data;
     },
   });
+
+  // Fetch societies list for dropdown
+  const { data: societiesList = [] } = useQuery({
+    queryKey: ["profile-societies-list"],
+    queryFn: async () => {
+      const { data } = await supabase.from("societies").select("id, name").order("name");
+      return data ?? [];
+    },
+  });
+
+  // Fetch active plan to restrict society changes
+  const { data: activePlan } = useQuery({
+    queryKey: ["profile-active-plan", user?.id],
+    enabled: !!user && role === "client",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("status, end_date")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const hasActivePlan = activePlan?.status === "active";
 
   // Trainers get their own profile view (no society/plan/trainer fields)
   if (role === "trainer") return <TrainerProfile />;
@@ -47,16 +77,31 @@ export default function Profile() {
   const openDialog = () => {
     setName(profile?.name ?? "");
     setPhone(profile?.phone ?? "");
+    setEmail((profile as any)?.email ?? "");
     setSociety(profile?.society ?? "");
+    setSocietyId(profile?.society_id ?? "");
     setTimeSlot(profile?.time_slot ?? "");
     setOpen(true);
   };
 
   const handleSave = async () => {
     if (!user) return;
-    const { error } = await supabase.from("profiles")
-      .update({ name, phone, society, time_slot: timeSlot }).eq("id", user.id);
-    if (error) { toast.error(error.message); return; }
+    if (role === "admin") {
+      const { error } = await supabase.from("admins")
+        .update({ name, phone }).eq("id", user.id);
+      if (error) { toast.error(error.message); return; }
+    } else {
+      // Clients can only change email and society — name, phone and time slot
+      // are managed by the admin (and trainers never reach this page).
+      const { error } = await supabase.from("profiles")
+        .update({
+          email: email || null,
+          society: society || null,
+          society_id: societyId || null,
+        })
+        .eq("id", user.id);
+      if (error) { toast.error(error.message); return; }
+    }
     toast.success("Profile updated");
     qc.invalidateQueries({ queryKey: ["profile", user.id] });
     setOpen(false);
@@ -71,6 +116,7 @@ export default function Profile() {
     { icon: Clock,     label: "Time slot", value: profile?.time_slot || "—" },
     { icon: UserRound, label: "Trainer",   value: trainer?.name      || "Not assigned" },
     { icon: Phone,     label: "Phone",     value: profile?.phone     || "—" },
+    { icon: Mail,      label: "Email",     value: (profile as any)?.email || "—" },
   ];
 
   return (
@@ -100,7 +146,7 @@ export default function Profile() {
               <p className="font-bold truncate" style={{ fontSize: 19, color: NAVY }}>
                 {displayName || (isLoading ? "Loading…" : "Add your name")}
               </p>
-              <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{user?.email}</p>
+              <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{profile?.email ?? user?.email}</p>
             </div>
           </div>
 
@@ -141,19 +187,48 @@ export default function Profile() {
                 <div className="space-y-4 py-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                    <Input id="name" value={name} disabled={role !== "admin"} onChange={(e) => setName(e.target.value)} />
+                    {role !== "admin" && <p className="text-[11px] text-muted-foreground">Name cannot be changed.</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone</Label>
-                    <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <Input id="phone" value={phone} disabled={role !== "admin"} onChange={(e) => setPhone(e.target.value)} />
+                    {role !== "admin" && <p className="text-[11px] text-muted-foreground">Phone number cannot be changed.</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
+                    <p className="text-[11px] text-muted-foreground">Visible to your trainer and admin.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="society">Society</Label>
-                    <Input id="society" value={society} onChange={(e) => setSociety(e.target.value)} />
+                    <select
+                      id="society"
+                      value={societyId}
+                      disabled={hasActivePlan && role === "client"}
+                      onChange={(e) => {
+                        const selId = e.target.value;
+                        setSocietyId(selId);
+                        const selName = societiesList.find(s => s.id === selId)?.name ?? "";
+                        setSociety(selName);
+                      }}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Select a society</option>
+                      {societiesList.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    {hasActivePlan && role === "client" && (
+                      <p className="text-[11px] text-destructive">Society cannot be changed during an active subscription.</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="time">Time slot</Label>
-                    <Input id="time" value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} placeholder="e.g. 7:30 – 8:30 AM" />
+                    <Input id="time" value={timeSlot} disabled={role === "client"} onChange={(e) => setTimeSlot(e.target.value)} placeholder="e.g. 7:30 – 8:30 AM" />
+                    {role === "client" && <p className="text-[11px] text-muted-foreground">Time slot is set by your trainer or admin.</p>}
                   </div>
                 </div>
                 <DialogFooter>
@@ -164,6 +239,13 @@ export default function Profile() {
             </Dialog>
           </div>
         </div>
+
+        {/* Payment history — tucked away, collapsed by default */}
+        {role === "client" && user && (
+          <div className="mx-4 mb-4">
+            <PaymentHistory userId={user.id} />
+          </div>
+        )}
       </div>
 
       {/* ── Desktop Layout (original) ──────────────────────────────── */}
@@ -185,19 +267,48 @@ export default function Profile() {
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label htmlFor="name-d">Name</Label>
-                  <Input id="name-d" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input id="name-d" value={name} disabled={role !== "admin"} onChange={(e) => setName(e.target.value)} />
+                  {role !== "admin" && <p className="text-[11px] text-muted-foreground">Name cannot be changed.</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone-d">Phone</Label>
-                  <Input id="phone-d" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  <Input id="phone-d" value={phone} disabled={role !== "admin"} onChange={(e) => setPhone(e.target.value)} />
+                  {role !== "admin" && <p className="text-[11px] text-muted-foreground">Phone number cannot be changed.</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email-d">Email</Label>
+                  <Input id="email-d" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" />
+                  <p className="text-[11px] text-muted-foreground">Visible to your trainer and admin.</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="society-d">Society</Label>
-                  <Input id="society-d" value={society} onChange={(e) => setSociety(e.target.value)} />
+                  <select
+                    id="society-d"
+                    value={societyId}
+                    disabled={hasActivePlan && role === "client"}
+                    onChange={(e) => {
+                      const selId = e.target.value;
+                      setSocietyId(selId);
+                      const selName = societiesList.find(s => s.id === selId)?.name ?? "";
+                      setSociety(selName);
+                    }}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">Select a society</option>
+                    {societiesList.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  {hasActivePlan && role === "client" && (
+                    <p className="text-[11px] text-destructive">Society cannot be changed during an active subscription.</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="time-d">Time slot</Label>
-                  <Input id="time-d" value={timeSlot} onChange={(e) => setTimeSlot(e.target.value)} placeholder="e.g. 7:30 – 8:30 AM" />
+                  <Input id="time-d" value={timeSlot} disabled={role === "client"} onChange={(e) => setTimeSlot(e.target.value)} placeholder="e.g. 7:30 – 8:30 AM" />
+                  {role === "client" && <p className="text-[11px] text-muted-foreground">Time slot is set by your trainer or admin.</p>}
                 </div>
               </div>
               <DialogFooter>
@@ -220,7 +331,7 @@ export default function Profile() {
           </div>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2">
-            <InfoRow icon={Mail}      label="Email"     value={user?.email ?? ""} />
+            <InfoRow icon={Mail}      label="Email"     value={profile?.email ?? user?.email ?? ""} />
             <InfoRow icon={Phone}     label="Phone"     value={profile?.phone     || "—"} />
             <InfoRow icon={MapPin}    label="Society"   value={profile?.society   || "—"} />
             <InfoRow icon={Clock}     label="Time slot" value={profile?.time_slot || "—"} />
@@ -245,8 +356,79 @@ export default function Profile() {
             <p className="mt-4 text-sm text-muted-foreground">No trainer assigned yet.</p>
           )}
         </Card>
+
+        {/* Payment history — tucked away, collapsed by default */}
+        {role === "client" && user && <PaymentHistory userId={user.id} />}
       </div>
     </>
+  );
+}
+
+/**
+ * Payment history, tucked away and collapsed by default — deliberately not on
+ * the Plan page so customers aren't confronted with what they've paid.
+ */
+function PaymentHistory({ userId }: { userId: string }) {
+  const [open, setOpen] = useState(false);
+
+  const { data: billing = [] } = useQuery({
+    queryKey: ["billing", userId],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("billing_history").select("*").eq("user_id", userId)
+        .order("payment_date", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  return (
+    <div className="rounded-[20px]" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between p-4 cursor-pointer border-none bg-transparent"
+      >
+        <span className="flex items-center gap-2.5">
+          <Receipt size={15} color={MUTED} />
+          <span className="font-medium" style={{ fontSize: 13, color: MUTED }}>Payment history</span>
+        </span>
+        <ChevronDown size={15} color={MUTED}
+          style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          {billing.length === 0 ? (
+            <p style={{ fontSize: 12, color: MUTED }}>No payments recorded yet.</p>
+          ) : (
+            <ul className="divide-y" style={{ borderColor: BORDER }}>
+              {billing.map((b) => {
+                const isRefund = Number(b.amount) < 0 || b.type === "refund";
+                const displayAmount = Math.abs(Number(b.amount));
+                return (
+                  <li key={b.id} className="py-2.5 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium" style={{ fontSize: 13, color: NAVY }}>
+                        {new Date(b.payment_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                        {isRefund && (
+                          <span className="ml-2 text-[9px] font-bold uppercase px-1.5 py-0.5 rounded align-middle"
+                            style={{ background: "rgba(210,59,52,0.1)", color: "#d23b34" }}>
+                            Refund
+                          </span>
+                        )}
+                      </p>
+                      {b.notes && <p className="truncate" style={{ fontSize: 11, color: MUTED }}>{b.notes}</p>}
+                    </div>
+                    <span className="font-semibold shrink-0" style={{ fontSize: 13, color: isRefund ? "#d23b34" : NAVY }}>
+                      {isRefund ? "−" : ""}₹{displayAmount.toLocaleString("en-IN")}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

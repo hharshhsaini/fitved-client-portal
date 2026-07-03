@@ -31,8 +31,8 @@ export function TasksTab({ userId }: { userId: string }) {
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
       const { error } = await supabase.from("tasks").insert({
-        client_id: userId, trainer_id: user.id, title, notes: notes || null,
-        due_date: due || null, completed: false,
+        client_id: userId, trainer_id: user.id, title, description: notes || null,
+        due_date: due || null, status: "todo",
       });
       if (error) throw error;
     },
@@ -46,7 +46,8 @@ export function TasksTab({ userId }: { userId: string }) {
 
   const toggle = useMutation({
     mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
-      const { error } = await supabase.from("tasks").update({ completed }).eq("id", id);
+      const { error } = await supabase.from("tasks")
+        .update({ status: completed ? "done" : "todo" }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["customer-tasks", userId] }),
@@ -88,25 +89,28 @@ export function TasksTab({ userId }: { userId: string }) {
         <h3 className="font-medium">Tasks</h3>
         {tasks.length === 0 ? (
           <p className="text-sm text-muted-foreground">No tasks yet.</p>
-        ) : tasks.map((t) => (
-          <div key={t.id} className="flex items-start justify-between rounded-lg border p-3 gap-3">
-            <div className="flex items-start gap-3 flex-1">
-              <Checkbox
-                checked={t.completed}
-                onCheckedChange={(c) => toggle.mutate({ id: t.id, completed: !!c })}
-                className="mt-0.5"
-              />
-              <div className="flex-1">
-                <div className={`text-sm font-medium ${t.completed ? "line-through text-muted-foreground" : ""}`}>
-                  {t.title}
+        ) : tasks.map((t) => {
+          const done = t.status === "done";
+          return (
+            <div key={t.id} className="flex items-start justify-between rounded-lg border p-3 gap-3">
+              <div className="flex items-start gap-3 flex-1">
+                <Checkbox
+                  checked={done}
+                  onCheckedChange={(c) => toggle.mutate({ id: t.id, completed: !!c })}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <div className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : ""}`}>
+                    {t.title}
+                  </div>
+                  {t.description && <div className="text-xs text-muted-foreground mt-0.5">{t.description}</div>}
+                  {t.due_date && <div className="text-xs text-muted-foreground mt-1">Due {formatDate(t.due_date)}</div>}
                 </div>
-                {t.notes && <div className="text-xs text-muted-foreground mt-0.5">{t.notes}</div>}
-                {t.due_date && <div className="text-xs text-muted-foreground mt-1">Due {formatDate(t.due_date)}</div>}
               </div>
+              <Button size="sm" variant="ghost" onClick={() => remove.mutate(t.id)}>×</Button>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => remove.mutate(t.id)}>×</Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

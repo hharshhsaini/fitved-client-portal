@@ -104,19 +104,27 @@ export default function Trainers() {
 
       if (createLogin && !editing) {
         if (!loginEmail || loginPassword.length < 6) throw new Error("Email and password (6+ chars) required");
-        const { data, error } = await supabase.functions.invoke("create-trainer", {
-          body: {
-            name, contact, specialization, active,
-            email: loginEmail, password: loginPassword,
-            society_ids: societyIds,
-          },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        return;
-      }
 
-      if (editing) {
+        const { data: existing } = await supabase
+          .from("trainers").select("id").eq("email", loginEmail).maybeSingle();
+        if (existing) throw new Error("A trainer with this email already exists.");
+
+        // Staff login checks trainers.email + trainers.password directly, so a
+        // plain insert is enough. user_id is the id the session will run under.
+        const newUserId = crypto.randomUUID();
+        const { data: created, error } = await supabase.from("trainers").insert({
+          user_id: newUserId,
+          name, contact: contact || null, specialization: specialization || null, active,
+          email: loginEmail, password: loginPassword,
+        } as any).select("id").single();
+        if (error) throw error;
+
+        const { error: roleErr } = await supabase
+          .from("user_roles").insert({ user_id: newUserId, role: "trainer" });
+        if (roleErr) console.warn("user_roles insert failed:", roleErr.message);
+
+        trainerId = created?.id;
+      } else if (editing) {
         const { error } = await supabase.from("trainers").update({
           name, contact: contact || null, specialization: specialization || null, active,
         }).eq("id", editing.id);
@@ -189,13 +197,14 @@ export default function Trainers() {
               <TableHead className="hidden md:table-cell">Specialization</TableHead>
               <TableHead className="hidden md:table-cell">Contact</TableHead>
               <TableHead>Societies</TableHead>
+              <TableHead>Password</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {trainers.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No trainers yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No trainers yet</TableCell></TableRow>
             ) : trainers.map((t) => {
               const count = links.filter((l) => l.trainer_id === t.id).length;
               return (
@@ -207,6 +216,7 @@ export default function Trainers() {
                   <TableCell className="hidden md:table-cell">{t.specialization ?? "—"}</TableCell>
                   <TableCell className="hidden md:table-cell">{t.contact ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{count}</Badge></TableCell>
+                  <TableCell className="font-mono text-xs">{(t as any).password ?? "—"}</TableCell>
                   <TableCell><Badge variant={t.active ? "secondary" : "outline"}>{t.active ? "active" : "inactive"}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" title="View as this trainer"

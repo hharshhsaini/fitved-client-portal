@@ -23,9 +23,38 @@ export function TrainerPauses() {
     queryKey: ["trainer-pauses", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("get_trainer_client_pauses");
+      // Resolve the trainer row (session id may be trainers.user_id or trainers.id)
+      const { data: trainer } = await supabase
+        .from("trainers").select("id")
+        .or(`user_id.eq.${user!.id},id.eq.${user!.id}`)
+        .maybeSingle();
+      if (!trainer) return [] as PauseRow[];
+
+      const { data: clients } = await supabase
+        .from("profiles").select("id, name, society, time_slot")
+        .eq("trainer_id", trainer.id);
+      if (!clients || clients.length === 0) return [] as PauseRow[];
+
+      const byId = new Map(clients.map((c) => [c.id, c]));
+      const { data: pauses, error } = await (supabase.from("pauses") as any)
+        .select("id, client_id, from_date, to_date, status")
+        .in("client_id", clients.map((c) => c.id))
+        .order("from_date", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as PauseRow[];
+
+      return (pauses ?? []).map((p: any): PauseRow => {
+        const c = byId.get(p.client_id);
+        return {
+          pause_id: p.id,
+          client_id: p.client_id,
+          client_name: c?.name ?? null,
+          society: c?.society ?? null,
+          time_slot: c?.time_slot ?? null,
+          from_date: p.from_date,
+          to_date: p.to_date,
+          status: p.status,
+        };
+      });
     },
   });
 
