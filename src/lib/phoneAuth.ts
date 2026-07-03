@@ -1,7 +1,7 @@
 // Helpers to map phone+DOB onto Supabase email/password auth.
 // Customers don't have real emails — we synthesize one from their phone.
 
-export const PHONE_EMAIL_DOMAIN = "phone.fitved.local";
+export const PHONE_EMAIL_DOMAIN = "phone.fitved.com";
 
 export function normalizePhone(input: string): string {
   return (input || "").replace(/\D/g, "");

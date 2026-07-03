@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          id: string
+          name: string | null
+          password: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          password: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string | null
+          password?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      b2b_leads: {
+        Row: {
+          company: string | null
+          contact_name: string
+          created_at: string
+          email: string | null
+          event_type: string | null
+          headcount: string | null
+          id: string
+          message: string | null
+          phone: string
+        }
+        Insert: {
+          company?: string | null
+          contact_name: string
+          created_at?: string
+          email?: string | null
+          event_type?: string | null
+          headcount?: string | null
+          id?: string
+          message?: string | null
+          phone: string
+        }
+        Update: {
+          company?: string | null
+          contact_name?: string
+          created_at?: string
+          email?: string | null
+          event_type?: string | null
+          headcount?: string | null
+          id?: string
+          message?: string | null
+          phone?: string
+        }
+        Relationships: []
+      }
       billing_history: {
         Row: {
           amount: number
@@ -21,6 +81,8 @@ export type Database = {
           id: string
           method: string | null
           payment_date: string
+          type: string | null
+          notes: string | null
           user_id: string
         }
         Insert: {
@@ -29,6 +91,8 @@ export type Database = {
           id?: string
           method?: string | null
           payment_date: string
+          type?: string | null
+          notes?: string | null
           user_id: string
         }
         Update: {
@@ -37,34 +101,36 @@ export type Database = {
           id?: string
           method?: string | null
           payment_date?: string
+          type?: string | null
+          notes?: string | null
           user_id?: string
         }
         Relationships: []
       }
       health_reports: {
         Row: {
+          client_id: string
           created_at: string
           file_path: string | null
           id: string
           report_date: string
           title: string
-          user_id: string
         }
         Insert: {
+          client_id: string
           created_at?: string
           file_path?: string | null
           id?: string
           report_date: string
           title: string
-          user_id: string
         }
         Update: {
+          client_id?: string
           created_at?: string
           file_path?: string | null
           id?: string
           report_date?: string
           title?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -97,6 +163,7 @@ export type Database = {
       }
       pauses: {
         Row: {
+          client_id: string | null
           created_at: string
           from_date: string
           id: string
@@ -105,6 +172,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_id?: string | null
           created_at?: string
           from_date: string
           id?: string
@@ -118,6 +186,33 @@ export type Database = {
           id?: string
           status?: Database["public"]["Enums"]["pause_status"]
           to_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pending_trainers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password?: string
           user_id?: string
         }
         Relationships: []
@@ -249,8 +344,11 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           dob: string | null
+          email: string | null
+          full_name: string | null
           id: string
           name: string | null
           phone: string | null
@@ -261,8 +359,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           dob?: string | null
+          email?: string | null
+          full_name?: string | null
           id: string
           name?: string | null
           phone?: string | null
@@ -273,8 +374,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           dob?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
           name?: string | null
           phone?: string | null
@@ -328,33 +432,33 @@ export type Database = {
       tasks: {
         Row: {
           client_id: string
-          completed: boolean
           created_at: string
+          description: string | null
           due_date: string | null
           id: string
-          notes: string | null
+          status: string
           title: string
           trainer_id: string
           updated_at: string
         }
         Insert: {
           client_id: string
-          completed?: boolean
           created_at?: string
+          description?: string | null
           due_date?: string | null
           id?: string
-          notes?: string | null
+          status?: string
           title: string
           trainer_id: string
           updated_at?: string
         }
         Update: {
           client_id?: string
-          completed?: boolean
           created_at?: string
+          description?: string | null
           due_date?: string | null
           id?: string
-          notes?: string | null
+          status?: string
           title?: string
           trainer_id?: string
           updated_at?: string
@@ -437,8 +541,10 @@ export type Database = {
           active: boolean
           contact: string | null
           created_at: string
+          email: string | null
           id: string
           name: string
+          password: string | null
           specialization: string | null
           updated_at: string
           user_id: string | null
@@ -447,8 +553,10 @@ export type Database = {
           active?: boolean
           contact?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name: string
+          password?: string | null
           specialization?: string | null
           updated_at?: string
           user_id?: string | null
@@ -457,8 +565,10 @@ export type Database = {
           active?: boolean
           contact?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
+          password?: string | null
           specialization?: string | null
           updated_at?: string
           user_id?: string | null
@@ -491,6 +601,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_trainer: {
+        Args: {
+          p_email: string
+          p_name: string
+          p_password: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      reject_trainer: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      get_trainer_clients: {
+        Args: {
+          _trainer_id?: string | null
+        }
+        Returns: {
+          end_date: string | null
+          id: string
+          is_paused_today: boolean | null
+          name: string | null
+          phone: string | null
+          society_id: string | null
+          time_slot: string | null
+          training_days: string[] | null
+        }[]
+      }
       get_my_society_batches: {
         Args: never
         Returns: {
@@ -526,7 +666,7 @@ export type Database = {
     Enums: {
       app_role: "client" | "trainer" | "admin"
       pause_status: "active" | "completed"
-      plan_status: "active" | "paused" | "cancelled"
+      plan_status: "active" | "paused" | "cancelled" | "completed"
       plan_type: "1-month" | "3-month" | "6-month"
     }
     CompositeTypes: {
@@ -657,7 +797,7 @@ export const Constants = {
     Enums: {
       app_role: ["client", "trainer", "admin"],
       pause_status: ["active", "completed"],
-      plan_status: ["active", "paused", "cancelled"],
+      plan_status: ["active", "paused", "cancelled", "completed"],
       plan_type: ["1-month", "3-month", "6-month"],
     },
   },

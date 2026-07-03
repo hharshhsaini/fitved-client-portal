@@ -54,23 +54,57 @@ export function AddCustomerDialog({ open, onOpenChange, onCreated }: Props) {
 
   const create = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("create-customer", {
-        body: {
-          name,
-          phone: normalizePhone(phone),
-          dob: `${dob!.getFullYear()}-${String(dob!.getMonth() + 1).padStart(2, "0")}-${String(dob!.getDate()).padStart(2, "0")}`,
+      const normalizedPhone = normalizePhone(phone);
+      const dobString = `${dob!.getFullYear()}-${String(dob!.getMonth() + 1).padStart(2, "0")}-${String(dob!.getDate()).padStart(2, "0")}`;
+
+      // Check if phone already exists
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("phone", normalizedPhone)
+        .maybeSingle();
+
+      if (existing) throw new Error("A customer with this phone number already exists.");
+
+      // Get society name for the legacy text column
+      const selectedSociety = societies.find((s) => s.id === societyId);
+
+      // 1. Insert into profiles
+      const newId = crypto.randomUUID();
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .insert({
+          id: newId,
+          name: name.trim(),
+          phone: normalizedPhone,
+          dob: dobString,
           society_id: societyId || null,
+          society: selectedSociety?.name ?? null,
           trainer_id: trainerId || null,
           time_slot: timeSlot || null,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      return data;
+        })
+        .select("id")
+        .single();
+
+      if (profileError || !profileData) {
+        throw new Error(profileError?.message ?? "Failed to create customer profile.");
+      }
+
+      // 2. CRITICAL: Insert into user_roles so admin dashboard finds this customer
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: profileData.id, role: "client" });
+
+      if (roleError) {
+        throw new Error(`Profile created but role assignment failed: ${roleError.message}`);
+      }
+
+      return profileData;
     },
     onSuccess: () => {
       toast.success("Customer added — they can log in with their phone + birthday");
       qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
       onCreated?.();
       reset();
       onOpenChange(false);

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fitved-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "8082", "--strictPort"],
+      "port": 8082,
+      "autoPort": false
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, CheckCircle2, PauseCircle, PlayCircle } from "lucide-react";
+import { CalendarIcon, CheckCircle2, PauseCircle, Trash2 } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -69,17 +69,25 @@ export default function Pause() {
   const days = range?.from && range?.to
     ? daysBetween(range.from.toISOString(), range.to.toISOString()) : 0;
 
-  // Fetch training days from the user's active plan
-  const { data: trainingDays = [] } = useQuery({
-    queryKey: ["pause-plan-training-days", user?.id],
+  // Fetch user's active plan info
+  const { data: activePlan } = useQuery({
+    queryKey: ["pause-active-plan-info", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("plans").select("training_days").eq("user_id", user!.id)
-        .order("created_at", { ascending: false }).limit(1).maybeSingle();
-      return (data?.training_days ?? []) as string[];
+        .from("plans")
+        .select("training_days, total_sessions")
+        .eq("user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
     },
   });
+
+  const trainingDays = (activePlan?.training_days ?? []) as string[];
+  const totalSessions = activePlan?.total_sessions ?? 0;
+  const maxCarryForward = Math.floor(totalSessions / 3);
 
   // Sessions that actually fall in the selected range
   const sessionCount = range?.from && range?.to
@@ -87,6 +95,7 @@ export default function Pause() {
     : 0;
 
   const tooFewSessions = range?.from && range?.to && sessionCount < 2;
+  const tooManySessions = range?.from && range?.to && sessionCount > maxCarryForward;
 
   const handlePause = async () => {
     if (!range?.from || !range?.to) { toast.error("Please select a start and end date"); return; }
@@ -99,20 +108,24 @@ export default function Pause() {
       toast.success(`Classes paused for ${days} days (${sessionCount} sessions)`);
       setRange(undefined);
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Could not pause");
+      console.error("Pause error:", e);
+      toast.error(e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e) || "Could not pause");
     }
   };
 
   const handleResume = async () => {
     try {
       await resume();
-      toast.success("Classes resumed — see you soon!");
+      toast.success("Pause deleted — your classes continue as scheduled!");
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Could not resume");
+      toast.error(e instanceof Error ? e.message : "Could not delete the pause");
     }
   };
 
   const isPaused = !!activePause;
+  const d = new Date();
+  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const isLocked = activePause ? todayStr > activePause.from : false;
 
   return (
     <>
@@ -125,6 +138,19 @@ export default function Pause() {
           <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: NAVY }}>
             Pause classes
           </h2>
+        </div>
+
+        {/* Policy banner */}
+        <div className="mx-4 mb-4 rounded-[20px] p-4" style={{ background: "rgba(30,58,95,0.03)", border: `1px solid ${BORDER}` }}>
+          <p className="font-semibold mb-2 flex items-center gap-1.5" style={{ fontSize: 13, color: NAVY }}>
+            <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#f0a720" }} />
+            Class Pause Policy
+          </p>
+          <ul className="space-y-1.5 text-[11px] text-muted-foreground list-disc list-inside">
+            <li>Applicable only when you'll miss 2 or more consecutive sessions (Single missed sessions is not eligible).</li>
+            <li>You need to apply pause in advance; backdated pauses are not allowed.</li>
+            <li>You can pause for as long as you want, but a maximum of {maxCarryForward} sessions (1/3 of your plan) will be carried forward.</li>
+          </ul>
         </div>
 
         {/* Schedule a pause — shown first when not paused */}
@@ -168,7 +194,12 @@ export default function Pause() {
                 Class pauses apply only when you'll miss 2 or more sessions.
               </p>
             )}
-            {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && (
+            {tooManySessions && (
+              <p className="text-sm mt-2 text-warning-foreground font-medium">
+                Note: You are pausing {sessionCount} sessions, but only {maxCarryForward} sessions will be carried forward (1/3 of plan limit).
+              </p>
+            )}
+            {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && !tooManySessions && (
               <p className="text-sm text-muted-foreground mt-2">
                 Pausing <span className="font-medium text-foreground">{sessionCount} sessions</span> ({days} days).
               </p>
@@ -205,14 +236,18 @@ export default function Pause() {
               ? `Paused from ${formatDate(activePause!.from)} to ${formatDate(activePause!.to)}.`
               : "All sessions are scheduled as planned."}
           </p>
-          {isPaused ? (
+          {isPaused && !isLocked ? (
             <button
               onClick={handleResume}
               className="mt-5 w-full rounded-2xl border-none cursor-pointer"
-              style={{ background: GREEN, padding: "14px", fontSize: 15, fontWeight: 700, color: "#fff" }}
+              style={{ background: RED, padding: "14px", fontSize: 15, fontWeight: 700, color: "#fff" }}
             >
-              Resume Classes
+              Delete Pause
             </button>
+          ) : isPaused && isLocked ? (
+            <p className="mt-5 text-sm" style={{ color: MUTED }}>
+              Pause has already started. Please contact support to resume early.
+            </p>
           ) : null}
         </div>
 
@@ -224,20 +259,34 @@ export default function Pause() {
               Past pauses
             </p>
             <ul>
-              {history.map((p) => (
-                <li key={p.id} className="flex items-center justify-between py-2.5"
-                  style={{ borderTop: `1px solid ${BORDER}` }}>
-                  <div>
-                    <p className="font-medium" style={{ fontSize: 13, color: NAVY }}>
-                      {formatDate(p.from)} — {formatDate(p.to)}
-                    </p>
-                    <p style={{ fontSize: 11, color: MUTED }}>{daysBetween(p.from, p.to)} days</p>
-                  </div>
-                  <span className="rounded-full font-semibold" style={{ fontSize: 11, color: GREEN, background: GREEN_LIGHT, padding: "3px 10px" }}>
-                    Done
-                  </span>
-                </li>
-              ))}
+              {history.map((p) => {
+                const isCancelled = p.to < p.from;
+                return (
+                  <li key={p.id} className="flex items-center justify-between py-2.5"
+                    style={{ borderTop: `1px solid ${BORDER}` }}>
+                    <div>
+                      {isCancelled ? (
+                        <>
+                          <p className="font-medium" style={{ fontSize: 13, color: NAVY }}>
+                            {formatDate(p.from)}
+                          </p>
+                          <p style={{ fontSize: 11, color: MUTED }}>Cancelled on day 1</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium" style={{ fontSize: 13, color: NAVY }}>
+                            {formatDate(p.from)} — {formatDate(p.to)}
+                          </p>
+                          <p style={{ fontSize: 11, color: MUTED }}>{daysBetween(p.from, p.to)} days</p>
+                        </>
+                      )}
+                    </div>
+                    <span className="rounded-full font-semibold" style={{ fontSize: 11, color: isCancelled ? MUTED : GREEN, background: isCancelled ? "rgba(30,58,95,0.07)" : GREEN_LIGHT, padding: "3px 10px" }}>
+                      {isCancelled ? "Cancelled" : "Done"}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -249,6 +298,21 @@ export default function Pause() {
           <h1 className="font-display text-3xl text-foreground">Pause classes</h1>
           <p className="mt-1 text-muted-foreground">Need a break? Pause your sessions for any date range.</p>
         </header>
+
+        {/* Policy banner */}
+        <Card className="p-5 rounded-2xl flex gap-4 items-start" style={{ background: "rgba(30,58,95,0.02)", border: `1px solid ${BORDER}` }}>
+          <div className="flex items-center justify-center rounded-xl flex-shrink-0" style={{ width: 40, height: 40, background: "rgba(240,167,32,0.12)" }}>
+            <span className="font-bold text-fv-orange" style={{ color: "#f0a720", fontSize: 16 }}>!</span>
+          </div>
+          <div>
+            <h3 className="font-display font-semibold text-base mb-1" style={{ color: NAVY }}>Class Pause Policy</h3>
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+              <li>Applicable only when you'll miss 2 or more consecutive sessions (Single missed sessions is not eligible).</li>
+              <li>You need to apply pause in advance; backdated pauses are not allowed.</li>
+              <li>You can pause for as long as you want, but a maximum of {maxCarryForward} sessions (1/3 of your plan) will be carried forward.</li>
+            </ul>
+          </div>
+        </Card>
 
         <Card className={cn(
           "p-6 rounded-2xl shadow-card border-l-4",
@@ -271,10 +335,15 @@ export default function Pause() {
                 </p>
               </div>
             </div>
-            {activePause && (
-              <Button onClick={handleResume} variant="outline">
-                <PlayCircle className="mr-2 h-4 w-4" /> Resume now
+            {activePause && !isLocked && (
+              <Button onClick={handleResume} variant="destructive">
+                <Trash2 className="mr-2 h-4 w-4" /> Delete pause
               </Button>
+            )}
+            {activePause && isLocked && (
+              <p className="text-sm text-muted-foreground mt-2 md:mt-0">
+                Contact support to resume early
+              </p>
             )}
           </div>
         </Card>
@@ -310,19 +379,29 @@ export default function Pause() {
             </div>
             <div className="flex-1">
               {tooFewSessions && (
-                <p className="text-sm text-destructive">
+                <p className="text-sm mt-3" style={{ color: RED }}>
                   Class pauses apply only when you'll miss 2 or more sessions.
                 </p>
               )}
-              {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && (
-                <p className="text-sm text-muted-foreground">
+              {tooManySessions && (
+                <p className="text-sm mt-3 text-warning-foreground font-medium">
+                  Note: You are pausing {sessionCount} sessions, but only {maxCarryForward} sessions will be carried forward (1/3 of plan limit).
+                </p>
+              )}
+              {range?.from && range?.to && !tooFewSessions && sessionCount > 0 && !tooManySessions && (
+                <p className="text-sm text-muted-foreground mt-3">
                   Pausing <span className="font-medium text-foreground">{sessionCount} sessions</span> ({days} days).
                 </p>
               )}
+
+              <Button
+                onClick={handlePause}
+                disabled={!range?.from || !range?.to || !!tooFewSessions}
+                className="mt-5 w-full sm:w-auto px-8"
+              >
+                Pause my classes
+              </Button>
             </div>
-            <Button onClick={handlePause} disabled={!range?.from || !range?.to || !!tooFewSessions || !!activePause} className="h-11">
-              <PauseCircle className="mr-2 h-4 w-4" /> Pause my classes
-            </Button>
           </div>
         </Card>
 

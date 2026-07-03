@@ -23,7 +23,7 @@ export default function TrainerProfile() {
     queryFn: async () => {
       const { data } = await supabase
         .from("trainers").select("id, name, contact, specialization, active")
-        .eq("user_id", user!.id).maybeSingle();
+        .or(`user_id.eq.${user!.id},id.eq.${user!.id}`).maybeSingle();
       return data;
     },
   });

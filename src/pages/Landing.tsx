@@ -125,9 +125,11 @@ export default function Landing() {
   }, []);
 
   // Single popup: trigger on 30s timer OR exit-intent (whichever first)
+  // Re-reads localStorage at trigger time so post-submit it never shows
   useEffect(() => {
     const trigger = () => {
       if (popupShown.current.shown) return;
+      if (localStorage.getItem("fitved_form_submitted")) return;
       popupShown.current.shown = true;
       setShowTimer(true);
     };
@@ -136,9 +138,18 @@ export default function Landing() {
       if (e.clientY <= 0) trigger();
     };
     document.addEventListener("mouseleave", onLeave);
+
+    // Also listen for the custom event fired after form submit
+    const onFormDone = () => {
+      popupShown.current.shown = true; // prevent popup from ever showing
+      setShowTimer(false);             // close if already open
+    };
+    window.addEventListener("fitved_form_done", onFormDone);
+
     return () => {
       window.clearTimeout(t);
       document.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("fitved_form_done", onFormDone);
     };
   }, []);
 
@@ -1306,18 +1317,25 @@ function EnquiryForm() {
       return;
     }
     setBusy(true);
+
     const { error } = await supabase.from("leads").insert({
       name: parsed.data.name,
       phone: parsed.data.phone,
       interest: parsed.data.interest,
       source: "landing_form",
     });
+
     setBusy(false);
+
     if (error) {
-      toast.error("Could not submit. Please try again.");
+      console.error("Lead insert error:", JSON.stringify(error));
+      toast.error(`Submit failed: ${error.message}`);
       return;
     }
+
     trackEvent("enquiry_submitted", { interest: parsed.data.interest });
+    localStorage.setItem("fitved_form_submitted", "true");
+    window.dispatchEvent(new Event("fitved_form_done"));
     setDone(true);
   };
 
@@ -1564,18 +1582,25 @@ function PopupModal({
       return;
     }
     setBusy(true);
+
     const { error } = await supabase.from("leads").insert({
       name: name.trim() || "Anonymous",
       phone,
       interest: "Popup enquiry",
       source,
     });
+
     setBusy(false);
+
     if (error) {
-      toast.error("Could not submit. Please try again.");
+      console.error("Popup lead insert error:", JSON.stringify(error));
+      toast.error(`Could not submit: ${error.message}`);
       return;
     }
+
     trackEvent("enquiry_submitted", { source });
+    localStorage.setItem("fitved_form_submitted", "true");
+    window.dispatchEvent(new Event("fitved_form_done"));
     toast.success("Thanks! We'll be in touch shortly.");
     onOpenChange(false);
   };

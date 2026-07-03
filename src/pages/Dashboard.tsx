@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import {
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
-import { countTrainingDaysInRange } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, countTrainingDaysInRange, formatPlanName, isoDate } from "@/lib/sessionPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +55,7 @@ function getTodayIdx() {
 }
 
 export default function Dashboard() {
+  const qc = useQueryClient();
   const { user, role } = useAuth();
   const { data: profile } = useProfile();
   const { activePause, history } = usePauseStore();
@@ -89,18 +90,19 @@ export default function Dashboard() {
     enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("health_reports").select("*").eq("user_id", user!.id)
+        .from("health_reports").select("*").eq("client_id", user!.id)
         .order("report_date", { ascending: false }).limit(1).maybeSingle();
       return data;
     },
   });
 
+  // profiles.trainer_id references trainers.id — look the name up there.
   const { data: trainerName } = useQuery({
     queryKey: ["trainer-name", profile?.trainer_id],
     enabled: !!profile?.trainer_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("profiles").select("name").eq("id", profile!.trainer_id!).maybeSingle();
+        .from("trainers").select("name").eq("id", profile!.trainer_id!).maybeSingle();
       return data?.name ?? null;
     },
   });
@@ -126,26 +128,52 @@ export default function Dashboard() {
   const sessionsLeft  = plan ? Math.max(0, plan.total_sessions - sessionsUsed) : 0;
 
   // Carry-forward = training days lost to pauses DURING the current plan period
-  // (each pause range clamped to the plan's start/end). These are missed sessions
-  // pushed to the end of the plan — shown separately, not folded into "sessions left".
+  // (each pause range clamped to the plan's start → base end, matching the
+  // extension math in recalculatePlanDates). These are missed sessions pushed
+  // to the end of the plan — shown separately, not folded into "sessions left".
   const allPauses = [...history, ...(activePause ? [activePause] : [])];
-  const carryForward = plan
+  const planBaseEnd = plan
+    ? isoDate(calculatePlanEndDate(plan.start_date, plan.total_sessions, plan.training_days ?? []))
+    : "";
+  const lostToPauses = plan
     ? allPauses.reduce((sum, p) => {
         const from = p.from > plan.start_date ? p.from : plan.start_date;
-        const to   = p.to   < plan.end_date   ? p.to   : plan.end_date;
+        const to   = p.to   < planBaseEnd     ? p.to   : planBaseEnd;
         if (from > to) return sum; // pause doesn't overlap the current plan window
         return sum + countTrainingDaysInRange(from, to, plan.training_days ?? []);
       }, 0)
     : 0;
+  // Carry-forward is capped at 1/3 of the plan, matching recalculatePlanDates.
+  const carryForward = plan ? Math.min(lostToPauses, Math.floor(plan.total_sessions / 3)) : 0;
   const baseTotal  = plan?.total_sessions ?? 0;
   const capacity   = baseTotal + carryForward;            // all classes incl. carried
   // Bar segment widths (track scaled to full capacity; attended portion stays empty)
   const blueW   = capacity > 0 ? (sessionsLeft / capacity) * 100 : 0;
   const orangeW = capacity > 0 ? (carryForward / capacity) * 100 : 0;
 
+  // Expired plans complete automatically (legacy "paused" rows migrate too).
+  // Renewal is always a manual admin action.
+  useEffect(() => {
+    if (plan && (plan.status === "active" || plan.status === "paused")) {
+      const todayISO = todayLocalISO();
+      if (plan.end_date < todayISO) {
+        supabase
+          .from("plans")
+          .update({ status: "completed" })
+          .eq("id", plan.id)
+          .then(({ error }) => {
+            if (!error) {
+              qc.invalidateQueries({ queryKey: ["plan", user?.id] });
+            }
+          });
+      }
+    }
+  }, [plan, user?.id, qc]);
+
   // ── Renewal urgency ───────────────────────────────────────────────────────
   const todayISO    = todayLocalISO();
-  const expired     = !!plan && plan.end_date < todayISO;
+  const planEnded   = plan?.status === "cancelled" || plan?.status === "completed" || plan?.status === "paused";
+  const expired     = !!plan && (plan.end_date < todayISO || planEnded);
   const daysToEnd   = plan ? Math.max(0, daysBetween(todayISO, plan.end_date) - 1) : 0;
   const daysSinceRenewal = plan ? Math.max(0, daysBetween(plan.renewal_date, todayISO) - 1) : 0;
   const expiring    = !!plan && !expired && (daysToEnd <= 3 || sessionsLeft <= 1);
@@ -187,16 +215,15 @@ export default function Dashboard() {
             <>
               <div className="flex items-center gap-2 mb-2 relative">
                 <Clock size={16} color="#fff" />
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                  Plan to be renewed on {formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, "")}
-                  {daysSinceRenewal > 0 ? ` · ${daysSinceRenewal} day${daysSinceRenewal === 1 ? "" : "s"} ago` : " · today"}
+                <span className="text-[12px] font-bold text-white">
+                  {`Plan to be renewed on ${formatDate(plan.renewal_date).replace(/,?\s*\d{4}$/, "")}${daysSinceRenewal > 0 ? ` · ${daysSinceRenewal} day${daysSinceRenewal === 1 ? "" : "s"} ago` : " · today"}`}
                 </span>
               </div>
               <h1 className="font-display text-white relative" style={{ fontSize: 23, fontWeight: 600, lineHeight: 1.25 }}>
                 Your momentum is waiting
               </h1>
-              <p className="relative" style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", marginTop: 8, lineHeight: 1.5 }}>
-                You completed all {baseTotal} sessions — real consistency. Pick up right where you left off before the habit fades.
+              <p className="text-[13px] leading-relaxed text-white/85 mt-2">
+                {`You completed all ${baseTotal} sessions — real consistency. Pick up right where you left off before the habit fades.`}
               </p>
             </>
           ) : (
@@ -205,9 +232,12 @@ export default function Dashboard() {
                 <Flame size={17} color="#fff" />
                 <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Final session coming up</span>
               </div>
-              <span className="font-display font-bold text-white relative" style={{ fontSize: 46, lineHeight: 1 }}>{sessionsLeft}</span>
-              <p className="relative" style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>
-                session{sessionsLeft === 1 ? "" : "s"} left
+              <h3 className="font-display font-semibold text-white relative" style={{ fontSize: 20 }}>
+                {formatPlanName(baseTotal)}
+              </h3>
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginTop: 6, lineHeight: 1.4 }} className="relative">
+                {trainingDays.length > 0 ? trainingDays.join(", ") : "No days set"}
+                {profile?.time_slot ? ` · ${profile.time_slot}` : ""}
               </p>
               <div className="relative" style={{ marginTop: 12 }}>
                 <div className="rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.2)" }}>
@@ -261,8 +291,8 @@ export default function Dashboard() {
         {/* Sessions + progress ring */}
         <div className="flex items-center justify-between relative">
           <div className="flex flex-col gap-1">
-            <span className="font-display font-bold text-white" style={{ fontSize: 52, lineHeight: 1 }}>
-              {plan ? baseTotal : "—"}
+            <span className="font-display font-bold text-white" style={{ fontSize: 32, lineHeight: 1.1 }}>
+              {plan ? formatPlanName(baseTotal) : "—"}
             </span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>total sessions</span>
             <div className="flex flex-col items-start gap-1 mt-2.5">
@@ -405,7 +435,7 @@ export default function Dashboard() {
               </span>
               <div>
                 <p className="text-sm text-muted-foreground">Your plan</p>
-                <p className="font-display text-xl">{plan ? `${plan.total_sessions} sessions` : "Not assigned"}</p>
+                <p className="font-display text-xl">{plan ? formatPlanName(plan.total_sessions) : "—"}</p>
               </div>
             </div>
             {plan && (
@@ -450,9 +480,12 @@ export default function Dashboard() {
                     <p className="text-muted-foreground">Started</p>
                     <p className="font-medium">{formatDate(plan.start_date)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-muted-foreground">Next plan starts</p>
-                    <p className="font-medium">{formatDate(plan.renewal_date)}</p>
+                  <div className="col-span-2">
+                    <p className="text-muted-foreground">Schedule</p>
+                    <p className="font-medium text-foreground">
+                      {trainingDays.length > 0 ? trainingDays.join(", ") : "None"}
+                      {profile?.time_slot ? ` · ${profile.time_slot}` : ""}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -473,18 +506,38 @@ export default function Dashboard() {
             </span>
             <div>
               <p className="text-sm text-muted-foreground">Pause status</p>
-              <p className="font-display text-xl">{activePause ? "Paused" : "Active"}</p>
+              <p className="font-display text-xl">{planEnded ? "Plan ended" : activePause ? "Paused" : "Active"}</p>
             </div>
           </div>
           <p className="mt-5 text-sm text-muted-foreground">
-            {activePause
+            {planEnded
+              ? "Your plan has ended. Renew to continue your classes."
+              : activePause
               ? `Your classes are paused from ${formatDate(activePause.from)} to ${formatDate(activePause.to)}.`
               : "Your classes are running as scheduled. Need a break? Pause anytime."}
           </p>
-          <Button asChild className="mt-4">
-            <Link to="/pause">Manage pause <ArrowRight className="ml-1 h-4 w-4" /></Link>
-          </Button>
+          {!planEnded && (
+            <Button asChild className="mt-4">
+              <Link to="/pause">Manage pause <ArrowRight className="ml-1 h-4 w-4" /></Link>
+            </Button>
+          )}
         </Card>
+
+        {/* My classes calendar — includes trainer off-day indicators */}
+        {plan && (
+          <Card className="p-2 rounded-2xl shadow-card md:col-span-2">
+            <ClassCalendar
+              startDate={plan.start_date}
+              endDate={plan.end_date}
+              trainingDays={plan.training_days ?? []}
+              pauses={allPauses}
+              offTimes={offTimes}
+              customerSlot={profile?.time_slot ?? null}
+              expanded={calExpanded}
+              onExpandedChange={setCalExpanded}
+            />
+          </Card>
+        )}
 
         {/* Health report */}
         <Card className="p-6 rounded-2xl shadow-card hover:shadow-elevated transition-shadow">

@@ -8,6 +8,7 @@ import {
   Phone as PhoneIcon, Eye, ShieldAlert, LogOut,
 } from "lucide-react";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
+import { TrainerClientPauseModal } from "@/components/dashboard/TrainerClientPauseModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,7 +36,16 @@ const BG          = "#f4f2ee";
 interface TrainerRow { id: string; name: string; specialization: string | null; active: boolean; }
 interface SocietyRow { id: string; name: string; address: string | null; }
 interface BatchRow   { time_slot: string | null; client_count: number; }
-interface ClientRow  { id: string; name: string | null; phone: string | null; society_id: string | null; time_slot: string | null; }
+interface ClientRow  { 
+  id: string; 
+  name: string | null; 
+  phone: string | null; 
+  society_id: string | null; 
+  time_slot: string | null; 
+  end_date: string | null;
+  training_days: string[] | null;
+  is_paused_today: boolean | null;
+}
 
 /** Build tel: / wa.me links from a stored phone number */
 function phoneLinks(phone: string) {
@@ -70,6 +80,7 @@ export default function TrainerDashboard() {
   const [reason, setReason]                   = useState("");
   const [calOpen, setCalOpen]                 = useState(false);
   const [singleCalOpen, setSingleCalOpen]     = useState(false);
+  const [pauseClient, setPauseClient]         = useState<{ id: string; name: string } | null>(null);
 
   // ── Queries ───────────────────────────────────────────────────────────────
   const { data: trainer, isLoading: trainerLoading } = useQuery<TrainerRow | null>({
@@ -79,7 +90,7 @@ export default function TrainerDashboard() {
       const q = supabase.from("trainers").select("id, name, specialization, active");
       const { data } = viewAsId
         ? await q.eq("id", viewAsId).maybeSingle()
-        : await q.eq("user_id", user!.id).maybeSingle();
+        : await q.or(`user_id.eq.${user!.id},id.eq.${user!.id}`).maybeSingle();
       return (data as TrainerRow | null) ?? null;
     },
   });
@@ -103,7 +114,7 @@ export default function TrainerDashboard() {
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc(
         "get_trainer_clients",
-        viewAsId ? { _trainer_id: viewAsId } : {}
+        { _trainer_id: viewAsId || trainer!.id }
       );
       if (error) throw error;
       return (data ?? []) as ClientRow[];
@@ -391,29 +402,61 @@ export default function TrainerDashboard() {
                     <UserCircle2 size={18} color={NAVY} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate" style={{ fontSize: 14, color: NAVY }}>
-                      {c.name ?? "Unnamed"}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium truncate" style={{ fontSize: 14, color: NAVY }}>
+                        {c.name ?? "Unnamed"}
+                      </p>
+                      {c.is_paused_today && (
+                        <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-600">
+                          Paused Today
+                        </span>
+                      )}
+                    </div>
                     {c.phone && (
                       <p style={{ fontSize: 12, color: MUTED }}>{c.phone}</p>
                     )}
+                    {(c.training_days?.length || c.end_date) && (
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {c.training_days && c.training_days.length > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                            <CalendarOff className="h-3 w-3 opacity-0 hidden" /> {/* spacer hack if needed, or just text */}
+                            {c.training_days.join(" - ")}
+                          </span>
+                        )}
+                        {c.end_date && (
+                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                            Ends: {new Date(c.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {c.phone && (
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <a href={phoneLinks(c.phone).tel}
-                        className="grid place-items-center rounded-full"
-                        style={{ width: 32, height: 32, background: "rgba(30,58,95,0.07)" }}>
-                        <PhoneIcon size={14} color={NAVY} />
-                      </a>
-                      <a href={phoneLinks(c.phone).wa} target="_blank" rel="noopener noreferrer"
-                        className="grid place-items-center rounded-full"
-                        style={{ width: 32, height: 32, background: GREEN_LIGHT }}>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill={GREEN}>
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                        </svg>
-                      </a>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => setPauseClient({ id: c.id, name: c.name ?? "Client" })}
+                      className="grid place-items-center rounded-full border-none cursor-pointer"
+                      style={{ width: 32, height: 32, background: "rgba(240, 167, 32, 0.15)", color: "#f0a720" }}
+                      title="Pause Classes"
+                    >
+                      <CalendarOff size={14} />
+                    </button>
+                    {c.phone && (
+                      <>
+                        <a href={phoneLinks(c.phone).tel}
+                          className="grid place-items-center rounded-full"
+                          style={{ width: 32, height: 32, background: "rgba(30,58,95,0.07)" }}>
+                          <PhoneIcon size={14} color={NAVY} />
+                        </a>
+                        <a href={phoneLinks(c.phone).wa} target="_blank" rel="noopener noreferrer"
+                          className="grid place-items-center rounded-full"
+                          style={{ width: 32, height: 32, background: GREEN_LIGHT }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill={GREEN}>
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                          </svg>
+                        </a>
+                      </>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -951,6 +994,13 @@ export default function TrainerDashboard() {
         {/* Client pauses */}
         {!isViewAs && <TrainerPauses />}
       </div>
+
+      <TrainerClientPauseModal
+        open={!!pauseClient}
+        onOpenChange={(open) => !open && setPauseClient(null)}
+        clientId={pauseClient?.id ?? ""}
+        clientName={pauseClient?.name ?? ""}
+      />
     </>
   );
 }

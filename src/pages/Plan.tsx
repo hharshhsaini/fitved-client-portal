@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { usePauseStore } from "@/stores/pauseStore";
 import { ExplorePlansDialog } from "@/components/plan/ExplorePlansDialog";
-import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate, formatPlanName } from "@/lib/sessionPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -40,17 +40,6 @@ export default function Plan() {
         .from("plans").select("*").eq("user_id", user!.id)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       return data;
-    },
-  });
-
-  const { data: billing = [] } = useQuery({
-    queryKey: ["billing", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("billing_history").select("*").eq("user_id", user!.id)
-        .order("payment_date", { ascending: false });
-      return data ?? [];
     },
   });
 
@@ -115,13 +104,16 @@ export default function Plan() {
   // "original" (no-pause) end and compare it to the (extended) end.
   const planDaysFull: string[] = plan.training_days ?? [];
   const allPauses = [...history, ...(activePause ? [activePause] : [])];
-  const carriedClasses = allPauses.reduce((sum, p) => {
+  const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
+  const baseEndISO     = isoDate(baseEnd);
+  const lostToPauses = allPauses.reduce((sum, p) => {
     const from = p.from > plan.start_date ? p.from : plan.start_date;
-    const to   = p.to   < plan.end_date   ? p.to   : plan.end_date;
+    const to   = p.to   < baseEndISO      ? p.to   : baseEndISO;
     if (from > to) return sum;
     return sum + countTrainingDaysInRange(from, to, planDaysFull);
   }, 0);
-  const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
+  // Carry-forward is capped at 1/3 of the plan, matching recalculatePlanDates.
+  const carriedClasses = Math.min(lostToPauses, Math.floor(plan.total_sessions / 3));
   const projectedEndISO = isoDate(extendEndDateBySessions(baseEnd, carriedClasses, planDaysFull));
   const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
   const oldRenewalISO  = isoDate(calculatePlanRenewalDate(baseEnd, planDaysFull));
@@ -163,7 +155,7 @@ export default function Plan() {
                 ₹{netAmount.toLocaleString("en-IN")}
               </p>
               <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>
-                {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle · {plan.total_sessions} sessions
+                {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle · {formatPlanName(plan.total_sessions)}
               </p>
             </div>
             <span className="rounded-full font-bold" style={{ background: GREEN_LIGHT, color: GREEN, fontSize: 12, padding: "4px 12px" }}>
@@ -289,28 +281,6 @@ export default function Plan() {
           </div>
         </div>
 
-        {/* Billing history on mobile */}
-        {billing.length > 0 && (
-          <div className="mx-4 mb-4 rounded-[20px] p-4"
-            style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
-            <p className="font-semibold uppercase mb-3" style={{ fontSize: 12, color: MUTED, letterSpacing: "0.08em" }}>
-              Billing history
-            </p>
-            <ul className="divide-y" style={{ borderColor: BORDER }}>
-              {billing.map((b) => (
-                <li key={b.id} className="flex items-center justify-between py-2.5">
-                  <div>
-                    <p className="font-medium" style={{ fontSize: 14, color: NAVY }}>{formatDate(b.payment_date)}</p>
-                    <p style={{ fontSize: 11, color: MUTED }}>{b.method ?? "—"}</p>
-                  </div>
-                  <p className="font-semibold" style={{ fontSize: 14, color: NAVY }}>
-                    ₹{Number(b.amount).toLocaleString("en-IN")}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       {/* ── Desktop Layout (original) ──────────────────────────────── */}
@@ -329,7 +299,7 @@ export default function Plan() {
               </span>
               <div>
                 <Badge className="mb-2 bg-primary-soft text-primary hover:bg-primary-soft">
-                  {plan.total_sessions} sessions
+                  {formatPlanName(plan.total_sessions)}
                 </Badge>
                 {hasDiscount && (
                   <p className="text-sm text-muted-foreground line-through">₹{Number(plan.amount).toLocaleString("en-IN")}</p>
@@ -414,24 +384,6 @@ export default function Plan() {
           </Card>
         )}
 
-        <Card className="p-6 rounded-2xl shadow-card">
-          <h2 className="font-display text-xl">Billing history</h2>
-          {billing.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">No payments yet.</p>
-          ) : (
-            <ul className="mt-4 divide-y divide-border">
-              {billing.map((b) => (
-                <li key={b.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium">{formatDate(b.payment_date)}</p>
-                    <p className="text-xs text-muted-foreground">{b.method ?? "—"}</p>
-                  </div>
-                  <p className="font-medium">₹{Number(b.amount).toLocaleString("en-IN")}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
       </div>
     </>
   );

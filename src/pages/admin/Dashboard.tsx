@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +9,12 @@ import {
   Users, IndianRupee, Wallet, AlertTriangle, UserCog,
   CalendarOff, CalendarX, Clock, Phone, CheckCircle2, ChevronRight,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const RENEWAL_WINDOW = 14; // days ahead to surface expiring plans
 
@@ -54,9 +61,9 @@ export default function AdminDashboard() {
 
       const [profilesRes, plansRes, pausesRes, billingRes, societiesRes, trainersRes, offRes] = await Promise.all([
         ids.length ? supabase.from("profiles").select("id, name, phone, society_id, trainer_id, time_slot").in("id", ids) : Promise.resolve({ data: [] as any[] }),
-        ids.length ? supabase.from("plans").select("user_id, amount, status, start_date, end_date, auto_renew, renewal_date").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
+        ids.length ? supabase.from("plans").select("id, user_id, amount, status, start_date, end_date, auto_renew, renewal_date").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
         ids.length ? supabase.from("pauses").select("user_id, from_date, to_date, status").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
-        supabase.from("billing_history").select("amount, payment_date").gte("payment_date", monthStartISO),
+        supabase.from("billing_history").select("amount, payment_date"),
         supabase.from("societies").select("id, name"),
         supabase.from("trainers").select("id, name"),
         (supabase as any).from("trainer_off_times").select("id, trainer_id, from_date, to_date, time_slot, reason").gte("to_date", todayISO).order("from_date"),
@@ -83,15 +90,24 @@ export default function AdminDashboard() {
       );
       const activeClients = activeUsers.size;
 
-      let mrr = 0;
-      for (const p of plans) {
-        if (p.status === "active" && p.end_date >= todayISO) {
-          const months = Math.max(1, Math.round((parseISO(p.end_date).getTime() - parseISO(p.start_date).getTime()) / 86400000 / 30));
-          mrr += Number(p.amount) / months;
-        }
+      // ── Monthly income breakdown ──────────────────────────────────
+      const monthTotals: Record<string, number> = {};
+      const currentMonthKey = todayISO.slice(0, 7); // "YYYY-MM"
+      monthTotals[currentMonthKey] = 0;
+
+      for (const b of billing) {
+        if (!b.payment_date) continue;
+        const mKey = b.payment_date.slice(0, 7); // "YYYY-MM"
+        monthTotals[mKey] = (monthTotals[mKey] || 0) + Number(b.amount);
       }
 
-      const collectedThisMonth = billing.reduce((s, b) => s + Number(b.amount), 0);
+      const monthlyBreakdown = Object.entries(monthTotals)
+        .map(([key, amount]) => {
+          const d = new Date(key + "-02");
+          const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          return { key, label, amount };
+        })
+        .sort((a, b) => b.key.localeCompare(a.key));
 
       // ── Attention queue ────────────────────────────────────────────
       const renewals: RenewalRow[] = plans
@@ -116,7 +132,7 @@ export default function AdminDashboard() {
         if (!cur || p.end_date > cur.end_date) latestPlan.set(p.user_id, p);
       }
       const notRenewed: LapsedRow[] = [...latestPlan.values()]
-        .filter((p) => p.end_date < todayISO && p.status !== "paused")
+        .filter((p) => p.end_date < todayISO || p.status === "cancelled" || p.status === "completed")
         .map((p) => ({
           userId: p.user_id,
           name: profName.get(p.user_id) ?? "—",
@@ -160,15 +176,41 @@ export default function AdminDashboard() {
         reason: o.reason ?? null,
       }));
 
-      return { activeClients, mrr, collectedThisMonth, renewals, notRenewed, gaps, paused, offTimes };
+      return { activeClients, monthlyBreakdown, renewals, notRenewed, gaps, paused, offTimes, plans };
     },
   });
 
-  const stats = [
-    { label: "Active clients", value: data ? String(data.activeClients) : "—", icon: Users, hint: "in a running program" },
-    { label: "MRR", value: data ? inr(data.mrr) : "—", icon: IndianRupee, hint: "normalized monthly" },
-    { label: "Collected this month", value: data ? inr(data.collectedThisMonth) : "—", icon: Wallet, hint: format(today, "MMMM yyyy") },
-  ];
+  const qc = useQueryClient();
+  const plans = data?.plans ?? [];
+  const currentMonthKey = todayISO.slice(0, 7);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonthKey);
+
+  const monthlyBreakdown = data?.monthlyBreakdown ?? [];
+  const selectedInfo = monthlyBreakdown.find((m) => m.key === selectedMonth) ?? {
+    key: selectedMonth,
+    label: new Date(selectedMonth + "-02").toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    amount: 0,
+  };
+
+  useEffect(() => {
+    if (!plans.length) return;
+    // Expired plans complete automatically ("paused" rows are legacy from the
+    // old status model — migrate them too). Renewal is always a manual admin
+    // action from the customer's Plan tab.
+    const expired = plans.filter(
+      (p) => (p.status === "active" || p.status === "paused") && p.end_date < todayISO
+    );
+    if (expired.length > 0) {
+      Promise.all(
+        expired.map((p) =>
+          supabase.from("plans").update({ status: "completed" }).eq("id", p.id)
+        )
+      ).then(() => {
+        qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+        qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
+      });
+    }
+  }, [plans, todayISO, qc]);
 
   const lapsing = data?.renewals.filter((r) => !r.autoRenew) ?? [];
   const autoRenewing = data?.renewals.filter((r) => r.autoRenew) ?? [];
@@ -181,21 +223,63 @@ export default function AdminDashboard() {
       </header>
 
       {/* ── Headline numbers ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {stats.map((s) => (
-          <Card key={s.label} className="rounded-2xl shadow-card p-5">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
-                <s.icon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</p>
-                <p className="font-display text-2xl leading-tight">{isLoading ? "…" : s.value}</p>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Active Clients Card */}
+        <Card className="rounded-2xl shadow-card p-5">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-primary/10 text-primary">
+              <Users className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Active clients</p>
+              <p className="font-display text-2xl leading-tight mt-0.5">{isLoading ? "…" : data?.activeClients ?? 0}</p>
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">{s.hint}</p>
-          </Card>
-        ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">in a running program</p>
+        </Card>
+
+        {/* Collected Income Card (Interactive Dropdown) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Card className="rounded-2xl shadow-card p-5 cursor-pointer hover:bg-muted/30 hover:shadow-elevated transition-all border border-transparent hover:border-border select-none relative group">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-green-500/10 text-green-600">
+                    <Wallet className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 font-medium">
+                      Income generated <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded font-normal transition-colors group-hover:bg-primary group-hover:text-white">Change month</span>
+                    </p>
+                    <p className="font-display text-2xl leading-tight text-foreground mt-0.5">
+                      {isLoading ? "…" : inr(selectedInfo.amount)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Collected in <span className="font-semibold text-foreground">{selectedInfo.label}</span>
+              </p>
+            </Card>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[280px] max-h-[300px] overflow-y-auto rounded-xl p-1.5 shadow-elevated">
+            <div className="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border-b mb-1">
+              Select month to view income
+            </div>
+            {monthlyBreakdown.map((m) => (
+              <DropdownMenuItem
+                key={m.key}
+                onClick={() => setSelectedMonth(m.key)}
+                className={`flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer ${
+                  m.key === selectedMonth ? "bg-primary-soft text-primary font-medium" : ""
+                }`}
+              >
+                <span>{m.label}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{inr(m.amount)}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex items-center gap-2 pt-2">
@@ -206,7 +290,7 @@ export default function AdminDashboard() {
       <Section
         icon={AlertTriangle}
         title="Renewals due"
-        subtitle={`Plans ending in the next ${RENEWAL_WINDOW} days`}
+        subtitle={`Plans ending in the next ${RENEWAL_WINDOW} days — renew from the customer's Plan tab once paid`}
         count={data?.renewals.length ?? 0}
         accent="warning"
         loading={isLoading}
@@ -221,7 +305,7 @@ export default function AdminDashboard() {
         )}
         {autoRenewing.length > 0 && (
           <>
-            <GroupLabel>Auto-renews — confirm payment ({autoRenewing.length})</GroupLabel>
+            <GroupLabel>Expected to renew — collect payment &amp; renew ({autoRenewing.length})</GroupLabel>
             {autoRenewing.map((r) => (
               <RenewalLine key={`a-${r.userId}`} r={r} days={daysUntil(r.endDate)} onOpen={() => navigate(`/admin/customers/${r.userId}`)} />
             ))}
@@ -441,7 +525,7 @@ function RenewalLine({
         <p className="font-medium text-sm truncate">{r.name}</p>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">
           {r.society} · {inr(r.amount)}
-          {r.autoRenew ? ` · renews ${format(parseISO(r.renewalDate), "d MMM")}` : ""}
+          {r.autoRenew ? ` · next cycle ${format(parseISO(r.renewalDate), "d MMM")}` : ""}
         </p>
       </div>
       <div className="flex items-center gap-1 shrink-0">

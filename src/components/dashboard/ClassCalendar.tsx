@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, Check, Pause, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Check, Pause } from "lucide-react";
 
 // ── Brand tokens (match the dashboard) ───────────────────────────────────
 const GOLD   = "#f0a720";
@@ -43,6 +43,35 @@ function nice(d: string) {
   return dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
 
+/** First hour mentioned in a free-text slot ("6–7 AM", "7:00 AM – 8:00 AM") as 0–23, or null. */
+function slotStartHour(slot: string | null): number | null {
+  if (!slot) return null;
+  const m = slot.match(/(\d{1,2})(?::\d{2})?/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  if (h > 23) return null;
+  // Meridiem may only be written once at the end ("6–7 AM") — borrow it.
+  const afterStart = slot.slice((m.index ?? 0) + m[0].length);
+  const mer = afterStart.match(/AM|PM/i)?.[0]?.toUpperCase()
+    ?? slot.match(/AM|PM/i)?.[0]?.toUpperCase();
+  if (mer === "PM" && h < 12) h += 12;
+  if (mer === "AM" && h === 12) h = 0;
+  return h;
+}
+
+/**
+ * Does a trainer off-time apply to this customer's batch?
+ * Off-time slots are typed free-text, so compare parsed start hours instead of
+ * raw strings. When either side can't be parsed, err on informing the customer.
+ */
+export function offTimeAffectsSlot(offSlot: string | null, customerSlot: string | null): boolean {
+  if (!offSlot) return true; // whole day off
+  const a = slotStartHour(offSlot);
+  const b = slotStartHour(customerSlot);
+  if (a == null || b == null) return true;
+  return a === b;
+}
+
 interface Cell { d: number; date: string; dow: number; state: DayState; isToday: boolean }
 
 export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTimes, customerSlot, expanded, onExpandedChange }: Props) {
@@ -61,7 +90,7 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
   const classify = (date: string, dow: number): DayState => {
     if (date < startDate || date > endDate) return "outside";
     if (pauses.some((p) => inRange(date, p.from, p.to))) return trainingIdx.has(dow) ? "paused" : "outside";
-    if (offTimes.some((o) => inRange(date, o.from_date, o.to_date) && (!o.time_slot || o.time_slot === customerSlot)))
+    if (offTimes.some((o) => inRange(date, o.from_date, o.to_date) && offTimeAffectsSlot(o.time_slot, customerSlot)))
       return trainingIdx.has(dow) ? "off" : "outside";
     if (!trainingIdx.has(dow)) return "rest";
     return date < today ? "attended" : "upcoming";
@@ -72,6 +101,31 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     const dow = dt.getDay();
     return { d: dt.getDate(), date, dow, state: classify(date, dow), isToday: date === today };
   };
+
+  // Upcoming training days cancelled by a trainer off-time (today → plan end,
+  // scanned up to 60 days ahead) — surfaced as a notice above the calendar.
+  const upcomingOffDates = useMemo(() => {
+    if (!offTimes.length || trainingIdx.size === 0) return [] as string[];
+    const res: string[] = [];
+    const cursor = new Date(
+      Number(today.slice(0, 4)), Number(today.slice(5, 7)) - 1, Number(today.slice(8, 10))
+    );
+    for (let i = 0; i < 60; i++) {
+      const date = isoOf(cursor);
+      if (date > endDate) break;
+      if (
+        date >= startDate &&
+        trainingIdx.has(cursor.getDay()) &&
+        !pauses.some((p) => inRange(date, p.from, p.to)) &&
+        offTimes.some((o) => inRange(date, o.from_date, o.to_date) && offTimeAffectsSlot(o.time_slot, customerSlot))
+      ) {
+        res.push(date);
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return res;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [offTimes, pauses, trainingIdx, customerSlot, startDate, endDate, today]);
 
   // Anchor (today clamped to the plan window) drives both the default week and month.
   const anchor = today < startDate ? startDate : today > endDate ? endDate : today;
@@ -116,7 +170,10 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
       }
       case "off": {
         const o = offTimes.find((o) => inRange(cell.date, o.from_date, o.to_date));
-        return { title: "Trainer off", sub: o?.reason || nice(cell.date) };
+        return {
+          title: "Trainer's day off — no class",
+          sub: o?.reason ? `${nice(cell.date)} · ${o.reason}` : nice(cell.date),
+        };
       }
       default: return null;
     }
@@ -139,7 +196,15 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     } else if (cell.state === "paused") {
       content = <Pause size={13} color={GOLD_DEEP} fill={GOLD} strokeWidth={0} />;
     } else if (cell.state === "off") {
-      content = <X size={14} color={RED} strokeWidth={3} />;
+      // Trainer's day off — red day number with a red dot beneath it.
+      box.background = "rgba(210,59,52,0.07)";
+      box.border = "1px solid rgba(210,59,52,0.35)";
+      content = (
+        <span style={{ display: "flex", flexDirection: "column", alignItems: "center", lineHeight: 1 }}>
+          <span style={{ color: RED, fontWeight: 600, fontSize: 12 }}>{cell.d}</span>
+          <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, marginTop: 2 }} />
+        </span>
+      );
     } else if (cell.state === "upcoming") {
       content = <span style={{ color: NAVY, fontWeight: 500 }}>{cell.d}</span>;
     } else {
@@ -195,6 +260,19 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
         </span>
       </button>
 
+      {/* Trainer off-day notice — shown ahead of time so no one turns up to a cancelled class */}
+      {upcomingOffDates.length > 0 && (
+        <div className="flex items-start gap-2 rounded-xl mb-3"
+          style={{ background: "rgba(210,59,52,0.08)", border: "1px solid rgba(210,59,52,0.3)", padding: "9px 12px" }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: RED, marginTop: 4, flexShrink: 0 }} />
+          <p style={{ fontSize: 12, color: "#8f231e", lineHeight: 1.45 }}>
+            <span style={{ fontWeight: 700 }}>Trainer's day off — no class on {nice(upcomingOffDates[0])}</span>
+            {upcomingOffDates.length > 1 && ` and ${upcomingOffDates.length - 1} more day${upcomingOffDates.length > 2 ? "s" : ""}`}
+            . These days are marked with a red dot below.
+          </p>
+        </div>
+      )}
+
       {/* Weekday labels */}
       <div className="grid mb-1.5" style={{ gridTemplateColumns: "repeat(7,1fr)", gap: 4 }}>
         {WEEK_LABELS.map((w, i) => (
@@ -232,6 +310,35 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
           </div>
         </>
       )}
+
+      {/* Legend — what each mark means */}
+      <div className="flex flex-wrap items-center mt-3 pb-2" style={{ gap: "6px 14px" }}>
+        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
+          <span className="flex items-center justify-center rounded-[5px]"
+            style={{ width: 15, height: 15, background: NAVY }}>
+            <Check size={9} color="#fff" strokeWidth={3.5} />
+          </span>
+          Attended
+        </span>
+        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
+          <span className="flex items-center justify-center rounded-[5px]"
+            style={{ width: 15, height: 15, background: "#fff", border: `1px solid ${BORDER}` }}>
+            <span style={{ fontSize: 9, color: NAVY, fontWeight: 600 }}>7</span>
+          </span>
+          Upcoming
+        </span>
+        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
+          <Pause size={11} color={GOLD_DEEP} fill={GOLD} strokeWidth={0} />
+          Paused
+        </span>
+        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
+          <span className="flex items-center justify-center rounded-[5px]"
+            style={{ width: 15, height: 15, background: "rgba(210,59,52,0.07)", border: "1px solid rgba(210,59,52,0.35)" }}>
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED }} />
+          </span>
+          Trainer's day off
+        </span>
+      </div>
     </div>
   );
 }
