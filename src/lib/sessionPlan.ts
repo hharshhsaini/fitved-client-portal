@@ -116,5 +116,73 @@ export function extendEndDateBySessions(
   return current;
 }
 
+/** First hour mentioned in a free-text slot ("6–7 AM", "7:00 AM – 8:00 AM") as 0–23, or null. */
+export function slotStartHour(slot: string | null): number | null {
+  if (!slot) return null;
+  const m = slot.match(/(\d{1,2})(?::\d{2})?/);
+  if (!m) return null;
+  let h = parseInt(m[1], 10);
+  if (h > 23) return null;
+  // Meridiem may only be written once at the end ("6–7 AM") — borrow it.
+  const afterStart = slot.slice((m.index ?? 0) + m[0].length);
+  const mer = afterStart.match(/AM|PM/i)?.[0]?.toUpperCase()
+    ?? slot.match(/AM|PM/i)?.[0]?.toUpperCase();
+  if (mer === "PM" && h < 12) h += 12;
+  if (mer === "AM" && h === 12) h = 0;
+  return h;
+}
+
+/**
+ * Does a trainer off-time apply to this customer's batch?
+ * Off-time slots are typed free-text, so compare parsed start hours instead of
+ * raw strings. When either side can't be parsed, err on informing the customer.
+ */
+export function offTimeAffectsSlot(offSlot: string | null, customerSlot: string | null): boolean {
+  if (!offSlot) return true; // whole day off
+  const a = slotStartHour(offSlot);
+  const b = slotStartHour(customerSlot);
+  if (a == null || b == null) return true;
+  return a === b;
+}
+
+export interface DateRangeLike { from: string; to: string }
+export interface OffTimeLike { from_date: string; to_date: string; time_slot: string | null }
+
+/**
+ * Training days lost inside [start, end] to customer pauses and trainer
+ * off-days, counted per-day so an overlapping pause + off-day is only counted
+ * once (as paused). Pause carry-forward is capped elsewhere at 1/3 of the
+ * plan; trainer off-days are the studio's fault, so they are never capped.
+ */
+export function countLostTrainingDays(
+  start: string | Date,
+  end: string | Date,
+  trainingDays: string[],
+  pauses: DateRangeLike[],
+  offTimes: OffTimeLike[],
+  customerSlot: string | null,
+): { pausedLost: number; offLost: number } {
+  const s = toDate(start);
+  const e = toDate(end);
+  let pausedLost = 0;
+  let offLost = 0;
+  if (e < s || !trainingDays.length) return { pausedLost, offLost };
+  const cursor = new Date(s);
+  while (cursor <= e) {
+    if (trainingDays.includes(weekdayName(cursor))) {
+      const iso = toIso(cursor);
+      if (pauses.some((p) => iso >= p.from && iso <= p.to)) {
+        pausedLost++;
+      } else if (
+        offTimes.some((o) => iso >= o.from_date && iso <= o.to_date && offTimeAffectsSlot(o.time_slot, customerSlot))
+      ) {
+        offLost++;
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return { pausedLost, offLost };
+}
+
 export const isoDate = toIso;
 export const parseIsoDate = toDate;

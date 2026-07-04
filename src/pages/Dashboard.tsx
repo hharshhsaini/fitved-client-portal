@@ -10,7 +10,7 @@ import {
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
-import { calculatePlanEndDate, countTrainingDaysInRange, formatPlanName, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, countLostTrainingDays, formatPlanName, isoDate } from "@/lib/sessionPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,7 @@ import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { ClassCalendar } from "@/components/dashboard/ClassCalendar";
+import { MarketingFeed } from "@/components/dashboard/MarketingFeed";
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const GOLD       = "#f0a720";
@@ -33,12 +34,6 @@ const GREEN_LIGHT = "#e6f7ed";
 const BLUE_SOFT  = "#4d9dff";  // base classes (sessions left)
 const RED        = "#d23b34";  // expiring / expired urgency
 const GOLD_DARK  = "#5a3c05";  // text on gold buttons
-
-// Direct-pay UPI deep link (opens GPay/PhonePe/Paytm prefilled).
-const UPI_VPA  = "vish26nov@okicici";
-const UPI_NAME = "FitVed";
-const buildUpiLink = (amount: number) =>
-  `upi://pay?pa=${UPI_VPA}&pn=${encodeURIComponent(UPI_NAME)}&am=${amount}&cu=INR&tn=${encodeURIComponent("FitVed plan renewal")}`;
 
 const WEEK_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -120,6 +115,40 @@ export default function Dashboard() {
     },
   });
 
+  // Renewal price comes from the plan catalog (matched by session count),
+  // with this customer's custom price taking priority — not from whatever
+  // the old plan happened to cost.
+  const { data: planOptions = [] } = useQuery({
+    queryKey: ["plan-options"],
+    enabled: !!plan,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plan_options").select("id,price,total_sessions").eq("active", true);
+      return data ?? [];
+    },
+  });
+
+  const { data: priceOverrides = [] } = useQuery({
+    queryKey: ["plan-price-overrides", user?.id],
+    enabled: !!user && !!plan,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plan_price_overrides").select("plan_option_id,price").eq("user_id", user!.id);
+      return data ?? [];
+    },
+  });
+
+  const renewalPrice = (() => {
+    if (!plan) return 0;
+    const matched = planOptions.find((o) => o.total_sessions === plan.total_sessions);
+    if (matched) {
+      const override = priceOverrides.find((o) => o.plan_option_id === matched.id);
+      return Math.round(Number(override?.price ?? matched.price));
+    }
+    // No catalog match — fall back to what they last paid (net of discount)
+    return Math.round(Math.max(0, Number(plan.amount) - Number(plan.discount ?? 0)));
+  })();
+
   // ── Derived values ──────────────────────────────────────────────────────────
   const totalDays   = plan ? daysBetween(plan.start_date, plan.end_date) : 0;
   const elapsedDays = plan ? daysBetween(plan.start_date, new Date().toISOString()) : 0;
@@ -127,24 +156,22 @@ export default function Dashboard() {
   const sessionsUsed  = plan ? Math.round((plan.total_sessions * progress) / 100) : 0;
   const sessionsLeft  = plan ? Math.max(0, plan.total_sessions - sessionsUsed) : 0;
 
-  // Carry-forward = training days lost to pauses DURING the current plan period
-  // (each pause range clamped to the plan's start → base end, matching the
-  // extension math in recalculatePlanDates). These are missed sessions pushed
-  // to the end of the plan — shown separately, not folded into "sessions left".
+  // Carry-forward = training days lost DURING the current plan period, both to
+  // the customer's own pauses (capped at 1/3 of the plan) and to trainer
+  // off-days (bonus classes — never capped), matching recalculatePlanDates.
   const allPauses = [...history, ...(activePause ? [activePause] : [])];
   const planBaseEnd = plan
     ? isoDate(calculatePlanEndDate(plan.start_date, plan.total_sessions, plan.training_days ?? []))
     : "";
-  const lostToPauses = plan
-    ? allPauses.reduce((sum, p) => {
-        const from = p.from > plan.start_date ? p.from : plan.start_date;
-        const to   = p.to   < planBaseEnd     ? p.to   : planBaseEnd;
-        if (from > to) return sum; // pause doesn't overlap the current plan window
-        return sum + countTrainingDaysInRange(from, to, plan.training_days ?? []);
-      }, 0)
+  const lostDays = plan
+    ? countLostTrainingDays(
+        plan.start_date, planBaseEnd, plan.training_days ?? [],
+        allPauses, offTimes, profile?.time_slot ?? null,
+      )
+    : { pausedLost: 0, offLost: 0 };
+  const carryForward = plan
+    ? Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) + lostDays.offLost
     : 0;
-  // Carry-forward is capped at 1/3 of the plan, matching recalculatePlanDates.
-  const carryForward = plan ? Math.min(lostToPauses, Math.floor(plan.total_sessions / 3)) : 0;
   const baseTotal  = plan?.total_sessions ?? 0;
   const capacity   = baseTotal + carryForward;            // all classes incl. carried
   // Bar segment widths (track scaled to full capacity; attended portion stays empty)
@@ -173,13 +200,13 @@ export default function Dashboard() {
   // ── Renewal urgency ───────────────────────────────────────────────────────
   const todayISO    = todayLocalISO();
   const planEnded   = plan?.status === "cancelled" || plan?.status === "completed" || plan?.status === "paused";
+  const hasActivePlan = plan && plan.status === "active";
   const expired     = !!plan && (plan.end_date < todayISO || planEnded);
   const daysToEnd   = plan ? Math.max(0, daysBetween(todayISO, plan.end_date) - 1) : 0;
   const daysSinceRenewal = plan ? Math.max(0, daysBetween(plan.renewal_date, todayISO) - 1) : 0;
   const expiring    = !!plan && !expired && (daysToEnd <= 3 || sessionsLeft <= 1);
   const renewUrgent = expiring || expired;
-  const upiAmount   = plan ? Math.round(Number(plan.amount)) : 0;
-  const upiLink     = buildUpiLink(upiAmount);
+  const upiAmount   = renewalPrice;
 
   const trainingDays: string[] = (plan?.training_days ?? []).map((d: string) => d.slice(0, 3));
   const todayIdx     = getTodayIdx();
@@ -250,15 +277,14 @@ export default function Dashboard() {
             </>
           )}
 
-          <a
-            href={upiLink}
-            onClick={(e) => e.stopPropagation()}
-            className="relative flex items-center justify-center gap-1.5 rounded-2xl"
-            style={{ background: GOLD, padding: "13px", marginTop: 16, fontSize: 14, fontWeight: 700, color: GOLD_DARK, textDecoration: "none" }}
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate("/plan"); }}
+            className="relative w-full flex items-center justify-center gap-1.5 rounded-2xl border-none cursor-pointer"
+            style={{ background: GOLD, padding: "13px", marginTop: 16, fontSize: 14, fontWeight: 700, color: GOLD_DARK }}
           >
             {expired ? "Renew now" : "Renew & keep it going"} · ₹{upiAmount.toLocaleString("en-IN")}
             <ArrowRight size={16} color={GOLD_DARK} />
-          </a>
+          </button>
         </div>
       )}
 
@@ -331,7 +357,7 @@ export default function Dashboard() {
       )}
 
       {/* My classes calendar */}
-      {plan && (
+      {hasActivePlan && (
         <div ref={calRef}>
           <ClassCalendar
             startDate={plan.start_date}
@@ -347,12 +373,13 @@ export default function Dashboard() {
       )}
 
       {/* Next session banner */}
-      <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
-        style={{
-          background: "#fff", border: `1px solid ${BORDER}`,
-          padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
-        }}>
-        <div onClick={expandCalendar} role="button" className="cursor-pointer flex-1">
+      {hasActivePlan && (
+        <div className="mx-4 my-3 rounded-[20px] flex items-center justify-between"
+          style={{
+            background: "#fff", border: `1px solid ${BORDER}`,
+            padding: "16px 18px", boxShadow: "0 2px 12px rgba(30,58,95,0.06)",
+          }}>
+          <div onClick={expandCalendar} role="button" className="cursor-pointer flex-1">
           <p className="uppercase font-semibold"
             style={{ fontSize: 11, color: MUTED, letterSpacing: "0.08em" }}>
             Next session
@@ -366,13 +393,14 @@ export default function Dashboard() {
             {trainerName ?? "Your trainer"} · {profile?.society ?? "Your society"}
           </p>
         </div>
-        <Link to="/plan">
-          <div className="flex items-center justify-center rounded-full"
-            style={{ width: 44, height: 44, background: GOLD_LIGHT, flexShrink: 0 }}>
-            <ChevronRight size={18} color={GOLD} />
-          </div>
-        </Link>
-      </div>
+          <Link to="/plan">
+            <div className="flex items-center justify-center rounded-full"
+              style={{ width: 44, height: 44, background: GOLD_LIGHT, flexShrink: 0 }}>
+              <ChevronRight size={18} color={GOLD} />
+            </div>
+          </Link>
+        </div>
+      )}
 
       {/* Quick cards */}
       <div className="flex gap-2.5 px-4 pb-4 pt-1">
@@ -414,6 +442,9 @@ export default function Dashboard() {
         {role === "trainer" && <TrainerPauses />}
         {role !== "trainer" && <SocietyBatches />}
       </div>
+
+      {/* Marketing feed */}
+      <MarketingFeed className="px-4 pb-6" />
     </div>
   );
 
@@ -435,10 +466,10 @@ export default function Dashboard() {
               </span>
               <div>
                 <p className="text-sm text-muted-foreground">Your plan</p>
-                <p className="font-display text-xl">{plan ? formatPlanName(plan.total_sessions) : "—"}</p>
+                <p className="font-display text-xl">{hasActivePlan ? formatPlanName(plan.total_sessions) : plan ? "Plan ended" : "—"}</p>
               </div>
             </div>
-            {plan && (
+            {hasActivePlan && (
               <div className="flex flex-col items-end gap-1">
                 <Badge variant="secondary">{sessionsLeft} sessions left</Badge>
                 {carryForward > 0 && (
@@ -450,7 +481,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          {plan ? (
+          {hasActivePlan ? (
             <>
               {renewUrgent && (
                 <div className="mt-4 rounded-xl p-4 flex items-center justify-between gap-3"
@@ -463,11 +494,11 @@ export default function Dashboard() {
                       {expired ? "Renew to pick up your momentum where you left off." : "Renew now so you don't break your rhythm."}
                     </p>
                   </div>
-                  <a href={upiLink}
+                  <Link to="/plan"
                     className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
                     style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
                     Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               )}
               <div className="mt-5 space-y-3">
@@ -488,6 +519,29 @@ export default function Dashboard() {
                     </p>
                   </div>
                 </div>
+              </div>
+              <Button asChild variant="ghost" className="mt-4 px-0 text-primary hover:text-primary hover:bg-transparent">
+                <Link to="/plan">View plan details <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
+            </>
+          ) : plan ? (
+            <>
+              {/* Expired/Ended Plan renewal alert */}
+              <div className="mt-4 rounded-xl p-4 flex items-center justify-between gap-3"
+                style={{ background: "rgba(210,59,52,0.08)", border: `1px solid ${RED}` }}>
+                <div>
+                  <p className="font-semibold" style={{ color: RED }}>
+                    Your plan has completed
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Renew now to continue your fitness journey and get back on track.
+                  </p>
+                </div>
+                <Link to="/plan"
+                  className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
+                  style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
+                  Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
               <Button asChild variant="ghost" className="mt-4 px-0 text-primary hover:text-primary hover:bg-transparent">
                 <Link to="/plan">View plan details <ArrowRight className="ml-1 h-4 w-4" /></Link>
@@ -524,7 +578,7 @@ export default function Dashboard() {
         </Card>
 
         {/* My classes calendar — includes trainer off-day indicators */}
-        {plan && (
+        {hasActivePlan && (
           <Card className="p-2 rounded-2xl shadow-card md:col-span-2">
             <ClassCalendar
               startDate={plan.start_date}
@@ -603,6 +657,8 @@ export default function Dashboard() {
         {role !== "trainer" && (
           <div className="md:col-span-2"><SocietyBatches /></div>
         )}
+
+        <MarketingFeed className="md:col-span-2" />
       </div>
     </div>
   );

@@ -76,7 +76,7 @@ export default function Pause() {
     queryFn: async () => {
       const { data } = await supabase
         .from("plans")
-        .select("training_days, total_sessions")
+        .select("training_days, total_sessions, status")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -98,34 +98,65 @@ export default function Pause() {
   const tooManySessions = range?.from && range?.to && sessionCount > maxCarryForward;
 
   const handlePause = async () => {
-    if (!range?.from || !range?.to) { toast.error("Please select a start and end date"); return; }
-    if (sessionCount < 2) {
-      toast.error("Class pauses apply only when you'll miss 2 or more sessions.");
-      return;
-    }
+    if (!range?.from || !range?.to) return;
     try {
       await pause(toLocalISODate(range.from), toLocalISODate(range.to));
-      toast.success(`Classes paused for ${days} days (${sessionCount} sessions)`);
+      toast.success("Pause scheduled successfully");
       setRange(undefined);
-    } catch (e: unknown) {
-      console.error("Pause error:", e);
-      toast.error(e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e) || "Could not pause");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to apply pause");
     }
   };
 
   const handleResume = async () => {
     try {
       await resume();
-      toast.success("Pause deleted — your classes continue as scheduled!");
-    } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Could not delete the pause");
+      toast.success("Pause cancelled successfully");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to cancel pause");
     }
   };
 
+  // Lock pause deletion if it has already started (i.e. start date <= today)
+  const todayStr = toLocalISODate(new Date());
+  const isLocked = activePause && activePause.from <= todayStr;
+
+  const hasActivePlan = activePlan && activePlan.status === "active";
+
+  if (!hasActivePlan) {
+    return (
+      <>
+        {/* Mobile empty state */}
+        <div className="md:hidden" style={{ background: "#f4f2ee", minHeight: "100%" }}>
+          <div style={{ padding: "8px 20px 16px" }}>
+            <p style={{ color: MUTED, fontSize: 13 }}>Pause subscription</p>
+            <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: NAVY }}>Pause classes</h2>
+          </div>
+          <div className="mx-4 rounded-[20px] p-8 text-center"
+            style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+            <p style={{ color: MUTED, fontSize: 14 }}>
+              You do not have an active plan. Pausing classes is only available when you have an active subscription.
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop empty state */}
+        <div className="hidden md:block space-y-6">
+          <header>
+            <h1 className="font-display text-3xl text-foreground">Pause classes</h1>
+            <p className="mt-1 text-muted-foreground">Manage pauses and extensions for your training sessions.</p>
+          </header>
+          <Card className="p-8 rounded-2xl shadow-card text-center">
+            <p className="text-muted-foreground">
+              You do not have an active plan. Pausing classes is only available when you have an active subscription.
+            </p>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
   const isPaused = !!activePause;
-  const d = new Date();
-  const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  const isLocked = activePause ? todayStr > activePause.from : false;
 
   return (
     <>

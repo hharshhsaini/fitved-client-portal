@@ -9,8 +9,8 @@ import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { usePauseStore } from "@/stores/pauseStore";
-import { ExplorePlansDialog } from "@/components/plan/ExplorePlansDialog";
-import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate, formatPlanName } from "@/lib/sessionPlan";
+import { ExplorePlansDialog, PlanOptionsList } from "@/components/plan/ExplorePlansDialog";
+import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countLostTrainingDays, isoDate, formatPlanName } from "@/lib/sessionPlan";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -43,6 +43,19 @@ export default function Plan() {
     },
   });
 
+  // Trainer off-days — they earn the customer uncapped bonus classes.
+  const { data: offTimes = [] } = useQuery({
+    queryKey: ["trainer-off-times", profile?.trainer_id],
+    enabled: !!profile?.trainer_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_off_times")
+        .select("from_date,to_date,time_slot")
+        .eq("trainer_id", profile!.trainer_id!);
+      return data ?? [];
+    },
+  });
+
   // Local toggle state for optimistic update
   const [autoRenewLocal, setAutoRenewLocal] = useState<boolean | null>(null);
   const autoRenew = autoRenewLocal !== null ? autoRenewLocal : (plan?.auto_renew ?? false);
@@ -59,19 +72,32 @@ export default function Plan() {
     }
   };
 
-  if (!plan) {
+  const isActive = plan && plan.status === "active";
+
+  if (!isActive) {
     return (
       <>
         {/* Mobile empty state */}
         <div className="md:hidden" style={{ background: "#f4f2ee", minHeight: "100%" }}>
           <div style={{ padding: "8px 20px 16px" }}>
-            <p style={{ color: MUTED, fontSize: 13 }}>Active subscription</p>
+            <p style={{ color: MUTED, fontSize: 13 }}>Subscription status</p>
             <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: NAVY }}>Your plan</h2>
           </div>
-          <div className="mx-4 rounded-[20px] p-8 text-center"
+          <div className="mx-4 rounded-[20px] p-6 text-center"
             style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
-            <p style={{ color: MUTED, fontSize: 14 }}>No plan assigned yet — your trainer will set this up.</p>
+            <p style={{ color: MUTED, fontSize: 14 }}>
+              {plan ? "Your plan has ended. Please renew to continue your classes." : "No plan assigned yet — pick one below to get started."}
+            </p>
           </div>
+          {/* Plans shown right on the page — no tap needed to see them */}
+          {user && (
+            <div className="mx-4 mt-5 mb-6">
+              <p className="font-semibold uppercase mb-3 px-1" style={{ fontSize: 12, color: MUTED, letterSpacing: "0.08em" }}>
+                Choose your plan
+              </p>
+              <PlanOptionsList userId={user.id} customerName={customerName} customerPhone={profile?.phone ?? ""} />
+            </div>
+          )}
         </div>
         {/* Desktop empty state */}
         <div className="hidden md:block space-y-6">
@@ -80,8 +106,16 @@ export default function Plan() {
             <p className="mt-1 text-muted-foreground">All the details about your current Fitved plan.</p>
           </header>
           <Card className="p-8 rounded-2xl shadow-card text-center">
-            <p className="text-muted-foreground">No plan assigned yet — your trainer will set this up.</p>
+            <p className="text-muted-foreground">
+              {plan ? "Your plan has ended. Please renew to continue your classes." : "No plan assigned yet — pick one below to get started."}
+            </p>
           </Card>
+          {user && (
+            <div className="max-w-md">
+              <h2 className="font-display text-xl mb-4">Choose your plan</h2>
+              <PlanOptionsList userId={user.id} customerName={customerName} customerPhone={profile?.phone ?? ""} />
+            </div>
+          )}
         </div>
       </>
     );
@@ -106,14 +140,13 @@ export default function Plan() {
   const allPauses = [...history, ...(activePause ? [activePause] : [])];
   const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
   const baseEndISO     = isoDate(baseEnd);
-  const lostToPauses = allPauses.reduce((sum, p) => {
-    const from = p.from > plan.start_date ? p.from : plan.start_date;
-    const to   = p.to   < baseEndISO      ? p.to   : baseEndISO;
-    if (from > to) return sum;
-    return sum + countTrainingDaysInRange(from, to, planDaysFull);
-  }, 0);
-  // Carry-forward is capped at 1/3 of the plan, matching recalculatePlanDates.
-  const carriedClasses = Math.min(lostToPauses, Math.floor(plan.total_sessions / 3));
+  // Pause carry-forward is capped at 1/3 of the plan; trainer off-day bonuses
+  // are never capped — matching recalculatePlanDates.
+  const lostDays = countLostTrainingDays(
+    plan.start_date, baseEndISO, planDaysFull, allPauses, offTimes, profile?.time_slot ?? null,
+  );
+  const carriedClasses =
+    Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) + lostDays.offLost;
   const projectedEndISO = isoDate(extendEndDateBySessions(baseEnd, carriedClasses, planDaysFull));
   const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
   const oldRenewalISO  = isoDate(calculatePlanRenewalDate(baseEnd, planDaysFull));
@@ -191,7 +224,7 @@ export default function Plan() {
                   You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
                 </p>
                 <p style={{ fontSize: 12, color: GOLD_SUB, marginTop: 3, lineHeight: 1.45 }}>
-                  because you missed these classes — FitVed added every one back to your plan.
+                  for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
                 </p>
               </div>
             </div>
@@ -366,7 +399,7 @@ export default function Plan() {
                   You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
                 </p>
                 <p className="text-sm mt-1" style={{ color: GOLD_SUB }}>
-                  because you missed these classes — FitVed added every one back to your plan.
+                  for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
                 </p>
                 <div className="mt-4 flex items-center gap-4 flex-wrap">
                   <div>

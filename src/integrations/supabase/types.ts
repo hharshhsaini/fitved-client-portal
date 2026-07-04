@@ -161,6 +161,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_posts: {
+        Row: {
+          active: boolean
+          caption: string | null
+          created_at: string
+          cta_label: string | null
+          cta_url: string | null
+          id: string
+          media_path: string
+          media_type: string
+        }
+        Insert: {
+          active?: boolean
+          caption?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          media_path: string
+          media_type?: string
+        }
+        Update: {
+          active?: boolean
+          caption?: string | null
+          created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
+          id?: string
+          media_path?: string
+          media_type?: string
+        }
+        Relationships: []
+      }
       pauses: {
         Row: {
           client_id: string | null
@@ -465,6 +498,30 @@ export type Database = {
           title?: string
           trainer_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      trainer_slots: {
+        Row: {
+          created_at: string
+          id: string
+          society_id: string
+          time_slot: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          society_id: string
+          time_slot: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          society_id?: string
+          time_slot?: string
+          trainer_id?: string
         }
         Relationships: []
       }

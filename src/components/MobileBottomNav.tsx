@@ -9,6 +9,7 @@ import {
   Users,
   Dumbbell,
   Package,
+  Megaphone,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -28,8 +29,8 @@ const TRAINER_TABS = [
 const ADMIN_TABS = [
   { path: "/admin",           Icon: Gauge,       label: "Overview" },
   { path: "/admin/customers", Icon: Users,       label: "Clients" },
-  { path: "/admin/plans",     Icon: Package,     label: "Plans" },
   { path: "/admin/trainers",  Icon: Dumbbell,    label: "Trainers" },
+  { path: "/admin/marketing", Icon: Megaphone,   label: "Marketing" },
   { path: "/profile",         Icon: UserCircle2, label: "Profile" },
 ];
 
