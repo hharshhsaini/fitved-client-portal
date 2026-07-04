@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import {
   WEEKDAYS, SESSION_OPTIONS,
   calculatePlanEndDate, calculatePlanRenewalDate,
-  countTrainingDaysInRange, extendEndDateBySessions, isoDate,
+  countLostTrainingDays, extendEndDateBySessions, isoDate,
 } from "@/lib/sessionPlan";
 import { CustomPlanPrices } from "./CustomPlanPrices";
 
@@ -48,6 +48,29 @@ export function PlanTab({ userId }: { userId: string }) {
     queryFn: async () => {
       const { data } = await supabase
         .from("pauses").select("from_date,to_date,status").eq("user_id", userId);
+      return data ?? [];
+    },
+  });
+
+  // Trainer off-days also extend the plan (uncapped) — fetch this customer's
+  // trainer + slot and the trainer's off times.
+  const { data: customerProfile } = useQuery({
+    queryKey: ["customer-profile-for-plan", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles").select("trainer_id, time_slot").eq("id", userId).maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: trainerOffTimes = [] } = useQuery({
+    queryKey: ["trainer-offs-for-plan", customerProfile?.trainer_id],
+    enabled: !!customerProfile?.trainer_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_off_times")
+        .select("from_date,to_date,time_slot")
+        .eq("trainer_id", customerProfile!.trainer_id!);
       return data ?? [];
     },
   });
@@ -89,18 +112,24 @@ export function PlanTab({ userId }: { userId: string }) {
     }
   }, [plan]);
 
-  // Count training days that fell inside any pause, clamped to this plan's
-  // window (start → base end) so pauses from a previous plan don't inflate it.
-  const lostFromPauses = useMemo(() => {
-    if (!pauses.length || !trainingDays.length || !startDate || !totalSessions) return 0;
+  // Training days lost inside this plan's window (start → base end) —
+  // customer pauses (capped at 1/3) and trainer off-days (never capped).
+  // A day that is both paused and trainer-off counts once, as paused.
+  const lostDays = useMemo(() => {
+    if (!trainingDays.length || !startDate || !totalSessions) return { pausedLost: 0, offLost: 0 };
     const baseEnd = isoDate(calculatePlanEndDate(startDate, totalSessions, trainingDays));
-    return pauses.reduce((sum, p) => {
-      const from = p.from_date > startDate ? p.from_date : startDate;
-      const to = p.to_date < baseEnd ? p.to_date : baseEnd;
-      if (from > to) return sum; // pause doesn't overlap this plan
-      return sum + countTrainingDaysInRange(from, to, trainingDays);
-    }, 0);
-  }, [pauses, trainingDays, startDate, totalSessions]);
+    return countLostTrainingDays(
+      startDate,
+      baseEnd,
+      trainingDays,
+      pauses.map((p) => ({ from: p.from_date, to: p.to_date })),
+      trainerOffTimes,
+      customerProfile?.time_slot ?? null,
+    );
+  }, [pauses, trainerOffTimes, customerProfile?.time_slot, trainingDays, startDate, totalSessions]);
+
+  const lostFromPauses = lostDays.pausedLost;
+  const lostFromTrainerOffs = lostDays.offLost;
 
   // Capped pause extension (max 1/3 of plan total sessions)
   const allowedPauseExtension = useMemo(() => {
@@ -109,15 +138,17 @@ export function PlanTab({ userId }: { userId: string }) {
     return Math.min(lostFromPauses, maxCarryForward);
   }, [lostFromPauses, totalSessions]);
 
-  // Auto-recompute end + renewal whenever start/sessions/days/pause-extension change
+  const totalExtension = allowedPauseExtension + lostFromTrainerOffs;
+
+  // Auto-recompute end + renewal whenever start/sessions/days/extension change
   useEffect(() => {
     if (!startDate || !trainingDays.length || !totalSessions) return;
     const base = calculatePlanEndDate(startDate, totalSessions, trainingDays);
-    const end = allowedPauseExtension > 0 ? extendEndDateBySessions(base, allowedPauseExtension, trainingDays) : base;
+    const end = totalExtension > 0 ? extendEndDateBySessions(base, totalExtension, trainingDays) : base;
     const renewal = calculatePlanRenewalDate(end, trainingDays);
     setEndDate(isoDate(end));
     setRenewalDate(isoDate(renewal));
-  }, [startDate, totalSessions, trainingDays, allowedPauseExtension]);
+  }, [startDate, totalSessions, trainingDays, totalExtension]);
 
   const toggleDay = (day: string, on: boolean) => {
     setTrainingDays((prev) =>
@@ -254,6 +285,14 @@ export function PlanTab({ userId }: { userId: string }) {
     [priceOverrides],
   );
 
+  // Effective price for a session count, straight from the Plans catalog with
+  // this customer's override applied — the single source of truth for pricing.
+  const priceForSessions = (sessions: number): number | null => {
+    const opt = planOptions.find((o) => o.total_sessions === sessions);
+    if (!opt) return null;
+    return overrideMap.get(opt.id) ?? Number(opt.price);
+  };
+
   // "same" = renew the current plan as-is; otherwise a plan_options id.
   const [nextCyclePkg, setNextCyclePkg] = useState("same");
 
@@ -277,7 +316,7 @@ export function PlanTab({ userId }: { userId: string }) {
       discount: Number(plan.discount ?? 0),
     };
   }, [plan, nextCyclePkg, planOptions, overrideMap]);
-  const renewStartISO = useMemo(() => {
+  const suggestedRenewStart = useMemo(() => {
     if (!plan) return "";
     const days: string[] = plan.training_days ?? [];
     const todayISO = new Date().toISOString().slice(0, 10);
@@ -291,29 +330,34 @@ export function PlanTab({ userId }: { userId: string }) {
     return start;
   }, [plan]);
 
+  // The admin can override the renewal start date — e.g. backdate it when a
+  // customer started training before the payment came through.
+  const [renewStartOverride, setRenewStartOverride] = useState("");
+  const renewStartISO = renewStartOverride || suggestedRenewStart;
+
   const renew = useMutation({
     mutationFn: async () => {
-      if (!plan) throw new Error("No plan to renew");
+      if (!plan || !nextCycle) throw new Error("No plan to renew");
       const days: string[] = plan.training_days ?? [];
       if (!days.length) throw new Error("The current plan has no training days set");
-      const newEnd = calculatePlanEndDate(renewStartISO, plan.total_sessions, days);
+      const newEnd = calculatePlanEndDate(renewStartISO, nextCycle.sessions, days);
       const newRenewal = calculatePlanRenewalDate(newEnd, days);
 
-      // Close the old cycle
+      // Close the old cycle (no-op if it already completed)
       const { error: closeErr } = await supabase
         .from("plans").update({ status: "completed" }).eq("id", plan.id);
       if (closeErr) throw closeErr;
 
-      // Start the new cycle
+      // Start the new cycle with the selected package
       const { data: created, error } = await supabase.from("plans").insert({
         user_id: userId,
-        total_sessions: plan.total_sessions,
+        total_sessions: nextCycle.sessions,
         training_days: days,
         start_date: renewStartISO,
         end_date: isoDate(newEnd),
         renewal_date: isoDate(newRenewal),
-        amount: plan.amount,
-        discount: plan.discount ?? 0,
+        amount: nextCycle.amount,
+        discount: nextCycle.discount,
         payment_method: plan.payment_method,
         auto_renew: plan.auto_renew,
         status: "active",
@@ -321,7 +365,7 @@ export function PlanTab({ userId }: { userId: string }) {
       if (error) throw error;
 
       // Record the renewal payment
-      const netAmt = Number(plan.amount) - Number(plan.discount ?? 0);
+      const netAmt = nextCycle.amount - nextCycle.discount;
       if (netAmt > 0) {
         const { error: billErr } = await supabase.from("billing_history").insert({
           user_id: userId,
@@ -329,14 +373,16 @@ export function PlanTab({ userId }: { userId: string }) {
           amount: netAmt,
           method: plan.payment_method ?? null,
           type: "payment",
-          notes: `Plan: ${plan.total_sessions} sessions (starts ${renewStartISO})`,
+          notes: `Plan: ${nextCycle.sessions} sessions (starts ${renewStartISO})`,
         });
         if (billErr) console.warn("Renewal billing insert failed:", billErr);
       }
       return created;
     },
     onSuccess: (created) => {
-      toast.success(`Plan renewed — next cycle starts ${format(new Date(renewStartISO), "EEE, MMM d")}`);
+      toast.success(`Plan ${nextCyclePkg === "same" ? "renewed" : "extended"} — next cycle starts ${format(new Date(renewStartISO), "EEE, MMM d")}`);
+      setNextCyclePkg("same");
+      setRenewStartOverride("");
       if (created) qc.setQueryData(["customer-plan", userId], created);
       qc.invalidateQueries({ queryKey: ["customer-plan", userId] });
       qc.invalidateQueries({ queryKey: ["customer-billing", userId] });
@@ -356,10 +402,11 @@ export function PlanTab({ userId }: { userId: string }) {
           <Select value={String(totalSessions)} onValueChange={(v) => {
             const val = Number(v);
             setTotalSessions(val);
-            if (val === 8) setAmount(0);
-            if (val === 12) setAmount(3499);
-            if (val === 36) setAmount(9897);
-            if (val === 72) setAmount(17994);
+            // Price comes from the Plans catalog (per-customer override first),
+            // so it always matches whatever the admin has set there.
+            const catalogPrice = priceForSessions(val);
+            if (catalogPrice != null) setAmount(catalogPrice);
+            else if (val === 8) setAmount(0); // trial — not in the catalog
           }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -370,6 +417,7 @@ export function PlanTab({ userId }: { userId: string }) {
                   {n === 12 && " · 1 month"}
                   {n === 36 && " · 3 months"}
                   {n === 72 && " · 6 months"}
+                  {priceForSessions(n) != null && ` · ₹${priceForSessions(n)!.toLocaleString("en-IN")}`}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -454,10 +502,14 @@ export function PlanTab({ userId }: { userId: string }) {
           ) : "Pick start date and training days to compute."}
         </p>
         <p className="text-xs text-muted-foreground pt-2">
-          Pause days lost (training days falling inside a pause):{" "}
-          <span className="font-medium text-foreground">{lostFromPauses}</span>
+          Pause days lost: <span className="font-medium text-foreground">{lostFromPauses}</span>
           {allowedPauseExtension > 0 && (
-            <> · extended automatically by <span className="font-medium text-foreground">{allowedPauseExtension}</span> day(s), capped at 1/3 of the plan</>
+            <> (extends by {allowedPauseExtension}, capped at 1/3 of the plan)</>
+          )}
+          {" "}· Trainer off-days hit: <span className="font-medium text-foreground">{lostFromTrainerOffs}</span>
+          {lostFromTrainerOffs > 0 && <> (bonus classes, no cap)</>}
+          {totalExtension > 0 && (
+            <> · end date pushed by <span className="font-medium text-foreground">{totalExtension}</span> training day(s) total</>
           )}
         </p>
       </div>
@@ -496,26 +548,75 @@ export function PlanTab({ userId }: { userId: string }) {
         {save.isPending ? "Saving…" : (plan && plan.status === "active") ? "Update plan" : "Create plan"}
       </Button>
 
-      {/* Manual renewal — the only way a plan rolls into its next cycle */}
-      {plan && plan.status === "active" && (
-        <div className="rounded-lg border p-4 space-y-2" style={{ borderColor: "rgba(240,167,32,0.5)", background: "rgba(240,167,32,0.06)" }}>
-          <p className="font-medium text-sm">Renew plan (next cycle)</p>
+      {/* Manual renewal / extension — the only way a plan rolls into its next cycle */}
+      {plan && nextCycle && (
+        <div className="rounded-lg border p-4 space-y-3" style={{ borderColor: "rgba(240,167,32,0.5)", background: "rgba(240,167,32,0.06)" }}>
+          <div>
+            <p className="font-medium text-sm">Renew / extend plan (next cycle)</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pick what comes next — the same plan again, or a different package. It starts right after the
+              current plan ends (pause extensions included).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Next cycle package</Label>
+              <Select value={nextCyclePkg} onValueChange={setNextCyclePkg}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="same">
+                    Same plan again · {plan.total_sessions} sessions · ₹{Math.max(0, Number(plan.amount) - Number(plan.discount ?? 0)).toLocaleString("en-IN")}
+                  </SelectItem>
+                  {planOptions.filter((o) => o.total_sessions != null).map((o) => (
+                    <SelectItem key={o.id} value={o.id}>
+                      {o.name} · {o.total_sessions} sessions · ₹{(overrideMap.get(o.id) ?? Number(o.price)).toLocaleString("en-IN")}
+                      {overrideMap.has(o.id) ? " (custom price)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Renewal start date</Label>
+              <Input
+                type="date"
+                value={renewStartISO}
+                onChange={(e) => setRenewStartOverride(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Backdate this if the customer started before paying{renewStartOverride && renewStartOverride !== suggestedRenewStart ? (
+                  <> · <button type="button" className="text-primary hover:underline" onClick={() => setRenewStartOverride("")}>reset to {suggestedRenewStart}</button></>
+                ) : null}
+              </p>
+            </div>
+          </div>
+
           <p className="text-xs text-muted-foreground">
-            Starts <span className="font-medium text-foreground">{renewStartISO && isValidDate(renewStartISO) ? format(new Date(renewStartISO), "EEE, MMM d, yyyy") : "—"}</span>
-            {" "}(right after the current plan, including pause extensions) · {plan.total_sessions} sessions ·{" "}
-            <span className="font-medium text-foreground">₹{Math.max(0, Number(plan.amount) - Number(plan.discount ?? 0)).toLocaleString("en-IN")}</span>.
+            <span className="font-medium text-foreground">{nextCycle.sessions} sessions</span>
+            {" "}starting <span className="font-medium text-foreground">{renewStartISO && isValidDate(renewStartISO) ? format(new Date(renewStartISO), "EEE, MMM d, yyyy") : "—"}</span>
+            {renewStartISO && (plan.training_days ?? []).length > 0 && (
+              <>
+                {" "}· runs till{" "}
+                <span className="font-medium text-foreground">
+                  {format(calculatePlanEndDate(renewStartISO, nextCycle.sessions, plan.training_days ?? []), "EEE, MMM d, yyyy")}
+                </span>
+              </>
+            )}
+            {" "}· <span className="font-medium text-foreground">₹{Math.max(0, nextCycle.amount - nextCycle.discount).toLocaleString("en-IN")}</span>.
             The current cycle is marked completed and the payment is recorded in Billing automatically.
           </p>
+
           <Button
             size="sm"
             disabled={renew.isPending}
             onClick={() => {
-              if (confirm(`Renew now? New cycle: ${plan.total_sessions} sessions starting ${renewStartISO}. A ₹${Math.max(0, Number(plan.amount) - Number(plan.discount ?? 0)).toLocaleString("en-IN")} payment will be recorded.`)) {
+              if (confirm(`${nextCyclePkg === "same" ? "Renew" : `Extend with ${nextCycle.label}`}? New cycle: ${nextCycle.sessions} sessions starting ${renewStartISO}. A ₹${Math.max(0, nextCycle.amount - nextCycle.discount).toLocaleString("en-IN")} payment will be recorded.`)) {
                 renew.mutate();
               }
             }}
           >
-            {renew.isPending ? "Renewing…" : "Renew plan now"}
+            {renew.isPending ? "Working…" : nextCyclePkg === "same" ? "Renew plan now" : "Extend plan now"}
           </Button>
         </div>
       )}

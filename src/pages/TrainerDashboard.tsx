@@ -9,15 +9,18 @@ import {
 } from "lucide-react";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { TrainerClientPauseModal } from "@/components/dashboard/TrainerClientPauseModal";
+import { MarketingFeed } from "@/components/dashboard/MarketingFeed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CalendarIcon } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { recalculatePlanDates } from "@/stores/pauseStore";
 import { toast } from "sonner";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -147,6 +150,31 @@ export default function TrainerDashboard() {
     [allClients, selectedSociety]
   );
 
+  // The slots this trainer runs (set by the admin in Admin → Trainers),
+  // grouped per society. Also drives the off-time slot picker.
+  const { data: mySlots = [] } = useQuery<{ society_id: string; time_slot: string }[]>({
+    queryKey: ["trainer-own-slots", trainer?.id],
+    enabled: !!trainer,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_slots")
+        .select("society_id, time_slot")
+        .eq("trainer_id", trainer!.id)
+        .order("time_slot");
+      return data ?? [];
+    },
+  });
+  const slotsForSociety = (sid: string) => mySlots.filter((s) => s.society_id === sid).map((s) => s.time_slot);
+
+  // Off-time slot options: admin-defined slots plus the batch slots their
+  // clients are actually assigned to — so the picker is never empty while
+  // the trainer has classes running.
+  const uniqueSlotOptions = useMemo(() => {
+    const set = new Set<string>(mySlots.map((s) => s.time_slot));
+    for (const c of allClients) if (c.time_slot) set.add(c.time_slot);
+    return [...set].sort();
+  }, [mySlots, allClients]);
+
   const today = new Date().toISOString().slice(0, 10);
   const { data: offTimes = [] } = useQuery<OffTimeRow[]>({
     queryKey: ["trainer-off-times", trainer?.id],
@@ -161,6 +189,16 @@ export default function TrainerDashboard() {
       return (data ?? []) as OffTimeRow[];
     },
   });
+
+  // Off-days count as bonus classes for every affected client — push their
+  // plan end dates out right away so schedules stay accurate.
+  const recalcAffectedClients = async () => {
+    if (!trainer) return;
+    const { data: clients } = await supabase
+      .from("profiles").select("id").eq("trainer_id", trainer.id);
+    await Promise.all((clients ?? []).map((c) => recalculatePlanDates(c.id)));
+    qc.invalidateQueries({ queryKey: ["trainer-clients"] });
+  };
 
   // ── Mutations ─────────────────────────────────────────────────────────────
   const addOff = useMutation({
@@ -193,10 +231,11 @@ export default function TrainerDashboard() {
       }
     },
     onSuccess: () => {
-      toast.success("Off time saved");
+      toast.success("Off time saved — affected clients get those classes back as bonus days");
       setDateRange(undefined); setSingleDate(undefined);
       setSlotInput(""); setReason("");
       qc.invalidateQueries({ queryKey: ["trainer-off-times"] });
+      recalcAffectedClients();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to save"),
   });
@@ -209,6 +248,7 @@ export default function TrainerDashboard() {
     onSuccess: () => {
       toast.success("Removed");
       qc.invalidateQueries({ queryKey: ["trainer-off-times"] });
+      recalcAffectedClients();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Failed to remove"),
   });
@@ -336,6 +376,20 @@ export default function TrainerDashboard() {
                         ))
                       }
                     </div>
+                    {slotsForSociety(s.id).length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5 ml-11">
+                        <span style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
+                          Your slots
+                        </span>
+                        {slotsForSociety(s.id).map((slot) => (
+                          <span key={slot}
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
+                            style={{ background: "rgba(30,58,95,0.07)", fontSize: 11, color: NAVY, fontWeight: 600 }}>
+                            <Clock size={10} /> {slot}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex flex-col items-end gap-1 ml-2 flex-shrink-0">
                     <span className="rounded-full font-bold"
@@ -546,18 +600,32 @@ export default function TrainerDashboard() {
                   className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
-            <input
-              value={slotInput}
-              onChange={(e) => setSlotInput(e.target.value)}
-              placeholder="Time slot e.g. 6–7 AM"
-              className="w-full rounded-xl px-3 py-2.5 text-sm"
-              style={{
-                border: `2px solid ${slotInput ? NAVY : "#c8d4e3"}`,
-                background: "#f8fafd",
-                outline: "none",
-                color: NAVY,
-              }}
-            />
+            {uniqueSlotOptions.length > 0 ? (
+              <Select value={slotInput || undefined} onValueChange={setSlotInput}>
+                <SelectTrigger className="w-full rounded-xl h-11"
+                  style={{ border: `2px solid ${slotInput ? NAVY : "#c8d4e3"}`, background: "#f8fafd", color: slotInput ? NAVY : MUTED }}>
+                  <SelectValue placeholder="Select your slot" />
+                </SelectTrigger>
+                <SelectContent>
+                  {uniqueSlotOptions.map((slot) => (
+                    <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <input
+                value={slotInput}
+                onChange={(e) => setSlotInput(e.target.value)}
+                placeholder="Time slot e.g. 6–7 AM"
+                className="w-full rounded-xl px-3 py-2.5 text-sm"
+                style={{
+                  border: `2px solid ${slotInput ? NAVY : "#c8d4e3"}`,
+                  background: "#f8fafd",
+                  outline: "none",
+                  color: NAVY,
+                }}
+              />
+            )}
           </>
         )}
 
@@ -726,6 +794,9 @@ export default function TrainerDashboard() {
         )}
         {tab === "offtime" && <OffTimeForm />}
 
+        {/* Marketing feed */}
+        {tab === "societies" && !selectedSociety && <MarketingFeed className="mx-4 mt-4" />}
+
         {/* bottom padding for nav */}
         <div style={{ height: 24 }} />
       </div>
@@ -795,6 +866,13 @@ export default function TrainerDashboard() {
                                   className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
                                   style={{ background: "rgba(240,167,32,0.12)", color: "#a07010" }}>
                                   <Clock size={10} /> {b.time_slot} · {b.client_count}
+                                </span>
+                              ))}
+                              {slotsForSociety(s.id).map((slot) => (
+                                <span key={`def-${slot}`}
+                                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
+                                  style={{ background: "rgba(30,58,95,0.07)", color: NAVY, fontWeight: 600 }}>
+                                  <Clock size={10} /> {slot}
                                 </span>
                               ))}
                             </div>
@@ -930,9 +1008,20 @@ export default function TrainerDashboard() {
                         className={cn("p-3 pointer-events-auto")} />
                     </PopoverContent>
                   </Popover>
-                  <input value={slotInput} onChange={(e) => setSlotInput(e.target.value)}
-                    placeholder="Time slot e.g. 6–7 AM"
-                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
+                  {uniqueSlotOptions.length > 0 ? (
+                    <Select value={slotInput || undefined} onValueChange={setSlotInput}>
+                      <SelectTrigger><SelectValue placeholder="Select your slot" /></SelectTrigger>
+                      <SelectContent>
+                        {uniqueSlotOptions.map((slot) => (
+                          <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <input value={slotInput} onChange={(e) => setSlotInput(e.target.value)}
+                      placeholder="Time slot e.g. 6–7 AM"
+                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-primary" />
+                  )}
                 </div>
               )}
 
@@ -993,6 +1082,9 @@ export default function TrainerDashboard() {
 
         {/* Client pauses */}
         {!isViewAs && <TrainerPauses />}
+
+        {/* Marketing feed */}
+        <MarketingFeed />
       </div>
 
       <TrainerClientPauseModal
