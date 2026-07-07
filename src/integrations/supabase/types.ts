@@ -107,6 +107,30 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tips: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          sort_order: number
+          text: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          sort_order?: number
+          text: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          sort_order?: number
+          text?: string
+        }
+        Relationships: []
+      }
       health_reports: {
         Row: {
           client_id: string

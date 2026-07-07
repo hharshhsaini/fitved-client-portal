@@ -36,12 +36,15 @@ export default function Customers() {
 
       const [{ data: profiles }, { data: plans }, { data: trainers }, { data: societies }] = await Promise.all([
         supabase.from("profiles").select("id, name, phone, society_id, trainer_id").in("id", ids),
-        supabase.from("plans").select("user_id, total_sessions, status").in("user_id", ids),
+        supabase.from("plans").select("user_id, total_sessions, status, created_at").in("user_id", ids)
+          .order("created_at", { ascending: false }),
         supabase.from("trainers").select("id, name"),
         supabase.from("societies").select("id, name"),
       ]);
 
       return (profiles ?? []).map((p) => {
+        // Plans are newest-first, so the first match is the current cycle —
+        // a renewed customer keeps an older "completed" row we must skip past.
         const plan = plans?.find((pl) => pl.user_id === p.id);
         const trainer = trainers?.find((t) => t.id === p.trainer_id);
         const soc = societies?.find((s) => s.id === p.society_id);

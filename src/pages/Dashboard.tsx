@@ -208,6 +208,20 @@ export default function Dashboard() {
   const renewUrgent = expiring || expired;
   const upiAmount   = renewalPrice;
 
+  // UPI deep link — opens the customer's UPI app prefilled with FitVed's VPA,
+  // the renewal amount, and a note naming the customer + the plan they're
+  // renewing. Works on mobile; on desktop it depends on a UPI handler.
+  const UPI_VPA  = "Vish26nov@okicici";
+  const UPI_NAME = "FitVed";
+  const planLabelForNote =
+    baseTotal === 12 ? "1 Month plan" :
+    baseTotal === 36 ? "3 Month plan" :
+    baseTotal === 72 ? "6 Month plan" :
+    baseTotal === 8  ? "Trial plan" :
+    `${baseTotal} sessions plan`;
+  const upiNote  = `${profile?.name ?? firstName} - renew ${planLabelForNote}`;
+  const upiLink  = `upi://pay?pa=${UPI_VPA}&pn=${encodeURIComponent(UPI_NAME)}&am=${upiAmount}&cu=INR&tn=${encodeURIComponent(upiNote)}`;
+
   const trainingDays: string[] = (plan?.training_days ?? []).map((d: string) => d.slice(0, 3));
   const todayIdx     = getTodayIdx();
   const nextTrainingDay = WEEK_DAYS.find((d, i) => i >= todayIdx && trainingDays.includes(d))
@@ -277,14 +291,15 @@ export default function Dashboard() {
             </>
           )}
 
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate("/plan"); }}
-            className="relative w-full flex items-center justify-center gap-1.5 rounded-2xl border-none cursor-pointer"
-            style={{ background: GOLD, padding: "13px", marginTop: 16, fontSize: 14, fontWeight: 700, color: GOLD_DARK }}
+          <a
+            href={upiLink}
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full flex items-center justify-center gap-1.5 rounded-2xl cursor-pointer"
+            style={{ background: GOLD, padding: "13px", marginTop: 16, fontSize: 14, fontWeight: 700, color: GOLD_DARK, textDecoration: "none" }}
           >
             {expired ? "Renew now" : "Renew & keep it going"} · ₹{upiAmount.toLocaleString("en-IN")}
             <ArrowRight size={16} color={GOLD_DARK} />
-          </button>
+          </a>
         </div>
       )}
 
@@ -494,11 +509,11 @@ export default function Dashboard() {
                       {expired ? "Renew to pick up your momentum where you left off." : "Renew now so you don't break your rhythm."}
                     </p>
                   </div>
-                  <Link to="/plan"
+                  <a href={upiLink}
                     className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
                     style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
                     Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </a>
                 </div>
               )}
               <div className="mt-5 space-y-3">
@@ -537,11 +552,11 @@ export default function Dashboard() {
                     Renew now to continue your fitness journey and get back on track.
                   </p>
                 </div>
-                <Link to="/plan"
+                <a href={upiLink}
                   className="inline-flex items-center gap-1.5 rounded-xl shrink-0"
                   style={{ background: GOLD, color: GOLD_DARK, fontWeight: 700, padding: "10px 14px", fontSize: 14, textDecoration: "none" }}>
                   Renew · ₹{upiAmount.toLocaleString("en-IN")} <ArrowRight className="h-4 w-4" />
-                </Link>
+                </a>
               </div>
               <Button asChild variant="ghost" className="mt-4 px-0 text-primary hover:text-primary hover:bg-transparent">
                 <Link to="/plan">View plan details <ArrowRight className="ml-1 h-4 w-4" /></Link>

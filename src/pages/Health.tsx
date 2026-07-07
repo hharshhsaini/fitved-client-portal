@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileHeart } from "lucide-react";
+import { Download, FileHeart, Lightbulb, ClipboardList, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,43 @@ const MUTED   = "#8a8f9e";
 const BORDER  = "rgba(30,58,95,0.08)";
 const GREEN   = "#2e9e5b";
 const GREEN_LIGHT = "#e6f7ed";
+const GOLD       = "#f0a720";
+const GOLD_LIGHT = "#fef3d0";
+const GOLD_DEEP  = "#b07d10";
+
+// Diet behaviour questionnaire (Google Form)
+const DIET_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSehQwl6IAFkeWIRfFux5CzR3vgvAH6mozius4IHcaMv6TQcZQ/viewform";
+
+// Rotating daily wellness tips — same tip for everyone on a given day,
+// changes automatically the next day.
+const DAILY_TIPS = [
+  "Start your day with a glass of warm water — it kickstarts digestion and hydration.",
+  "Aim for a fistful of protein at every meal to stay full and protect muscle.",
+  "Take a 10-minute walk after lunch to steady your blood sugar.",
+  "Fill half your plate with vegetables before adding anything else.",
+  "Chew slowly — it takes ~20 minutes for your brain to register fullness.",
+  "Swap one sugary drink today for water, buttermilk, or unsweetened tea.",
+  "Stand up and stretch for 2 minutes every hour you sit.",
+  "Eat your last meal 2–3 hours before bed for better sleep and digestion.",
+  "Add a source of fibre — dal, oats, fruit, or salad — to keep you regular.",
+  "Get 10 minutes of morning sunlight to support your sleep rhythm.",
+  "Prep tomorrow's snacks tonight so you're not caught hungry and unprepared.",
+  "Breathe deeply for 5 slow breaths before eating — it lowers stress-eating.",
+  "Include a handful of nuts or seeds for healthy fats and steady energy.",
+  "Track your water: aim for 6–8 glasses spread through the day.",
+  "Choose whole fruit over juice — you keep the fibre and skip the sugar spike.",
+  "Do 10 bodyweight squats while your tea or coffee brews.",
+  "Season with herbs and spices instead of extra salt or sugar.",
+  "Aim for 7–8 hours of sleep — recovery is where progress happens.",
+  "Eat mindfully: no screens for one meal today, just your food.",
+  "Add curd or a probiotic food to support gut health.",
+];
+
+function todaysTip(): string {
+  const dayIndex = Math.floor(Date.now() / 86_400_000);
+  return DAILY_TIPS[dayIndex % DAILY_TIPS.length];
+}
 
 export default function Health() {
   const { user } = useAuth();
@@ -47,8 +84,44 @@ export default function Health() {
         <div style={{ padding: "8px 20px 16px" }}>
           <p style={{ color: MUTED, fontSize: 13 }}>From your trainer</p>
           <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", color: NAVY }}>
-            Health reports
+            Health &amp; wellness
           </h2>
+        </div>
+
+        {/* Daily tip */}
+        <div className="mx-4 mb-3.5 rounded-[22px] p-5"
+          style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD}` }}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Lightbulb size={16} color={GOLD_DEEP} />
+            <p className="font-semibold uppercase" style={{ fontSize: 11, color: GOLD_DEEP, letterSpacing: "0.08em" }}>
+              Tip of the day
+            </p>
+          </div>
+          <p style={{ fontSize: 14, color: NAVY, lineHeight: 1.5 }}>{todaysTip()}</p>
+        </div>
+
+        {/* Diet behaviour questionnaire */}
+        <a href={DIET_FORM_URL} target="_blank" rel="noopener noreferrer"
+          className="mx-4 mb-4 rounded-[22px] p-5 flex items-center gap-3.5 cursor-pointer"
+          style={{ background: "#fff", border: `1px solid ${BORDER}`, textDecoration: "none", boxShadow: "0 2px 12px rgba(30,58,95,0.05)" }}>
+          <div className="flex items-center justify-center rounded-2xl flex-shrink-0"
+            style={{ width: 44, height: 44, background: GREEN_LIGHT }}>
+            <ClipboardList size={20} color={GREEN} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold" style={{ fontSize: 15, color: NAVY }}>Diet behaviour questionnaire</p>
+            <p style={{ fontSize: 12, color: MUTED, marginTop: 2, lineHeight: 1.4 }}>
+              A few quick questions to help your trainer personalise your nutrition.
+            </p>
+          </div>
+          <ArrowRight size={18} color={GOLD} className="flex-shrink-0" />
+        </a>
+
+        {/* Reports sub-heading */}
+        <div style={{ padding: "0 20px 12px" }}>
+          <p className="font-semibold uppercase" style={{ fontSize: 12, color: MUTED, letterSpacing: "0.08em" }}>
+            Your reports
+          </p>
         </div>
 
         {latest ? (
@@ -112,9 +185,35 @@ export default function Health() {
       {/* ── Desktop Layout (original) ──────────────────────────────── */}
       <div className="hidden md:block space-y-6">
         <header>
-          <h1 className="font-display text-3xl text-foreground">Health reports</h1>
+          <h1 className="font-display text-3xl text-foreground">Health &amp; wellness</h1>
           <p className="mt-1 text-muted-foreground">Your monthly wellness check, always within reach.</p>
         </header>
+
+        {/* Daily tip + questionnaire */}
+        <div className="grid gap-5 md:grid-cols-2">
+          <Card className="p-6 rounded-2xl shadow-card" style={{ background: GOLD_LIGHT, border: `1px solid ${GOLD}` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="h-5 w-5" style={{ color: GOLD_DEEP }} />
+              <p className="font-semibold uppercase text-xs tracking-wider" style={{ color: GOLD_DEEP }}>Tip of the day</p>
+            </div>
+            <p className="text-base" style={{ color: NAVY, lineHeight: 1.5 }}>{todaysTip()}</p>
+          </Card>
+
+          <a href={DIET_FORM_URL} target="_blank" rel="noopener noreferrer" className="block">
+            <Card className="p-6 rounded-2xl shadow-card hover:shadow-elevated transition-shadow h-full flex items-center gap-4">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl" style={{ background: GREEN_LIGHT }}>
+                <ClipboardList className="h-6 w-6" style={{ color: GREEN }} />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="font-display text-lg" style={{ color: NAVY }}>Diet behaviour questionnaire</p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  A few quick questions to help your trainer personalise your nutrition.
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 shrink-0" style={{ color: GOLD }} />
+            </Card>
+          </a>
+        </div>
 
         {latest ? (
           <Card className="p-6 md:p-8 rounded-2xl shadow-card bg-gradient-soft border-primary/15">
