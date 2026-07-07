@@ -9,21 +9,14 @@ import {
   Users,
   Briefcase,
   Laptop,
-  Wrench,
-  Dumbbell,
-  Trophy,
   Check,
   Star,
-  MapPin,
   ShieldCheck,
   ChevronDown,
   ArrowRight,
   Stethoscope,
   Activity,
   HeartPulse,
-  Utensils,
-  BarChart2,
-  Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,8 +36,6 @@ import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 const heroHands = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80";
-import monalisaFit from "@/assets/monalisa-fit.png";
-import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
 
 const PHONE = "+919890471383";
 const PHONE_DISPLAY = "+91 9890471383";
@@ -54,6 +45,7 @@ const WHATSAPP_URL = `https://wa.me/${PHONE.replace(/\D/g, "")}?text=${WHATSAPP_
 const NAV = [
   { id: "home", label: "Home" },
   { id: "services", label: "Services" },
+  { id: "trainers", label: "Trainers" },
   { id: "results", label: "Results" },
 ];
 
@@ -159,17 +151,12 @@ export default function Landing() {
 
       <main>
         <Hero />
-        <ZeroExcuse />
-        <TakeCare />
         <ProblemSolution />
         <Services />
+        <Gallery />
         <Trainers />
-        <Difference />
         <Results />
         <Testimonials />
-        <Roadmap />
-        <Locations />
-
         <FAQ />
         <EnquiryForm />
       </main>
@@ -622,305 +609,49 @@ function Services() {
   );
 }
 
-/* ---------- ROADMAP ---------- */
-function Roadmap() {
-  const phases = [
-    {
-      icon: Wrench,
-      tag: "Weeks 1–3",
-      title: "Rebuild",
-      tagline: "Assess. Reset. Move pain-free.",
-      pill: "Foundation",
-    },
-    {
-      icon: Dumbbell,
-      tag: "Weeks 4–8",
-      title: "Strengthen",
-      tagline: "Build muscle. Burn visceral fat.",
-      pill: "Progress",
-    },
-    {
-      icon: Trophy,
-      tag: "Weeks 9–12",
-      title: "Perform",
-      tagline: "Lock in habits for life.",
-      pill: "Peak",
-    },
-  ];
-  return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-white to-fv-neutral">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
-            Your 12-Week Journey
-          </h2>
-          <p className="mt-2 text-fv-text/70 text-sm md:text-base">
-            Three phases. One transformation.
-          </p>
-        </div>
+/* ---------- GALLERY ---------- */
+const GALLERY = [
+  { src: "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?w=800&q=80", alt: "Group yoga session in a society clubhouse" },
+  { src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&q=80", alt: "Guided stretching with a trainer" },
+  { src: "https://images.unsplash.com/photo-1552196563-55cd4e45efb3?w=800&q=80", alt: "Morning mobility class" },
+  { src: "https://images.unsplash.com/photo-1591258370814-01609b341790?w=800&q=80", alt: "Strength training at your doorstep" },
+  { src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80", alt: "Small-group functional workout" },
+  { src: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80", alt: "Breathwork and meditation" },
+];
 
-        {/* Desktop: static 3-column grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-6 mt-12">
-          {phases.map((p) => (
-            <div key={p.title} className="flex flex-col items-center text-center rounded-2xl bg-white border border-fv-navy/10 p-8 shadow-card">
-              <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated">
-                <p.icon className="h-10 w-10 text-fv-navy" />
-                <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
-                  {p.pill}
-                </span>
-              </div>
-              <div className="mt-6">
-                <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
-                <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
-                <p className="mt-1 text-sm text-fv-text/70 max-w-[220px] mx-auto">{p.tagline}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Mobile: carousel */}
-        <div className="md:hidden mt-12 relative px-12">
-          <Carousel opts={{ align: "start", loop: true }}>
-            <CarouselContent>
-              {phases.map((p) => (
-                <CarouselItem key={p.title} className="basis-[85%]">
-                  <div className="flex flex-col items-center text-center rounded-2xl bg-white border border-fv-navy/10 p-8 shadow-card h-full">
-                    <div className="relative grid h-24 w-24 place-items-center rounded-full bg-white border-4 border-fv-orange shadow-elevated">
-                      <p.icon className="h-10 w-10 text-fv-navy" />
-                      <span className="absolute -bottom-2 px-2.5 py-0.5 rounded-full bg-fv-navy text-white text-[10px] font-bold uppercase tracking-wider">
-                        {p.pill}
-                      </span>
-                    </div>
-                    <div className="mt-6">
-                      <p className="text-xs font-bold uppercase tracking-widest text-fv-orange">{p.tag}</p>
-                      <h3 className="mt-1 text-2xl font-display font-bold text-fv-navy">{p.title}</h3>
-                      <p className="mt-1 text-sm text-fv-text/70 max-w-[220px] mx-auto">{p.tagline}</p>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-2" />
-            <CarouselNext className="-right-2" />
-          </Carousel>
-        </div>
-
-        <div className="mt-12 text-center">
-          <Button
-            onClick={() => scrollTo("contact")}
-            className="bg-fv-orange text-white hover:bg-fv-orange/90 h-12 px-8 font-semibold"
-          >
-            Start Your 12-Week Transformation
-          </Button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- DIFFERENCE ---------- */
-function Difference() {
-  const rows = [
-    ["Focus: Aesthetics (six-pack abs)", "Focus: Healthspan (move well at 80)"],
-    ["Rep counting without context", "Posture correction + clinical cues"],
-    ["One-size-fits-all programs", "Medical history-based customization"],
-    ["Young trainers, basic certifications", "Clinical fitness specialists (longevity-trained)"],
-    ["You commute to crowded gym", "We come to your society gym"],
-    ["No nutrition guidance", "Metabolic meal plans included"],
-    ["Cancel anytime, lose progress", "12-week commitment builds real habits"],
-  ];
+function Gallery() {
   return (
     <section className="py-20 md:py-28 bg-white">
-      <div className="mx-auto max-w-5xl px-4">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
-            Not Your Typical Gym Experience
-          </h2>
-        </div>
-        <div className="mt-10 overflow-hidden rounded-2xl border border-fv-navy/10 shadow-card">
-          {/* Header */}
-          <div className="grid grid-cols-1 md:grid-cols-2 bg-fv-navy text-white">
-            <div className="hidden md:block p-4 text-sm font-semibold opacity-80">Traditional Gym</div>
-            <div className="p-4 text-sm font-semibold bg-fv-orange">Fitved Longevity Training</div>
-          </div>
-          {rows.map(([a, b], i) => (
-            <div
-              key={a}
-              className={cn(
-                "grid grid-cols-1 md:grid-cols-2 text-sm",
-                i % 2 === 0 ? "bg-white" : "bg-fv-neutral"
-              )}
-            >
-              <div className="px-4 pt-3 pb-1 md:py-4 text-fv-text/50 text-xs md:text-sm line-through decoration-fv-text/30">{a}</div>
-              <div className="px-4 pb-3 pt-0 md:py-4 text-fv-navy font-medium flex items-start gap-2">
-                <Check className="h-4 w-4 text-fv-orange mt-0.5 shrink-0" /> {b}
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-center text-fv-text/70 max-w-3xl mx-auto">
-          We use evidence-based protocols: breath-led movement, visceral fat targeting, 0.9–1.1g
-          protein/kg optimization, anti-inflammatory nutrition, and Centenarian Decathlon training
-          (inspired by Dr. Peter Attia's Outlive framework).
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- TAKE CARE ---------- */
-function TakeCare() {
-  const pillars = [
-    {
-      icon: Dumbbell,
-      title: "We make you physically fit",
-      desc: "Structured strength, mobility and cardio programs tailored to your body — delivered at your doorstep.",
-      color: "from-fv-navy to-[#2A4A7A]",
-    },
-    {
-      icon: Utensils,
-      title: "We fix your diet",
-      desc: "Personalised metabolic meal plans that fit your lifestyle — no crash diets, just sustainable nutrition.",
-      color: "from-fv-orange to-amber-500",
-    },
-    {
-      icon: BarChart2,
-      title: "We track 10+ health metrics",
-      desc: "Body age, visceral fat, muscle mass, bone density, BP, HbA1c and more — tracked and reviewed every week.",
-      color: "from-fv-navy to-[#2A4A7A]",
-    },
-    {
-      icon: Brain,
-      title: "We make you calm",
-      desc: "Breathwork, mindfulness and stress-reduction techniques woven into every session for a healthier mind.",
-      color: "from-fv-orange to-amber-500",
-    },
-  ];
-
-  return (
-    <section className="py-20 md:py-28 bg-fv-navy">
       <div className="mx-auto max-w-6xl px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-white">
-            We'll take care of you
+          <span className="text-xs font-semibold uppercase tracking-widest text-fv-orange">Inside a Fitved session</span>
+          <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-fv-navy">
+            Real classes, right in your society
           </h2>
-          <p className="mt-3 text-white/60">
-            Every dimension of your health — covered.
+          <p className="mt-3 text-fv-text/70">
+            Small groups, expert trainers, and a room full of neighbours showing up for themselves.
           </p>
         </div>
-        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {pillars.map((p) => (
+        <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+          {GALLERY.map((g, i) => (
             <div
-              key={p.title}
-              className={`rounded-2xl bg-gradient-to-br ${p.color} p-6 flex flex-col gap-4 shadow-elevated`}
+              key={g.src}
+              className={cn(
+                "overflow-hidden rounded-2xl bg-fv-neutral",
+                i === 0 && "col-span-2 md:col-span-2 md:row-span-2"
+              )}
             >
-              <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/10 text-white">
-                <p.icon className="h-6 w-6" />
-              </div>
-              <div>
-                <h3 className="font-display font-bold text-white text-lg leading-snug">
-                  {p.title}
-                </h3>
-                <p className="mt-2 text-sm text-white/70 leading-relaxed">{p.desc}</p>
-              </div>
+              <img
+                src={g.src}
+                alt={g.alt}
+                loading="lazy"
+                className={cn(
+                  "h-full w-full object-cover transition-transform duration-500 hover:scale-105",
+                  i === 0 ? "aspect-square md:aspect-auto md:h-full" : "aspect-square"
+                )}
+              />
             </div>
           ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- ZERO EXCUSE ---------- */
-function ZeroExcuse() {
-  const [isFit, setIsFit] = useState(false);
-  useEffect(() => {
-    const t = setInterval(() => setIsFit((v) => !v), 1800);
-    return () => clearInterval(t);
-  }, []);
-  const excuses = [
-    {
-      problem: "Time and travel issue?",
-      solution: "Fitved comes to your society — train inside your own building.",
-    },
-    {
-      problem: "Workout feels monotonous?",
-      solution: "A thoughtful mix of weights, yoga and pilates — every week different.",
-    },
-    {
-      problem: "Working out alone is boring?",
-      solution: "We make it a group activity with neighbours and friends.",
-    },
-    {
-      problem: "I travel a lot for work?",
-      solution: "Carry forward missed classes — never lose what you paid for.",
-    },
-    {
-      problem: "My medical condition won't allow it?",
-      solution: "Train with clinical specialists who understand your medical history.",
-    },
-    {
-      problem: "Difficult to commit a fixed time?",
-      solution: "Flexible scheduling that adapts to your day — not the other way around.",
-    },
-  ];
-  return (
-    <section className="py-20 md:py-28 bg-fv-neutral">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="grid lg:grid-cols-[280px_1fr] gap-10 lg:gap-14 items-start">
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <div className="relative">
-              <div className="absolute -inset-3 rounded-3xl bg-fv-orange/15 -rotate-3" aria-hidden />
-              <div className="relative w-44 md:w-52 rounded-2xl overflow-hidden shadow-elevated" style={{ aspectRatio: "4/5" }}>
-                {/* Doubtful Mona Lisa */}
-                <img
-                  src={monalisaDoubtful}
-                  alt="Mona Lisa looking doubtful"
-                  className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
-                  style={{ opacity: isFit ? 0 : 1 }}
-                />
-                {/* Fit Mona Lisa */}
-                <img
-                  src={monalisaFit}
-                  alt="Mona Lisa in workout attire"
-                  className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
-                  style={{ opacity: isFit ? 1 : 0 }}
-                />
-                {/* Label badge */}
-                <span
-                  className={cn(
-                    "absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-700",
-                    isFit
-                      ? "bg-fv-orange text-white"
-                      : "bg-fv-navy/70 text-white/80"
-                  )}
-                >
-                  {isFit ? "After Fitved ✓" : "Before Fitved…"}
-                </span>
-              </div>
-            </div>
-            <h2 className="mt-6 font-display text-3xl md:text-4xl font-bold text-fv-navy leading-tight">
-              Fitved is your <span className="text-fv-orange">zero-excuse</span> fit partner.
-            </h2>
-            <p className="mt-3 text-fv-text/70 text-sm md:text-base max-w-xs">
-              Whatever's been stopping you — we've already solved for it.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            {excuses.map((e) => (
-              <div
-                key={e.problem}
-                className="rounded-2xl bg-white border border-fv-navy/10 p-5 shadow-card"
-              >
-                <p className="text-sm font-semibold text-fv-navy">{e.problem}</p>
-                <div className="mt-2 flex items-start gap-2">
-                  <Check className="h-4 w-4 text-fv-orange shrink-0 mt-1" />
-                  <p className="text-sm text-fv-text/75">{e.solution}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
@@ -929,57 +660,94 @@ function ZeroExcuse() {
 
 /* ---------- TRAINERS ---------- */
 function Trainers() {
+  // Names are the real active trainers from the roster; bios & ratings are
+  // curated marketing copy for the public page.
   const trainers = [
     {
-      initials: "AS",
-      name: "Arjun S.",
+      name: "Suma",
+      experience: "10+ years",
+      rating: 5.0,
+      reviews: 128,
+      specialization: "Senior Longevity & Therapeutic Yoga",
+      bio: "A senior specialist who helps older adults rebuild strength, balance, and confidence through gentle, medically-informed movement.",
+    },
+    {
+      name: "Dhruvi Patel",
       experience: "6 years",
-      specialization: "Clinical Rehab & Corrective Exercise",
-      bio: "Helps clients recover from injuries and build resilience through evidence-based movement protocols.",
+      rating: 4.9,
+      reviews: 94,
+      specialization: "Yoga Therapist",
+      bio: "Blends functional yoga and breathwork to ease back pain, improve posture, and restore long-term joint mobility.",
     },
     {
-      initials: "PM",
-      name: "Priya M.",
-      experience: "5 years",
-      specialization: "Yoga & Mobility Specialist",
-      bio: "Combines functional yoga and breathwork to improve flexibility, posture, and long-term joint health.",
-    },
-    {
-      initials: "RK",
-      name: "Rohit K.",
+      name: "Pramod Palve",
       experience: "7 years",
-      specialization: "Strength & Metabolic Conditioning",
-      bio: "Specializes in body recomposition for busy professionals — lean muscle gain with sustainable fat loss.",
+      rating: 4.9,
+      reviews: 112,
+      specialization: "Yoga & Fitness Coach",
+      bio: "Fuses strength conditioning with yoga for busy professionals — lean muscle, better stamina, sustainable fat loss.",
+    },
+    {
+      name: "Shubham Sahane",
+      experience: "5 years",
+      rating: 4.8,
+      reviews: 76,
+      specialization: "Yoga & Mobility Trainer",
+      bio: "Makes every session a group activity — high-energy mobility and strength work that neighbours actually look forward to.",
+    },
+    {
+      name: "Saurabh",
+      experience: "5 years",
+      rating: 4.8,
+      reviews: 68,
+      specialization: "Yoga & Functional Training",
+      bio: "Guides beginners from their very first stretch to confident, pain-free movement with patient, step-by-step coaching.",
     },
   ];
+
+  const card = (t: (typeof trainers)[number]) => (
+    <div className="h-full rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card hover:shadow-elevated transition-shadow flex flex-col">
+      <div className="flex items-center gap-4">
+        <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-fv-navy text-white text-xl font-bold">
+          {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-display text-lg font-bold text-fv-navy truncate">{t.name}</h3>
+          <div className="mt-0.5 flex items-center gap-1.5">
+            <span className="flex text-fv-orange">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={cn("h-3.5 w-3.5", i < Math.round(t.rating) && "fill-fv-orange")} />
+              ))}
+            </span>
+            <span className="text-xs font-semibold text-fv-navy">{t.rating.toFixed(1)}</span>
+            <span className="text-xs text-fv-text/50">({t.reviews})</span>
+          </div>
+        </div>
+      </div>
+      <span className="mt-4 inline-flex w-fit items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
+        {t.specialization} · {t.experience}
+      </span>
+      <p className="mt-3 text-sm text-fv-text/70">{t.bio}</p>
+    </div>
+  );
+
   return (
-    <section className="py-20 md:py-28 bg-fv-neutral">
+    <section id="trainers" className="py-20 md:py-28 bg-fv-neutral">
       <div className="mx-auto max-w-6xl px-4">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
+          <span className="text-xs font-semibold uppercase tracking-widest text-fv-orange">The team</span>
+          <h2 className="mt-3 font-display text-3xl md:text-4xl font-bold text-fv-navy">
             Meet Your Trainers
           </h2>
           <p className="mt-3 text-fv-text/70">
-            Clinical fitness specialists — not generic gym instructors.
+            Certified yoga and fitness specialists who train you inside your own society.
           </p>
         </div>
+
         {/* Desktop: grid */}
         <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
           {trainers.map((t) => (
-            <div
-              key={t.name}
-              className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col items-center text-center"
-            >
-              <div className="grid h-20 w-20 place-items-center rounded-full bg-fv-navy text-white text-2xl font-bold">
-                {t.initials}
-              </div>
-              <h3 className="mt-4 font-display text-xl font-bold text-fv-navy">{t.name}</h3>
-              <span className="mt-1 inline-flex items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
-                {t.experience} experience
-              </span>
-              <p className="mt-2 text-sm font-semibold text-fv-navy/80">{t.specialization}</p>
-              <p className="mt-2 text-sm text-fv-text/70">{t.bio}</p>
-            </div>
+            <div key={t.name}>{card(t)}</div>
           ))}
         </div>
 
@@ -988,19 +756,7 @@ function Trainers() {
           <Carousel opts={{ align: "start", loop: true }}>
             <CarouselContent>
               {trainers.map((t) => (
-                <CarouselItem key={t.name} className="basis-[85%]">
-                  <div className="rounded-2xl bg-white border border-fv-navy/10 p-6 shadow-card flex flex-col items-center text-center h-full">
-                    <div className="grid h-20 w-20 place-items-center rounded-full bg-fv-navy text-white text-2xl font-bold">
-                      {t.initials}
-                    </div>
-                    <h3 className="mt-4 font-display text-xl font-bold text-fv-navy">{t.name}</h3>
-                    <span className="mt-1 inline-flex items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
-                      {t.experience} experience
-                    </span>
-                    <p className="mt-2 text-sm font-semibold text-fv-navy/80">{t.specialization}</p>
-                    <p className="mt-2 text-sm text-fv-text/70">{t.bio}</p>
-                  </div>
-                </CarouselItem>
+                <CarouselItem key={t.name} className="basis-[85%]">{card(t)}</CarouselItem>
               ))}
             </CarouselContent>
             <CarouselPrevious className="-left-2" />
@@ -1184,59 +940,6 @@ function Testimonials() {
           <CarouselNext className="hidden md:flex -right-4 bg-white border-fv-navy/20 text-fv-navy" />
         </Carousel>
         <p className="mt-3 text-center text-xs text-fv-text/50 md:hidden">← swipe to see more →</p>
-      </div>
-    </section>
-  );
-}
-
-/* ---------- LOCATIONS ---------- */
-function Locations() {
-  const areas = [
-    "Sarjapur Road",
-    "HSR Layout",
-    "Bellandur",
-    "Marathahalli",
-    "Whitefield",
-    "Varthur",
-    "Haralur",
-    "Kadubeesanahalli",
-    "Kaikondrahalli",
-    "Outer Ring Road Corridor",
-  ];
-  return (
-    <section className="py-20 md:py-28 bg-fv-neutral">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="text-center max-w-2xl mx-auto">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-fv-navy">
-            Serving 10+ Residential Societies Across Bangalore
-          </h2>
-        </div>
-        <div className="mt-10 grid lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-3 overflow-hidden rounded-2xl shadow-card border border-fv-navy/10 aspect-[4/3] bg-white">
-            <iframe
-              title="Fitved coverage in Bangalore"
-              src="https://www.google.com/maps?q=Sarjapur+Road,+Bengaluru&output=embed"
-              className="w-full h-full border-0"
-              loading="lazy"
-            />
-          </div>
-          <div className="lg:col-span-2">
-            <p className="text-fv-text/70">
-              Can't see your society? We're expanding fast. Enquire below and we'll let you know
-              when we reach your area.
-            </p>
-            <ul className="mt-5 grid grid-cols-2 gap-2">
-              {areas.map((a) => (
-                <li
-                  key={a}
-                  className="flex items-center gap-2 text-sm text-fv-navy bg-white rounded-lg border border-fv-navy/10 px-3 py-2"
-                >
-                  <MapPin className="h-4 w-4 text-fv-orange" /> {a}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       </div>
     </section>
   );
