@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countTrainingDaysInRange, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countLostTrainingDays, isoDate } from "@/lib/sessionPlan";
 
 // Today's date as a local YYYY-MM-DD string
 function todayLocalISO(): string {
@@ -34,27 +34,40 @@ export async function recalculatePlanDates(userId: string) {
 
   if (pausesError) return;
 
+  // Trainer off-days that hit this customer's sessions extend the plan too —
+  // that's the studio's absence, so unlike pauses it is never capped.
+  const { data: profile } = await supabase
+    .from("profiles").select("trainer_id, time_slot").eq("id", userId).maybeSingle();
+  let offTimes: { from_date: string; to_date: string; time_slot: string | null }[] = [];
+  if (profile?.trainer_id) {
+    const { data: offs } = await supabase
+      .from("trainer_off_times")
+      .select("from_date,to_date,time_slot")
+      .eq("trainer_id", profile.trainer_id);
+    offTimes = offs ?? [];
+  }
+
   const trainingDays = plan.training_days || [];
 
-  // Base end date (if no pauses existed)
+  // Base end date (if nothing was missed)
   let currentEndDate = calculatePlanEndDate(plan.start_date, plan.total_sessions, trainingDays);
   const baseEndISO = isoDate(currentEndDate);
 
-  // Add extensions for pauses, each clamped to this plan's window so pauses
-  // from a previous plan don't extend the current one.
-  let totalSessionsToExtend = 0;
-  if (pauses && pauses.length > 0) {
-    for (const p of pauses) {
-      const from = p.from_date > plan.start_date ? p.from_date : plan.start_date;
-      const to = p.to_date < baseEndISO ? p.to_date : baseEndISO;
-      if (from > to) continue; // pause doesn't overlap this plan
-      totalSessionsToExtend += countTrainingDaysInRange(from, to, trainingDays);
-    }
-  }
+  // Count lost training days inside this plan's window. Overlapping
+  // pause + off days only count once (as paused).
+  const { pausedLost, offLost } = countLostTrainingDays(
+    plan.start_date,
+    baseEndISO,
+    trainingDays,
+    (pauses ?? []).map((p: any) => ({ from: p.from_date, to: p.to_date })),
+    offTimes,
+    profile?.time_slot ?? null,
+  );
 
-  // Cap total carry forward to 1/3 of plan total sessions
+  // Customer pauses carry forward at most 1/3 of the plan; trainer off-days
+  // are added in full on top.
   const maxCarryForward = Math.floor(plan.total_sessions / 3);
-  const actualExtension = Math.min(totalSessionsToExtend, maxCarryForward);
+  const actualExtension = Math.min(pausedLost, maxCarryForward) + offLost;
 
   currentEndDate = extendEndDateBySessions(currentEndDate, actualExtension, trainingDays);
 

@@ -23,6 +23,19 @@ interface Trainer {
   active: boolean;
 }
 
+// Native <input type="time"> gives 24h "HH:MM"; slots are stored as friendly
+// "7:00 AM – 8:00 AM" strings (same format the customer profile uses).
+function to12h(hhmm: string): string {
+  if (!hhmm) return "";
+  const [hStr, mStr] = hhmm.split(":");
+  let h = parseInt(hStr, 10);
+  if (Number.isNaN(h)) return "";
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${(mStr ?? "00").padStart(2, "0")} ${ampm}`;
+}
+
 export default function Trainers() {
   const qc = useQueryClient();
   const navigate = useNavigate();
@@ -36,6 +49,9 @@ export default function Trainers() {
   const [createLogin, setCreateLogin] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  // Time slots this trainer runs, per society — customers pick from these.
+  const [slotsBySociety, setSlotsBySociety] = useState<Record<string, string[]>>({});
+  const [slotDraft, setSlotDraft] = useState<Record<string, { start: string; end: string }>>({});
 
   const { data: trainers = [] } = useQuery({
     queryKey: ["trainers"],
@@ -82,10 +98,21 @@ export default function Trainers() {
     },
   });
 
+  const { data: allSlots = [] } = useQuery({
+    queryKey: ["trainer-slots-all"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_slots").select("trainer_id, society_id, time_slot").order("time_slot");
+      return data ?? [];
+    },
+  });
+
   const startNew = () => {
     setEditing(null); setName(""); setContact(""); setSpecialization("");
     setActive(true); setSocietyIds([]); setCreateLogin(false);
-    setLoginEmail(""); setLoginPassword(""); setOpen(true);
+    setLoginEmail(""); setLoginPassword("");
+    setSlotsBySociety({}); setSlotDraft({});
+    setOpen(true);
   };
   const startEdit = (t: Trainer) => {
     setEditing(t);
@@ -93,7 +120,28 @@ export default function Trainers() {
     setActive(t.active);
     setSocietyIds(links.filter((l) => l.trainer_id === t.id).map((l) => l.society_id));
     setCreateLogin(false); setLoginEmail(""); setLoginPassword("");
+    const seeded: Record<string, string[]> = {};
+    for (const s of allSlots.filter((s) => s.trainer_id === t.id)) {
+      (seeded[s.society_id] ??= []).push(s.time_slot);
+    }
+    setSlotsBySociety(seeded); setSlotDraft({});
     setOpen(true);
+  };
+
+  const addSlot = (sid: string) => {
+    const d = slotDraft[sid];
+    if (!d?.start || !d?.end) return;
+    const slot = `${to12h(d.start)} – ${to12h(d.end)}`;
+    setSlotsBySociety((prev) => {
+      const cur = prev[sid] ?? [];
+      if (cur.includes(slot)) return prev;
+      return { ...prev, [sid]: [...cur, slot] };
+    });
+    setSlotDraft((prev) => ({ ...prev, [sid]: { start: "", end: "" } }));
+  };
+
+  const removeSlot = (sid: string, slot: string) => {
+    setSlotsBySociety((prev) => ({ ...prev, [sid]: (prev[sid] ?? []).filter((s) => s !== slot) }));
   };
 
   const save = useMutation({
@@ -145,12 +193,29 @@ export default function Trainers() {
           const { error } = await supabase.from("trainer_societies").insert(rows);
           if (error) throw error;
         }
+
+        // sync trainer_slots (only for societies still assigned)
+        const { error: delErr } = await supabase.from("trainer_slots").delete().eq("trainer_id", trainerId);
+        const slotRows = societyIds.flatMap((sid) =>
+          (slotsBySociety[sid] ?? []).map((slot) => ({
+            trainer_id: trainerId!, society_id: sid, time_slot: slot,
+          }))
+        );
+        const { error: slotErr } = slotRows.length
+          ? await supabase.from("trainer_slots").insert(slotRows)
+          : { error: null as any };
+        if (delErr || slotErr) {
+          console.warn("trainer_slots sync failed:", delErr ?? slotErr);
+          toast.info("Trainer saved, but time slots weren't stored — run the trainer_slots migration in Supabase first.");
+        }
       }
     },
     onSuccess: () => {
       toast.success(editing ? "Trainer updated" : "Trainer created");
       qc.invalidateQueries({ queryKey: ["trainers"] });
       qc.invalidateQueries({ queryKey: ["trainer_societies"] });
+      qc.invalidateQueries({ queryKey: ["trainer-slots-all"] });
+      qc.invalidateQueries({ queryKey: ["trainer-slots"] });
       setOpen(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
@@ -327,6 +392,67 @@ export default function Trainers() {
                 </div>
               )}
             </div>
+
+            {/* Time slots per society — the batches this trainer runs there */}
+            {societyIds.length > 0 && (
+              <div className="space-y-2">
+                <Label>Time slots per society</Label>
+                <p className="text-xs text-muted-foreground">
+                  Add the slot timings this trainer takes in each society — customers are assigned one of these on their profile.
+                </p>
+                <div className="space-y-2.5">
+                  {societyIds.map((sid) => {
+                    const soc = societies.find((s) => s.id === sid);
+                    const slots = slotsBySociety[sid] ?? [];
+                    const draft = slotDraft[sid] ?? { start: "", end: "" };
+                    return (
+                      <div key={sid} className="rounded-lg border p-3 space-y-2">
+                        <p className="text-sm font-medium">{soc?.name ?? "Society"}</p>
+                        {slots.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {slots.map((slot) => (
+                              <span key={slot}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                                {slot}
+                                <button
+                                  type="button"
+                                  onClick={() => removeSlot(sid, slot)}
+                                  className="text-muted-foreground hover:text-destructive leading-none"
+                                  aria-label={`Remove ${slot}`}
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Input
+                            type="time"
+                            className="w-auto"
+                            value={draft.start}
+                            onChange={(e) => setSlotDraft((p) => ({ ...p, [sid]: { ...draft, start: e.target.value } }))}
+                            aria-label="Slot start time"
+                          />
+                          <span className="text-muted-foreground">–</span>
+                          <Input
+                            type="time"
+                            className="w-auto"
+                            value={draft.end}
+                            onChange={(e) => setSlotDraft((p) => ({ ...p, [sid]: { ...draft, end: e.target.value } }))}
+                            aria-label="Slot end time"
+                          />
+                          <Button type="button" size="sm" variant="outline"
+                            onClick={() => addSlot(sid)} disabled={!draft.start || !draft.end}>
+                            <Plus className="h-3.5 w-3.5 mr-1" /> Add slot
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {!editing && (
               <div className="rounded-lg border p-3 space-y-3">

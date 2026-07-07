@@ -127,10 +127,37 @@ export function ProfileTab({ userId }: { userId: string }) {
 
   const availableTrainers = useMemo(() => {
     if (!societyId) return [];
-    return trainers.filter((t: any) => 
+    return trainers.filter((t: any) =>
       t.trainer_societies?.some((ts: any) => ts.society_id === societyId)
     );
   }, [trainers, societyId]);
+
+  // Slots the selected trainer runs in the selected society — admin-defined
+  // (Admin → Trainers) plus the batch slots their existing customers already
+  // use there, so the dropdown works even before slots are formally set up.
+  const { data: trainerSlots = [] } = useQuery({
+    queryKey: ["trainer-slots", trainerId, societyId],
+    enabled: !!trainerId && !!societyId,
+    queryFn: async () => {
+      const [defined, derived] = await Promise.all([
+        supabase
+          .from("trainer_slots").select("time_slot")
+          .eq("trainer_id", trainerId).eq("society_id", societyId)
+          .order("time_slot"),
+        supabase
+          .from("profiles").select("time_slot")
+          .eq("trainer_id", trainerId).eq("society_id", societyId)
+          .not("time_slot", "is", null),
+      ]);
+      const set = new Set<string>();
+      for (const r of defined.data ?? []) set.add(r.time_slot);
+      for (const r of derived.data ?? []) if (r.time_slot) set.add(r.time_slot);
+      return [...set].sort();
+    },
+  });
+
+  // Manual time entry is the fallback when the trainer has no slots here.
+  const [customTime, setCustomTime] = useState(false);
 
   useEffect(() => {
     // If society changes and the current trainer is not in the new society's list, clear the trainer
@@ -245,46 +272,7 @@ export function ProfileTab({ userId }: { userId: string }) {
         <p className="text-xs text-muted-foreground">Customer's email — set by the customer from their profile.</p>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Time slot</Label>
-        <div className="flex items-center gap-2">
-          <Input
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            className="w-auto"
-            aria-label="Slot start time"
-          />
-          <span className="text-muted-foreground">–</span>
-          <Input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            className="w-auto"
-            aria-label="Slot end time"
-          />
-          {(startTime || endTime) && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground"
-              onClick={() => { setStartTime(""); setEndTime(""); }}
-            >
-              Clear
-            </Button>
-          )}
-        </div>
-        {composedSlot ? (
-          <p className="text-xs text-muted-foreground">Saves as <span className="font-medium text-foreground">{composedSlot}</span></p>
-        ) : !startTime && !endTime && rawSlot ? (
-          <p className="text-xs text-amber-600">Existing value “{rawSlot}” couldn’t be read — pick a start &amp; end to standardize it.</p>
-        ) : (
-          <p className="text-xs text-muted-foreground">Pick the class start and end time.</p>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <Label>Society</Label>
           <Select value={societyId || "none"} onValueChange={(v) => setSocietyId(v === "none" ? "" : v)}>
@@ -299,7 +287,7 @@ export function ProfileTab({ userId }: { userId: string }) {
         </div>
         <div className="space-y-1.5">
           <Label>Assigned trainer</Label>
-          <Select disabled={!societyId} value={trainerId || "none"} onValueChange={(v) => setTrainerId(v === "none" ? "" : v)}>
+          <Select disabled={!societyId} value={trainerId || "none"} onValueChange={(v) => { setTrainerId(v === "none" ? "" : v); setCustomTime(false); }}>
             <SelectTrigger><SelectValue placeholder={societyId ? "Select trainer" : "Select society first"} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="none">No trainer</SelectItem>
@@ -309,7 +297,60 @@ export function ProfileTab({ userId }: { userId: string }) {
             </SelectContent>
           </Select>
         </div>
+        <div className="space-y-1.5">
+          <Label>Time slot</Label>
+          {trainerId && trainerSlots.length > 0 && !customTime ? (
+            <Select
+              value={trainerSlots.includes(composedSlot || rawSlot) ? (composedSlot || rawSlot) : undefined}
+              onValueChange={(v) => {
+                const parsed = parseSlot(v);
+                setStartTime(parsed.start);
+                setEndTime(parsed.end);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={rawSlot ? rawSlot : "Pick the trainer's slot"} />
+              </SelectTrigger>
+              <SelectContent>
+                {trainerSlots.map((slot) => (
+                  <SelectItem key={slot} value={slot}>{slot}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <Input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                aria-label="Slot start time"
+              />
+              <span className="text-muted-foreground">–</span>
+              <Input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                aria-label="Slot end time"
+              />
+            </div>
+          )}
+          {trainerId && trainerSlots.length > 0 && (
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={() => setCustomTime((v) => !v)}
+            >
+              {customTime ? "Back to trainer's slots" : "Set a custom time instead"}
+            </button>
+          )}
+        </div>
       </div>
+      {composedSlot && (
+        <p className="text-xs text-muted-foreground -mt-3">
+          Saves as <span className="font-medium text-foreground">{composedSlot}</span>
+          {trainerId && trainerSlots.length === 0 && " · this trainer has no slots defined yet — add them in Admin → Trainers"}
+        </p>
+      )}
 
       <Button onClick={() => save.mutate()} disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save profile"}

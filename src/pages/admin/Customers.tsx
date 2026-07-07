@@ -54,7 +54,7 @@ export default function Customers() {
           phone: p.phone,
           society: soc?.name ?? null,
           trainer_name: trainer?.name ?? null,
-          plan_type: plan ? formatPlanName(plan.total_sessions) : null,
+          plan_type: plan && plan.status === "active" ? formatPlanName(plan.total_sessions) : null,
           plan_status: plan?.status ?? null,
         };
       });

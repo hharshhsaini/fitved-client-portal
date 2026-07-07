@@ -40,6 +40,24 @@ export default function TrainerProfile() {
     },
   });
 
+  // The slots this trainer runs per society (set by the admin).
+  const { data: mySlots = [] } = useQuery({
+    queryKey: ["trainer-own-slots", trainer?.id],
+    enabled: !!trainer,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trainer_slots")
+        .select("society_id, time_slot")
+        .eq("trainer_id", trainer!.id)
+        .order("time_slot");
+      return data ?? [];
+    },
+  });
+
+  const slotsBySociety = societies
+    .map((s) => ({ society: s, slots: mySlots.filter((m) => m.society_id === s.id).map((m) => m.time_slot) }))
+    .filter((g) => g.slots.length > 0);
+
   const displayName = trainer?.name ?? "Trainer";
   const initials = displayName.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "T";
 
@@ -113,6 +131,31 @@ export default function TrainerProfile() {
           )}
         </div>
 
+        {/* Time slots per society */}
+        {slotsBySociety.length > 0 && (
+          <div className="mx-4 mb-4 rounded-[20px] p-4"
+            style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+            <p className="font-semibold uppercase mb-3" style={{ fontSize: 12, color: MUTED, letterSpacing: "0.08em" }}>
+              Your time slots
+            </p>
+            <div className="space-y-3">
+              {slotsBySociety.map(({ society, slots }) => (
+                <div key={society.id}>
+                  <p className="font-medium mb-1.5" style={{ fontSize: 13, color: NAVY }}>{society.name}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {slots.map((slot) => (
+                      <span key={slot} className="inline-flex items-center rounded-full px-3 py-1"
+                        style={{ background: "rgba(240,167,32,0.12)", fontSize: 12, fontWeight: 600, color: "#a07010" }}>
+                        {slot}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="mx-4 mb-4 text-center" style={{ fontSize: 12, color: MUTED }}>
           To update your details, contact your admin.
         </p>
@@ -170,6 +213,24 @@ export default function TrainerProfile() {
               </div>
             )}
           </div>
+
+          {slotsBySociety.length > 0 && (
+            <div className="mt-6">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Your time slots</p>
+              <div className="space-y-3">
+                {slotsBySociety.map(({ society, slots }) => (
+                  <div key={society.id}>
+                    <p className="text-sm font-medium mb-1.5">{society.name}</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {slots.map((slot) => (
+                        <Badge key={slot} variant="secondary">{slot}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <p className="mt-6 text-xs text-muted-foreground">To update your details, contact your admin.</p>
 

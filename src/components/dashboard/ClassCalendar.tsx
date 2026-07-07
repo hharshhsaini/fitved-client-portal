@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, ChevronDown, Check, Pause } from "lucide-react";
+import { offTimeAffectsSlot } from "@/lib/sessionPlan";
 
 // ── Brand tokens (match the dashboard) ───────────────────────────────────
 const GOLD   = "#f0a720";
@@ -43,34 +44,7 @@ function nice(d: string) {
   return dt.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 }
 
-/** First hour mentioned in a free-text slot ("6–7 AM", "7:00 AM – 8:00 AM") as 0–23, or null. */
-function slotStartHour(slot: string | null): number | null {
-  if (!slot) return null;
-  const m = slot.match(/(\d{1,2})(?::\d{2})?/);
-  if (!m) return null;
-  let h = parseInt(m[1], 10);
-  if (h > 23) return null;
-  // Meridiem may only be written once at the end ("6–7 AM") — borrow it.
-  const afterStart = slot.slice((m.index ?? 0) + m[0].length);
-  const mer = afterStart.match(/AM|PM/i)?.[0]?.toUpperCase()
-    ?? slot.match(/AM|PM/i)?.[0]?.toUpperCase();
-  if (mer === "PM" && h < 12) h += 12;
-  if (mer === "AM" && h === 12) h = 0;
-  return h;
-}
-
-/**
- * Does a trainer off-time apply to this customer's batch?
- * Off-time slots are typed free-text, so compare parsed start hours instead of
- * raw strings. When either side can't be parsed, err on informing the customer.
- */
-export function offTimeAffectsSlot(offSlot: string | null, customerSlot: string | null): boolean {
-  if (!offSlot) return true; // whole day off
-  const a = slotStartHour(offSlot);
-  const b = slotStartHour(customerSlot);
-  if (a == null || b == null) return true;
-  return a === b;
-}
+export { offTimeAffectsSlot } from "@/lib/sessionPlan";
 
 interface Cell { d: number; date: string; dow: number; state: DayState; isToday: boolean }
 
