@@ -81,8 +81,14 @@ export default function TrainerDashboard() {
   const [singleDate, setSingleDate]           = useState<Date | undefined>();
   const [slotInput, setSlotInput]             = useState("");
   const [reason, setReason]                   = useState("");
+  // Separate open-state per layout: the mobile and desktop off-time forms both
+  // exist in the DOM, and Radix portals popover content to <body> regardless of
+  // the trigger's visibility — sharing one state would open both calendars at
+  // once and make them flicker fighting over position.
   const [calOpen, setCalOpen]                 = useState(false);
   const [singleCalOpen, setSingleCalOpen]     = useState(false);
+  const [calOpenD, setCalOpenD]               = useState(false);
+  const [singleCalOpenD, setSingleCalOpenD]   = useState(false);
   const [pauseClient, setPauseClient]         = useState<{ id: string; name: string } | null>(null);
 
   // ── Queries ───────────────────────────────────────────────────────────────
@@ -592,10 +598,10 @@ export default function TrainerDashboard() {
                   {singleDate ? format(singleDate, "PPP") : "Select date"}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0" align="start" avoidCollisions={false}>
                 <Calendar mode="single" selected={singleDate}
                   onSelect={(d) => { setSingleDate(d); setSingleCalOpen(false); }}
-                  initialFocus captionLayout="dropdown" fromYear={2024} toYear={2030}
+                  initialFocus numberOfMonths={1}
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
@@ -971,7 +977,7 @@ export default function TrainerDashboard() {
               {offMode === "days" ? (
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground">All slots will be off for this date range.</p>
-                  <Popover open={calOpen} onOpenChange={setCalOpen}>
+                  <Popover open={calOpenD} onOpenChange={setCalOpenD}>
                     <PopoverTrigger asChild>
                       <Button variant="outline"
                         className={cn("w-full justify-start text-left font-normal h-10", !dateRange?.from && "text-muted-foreground")}>
@@ -992,7 +998,7 @@ export default function TrainerDashboard() {
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground">Only this specific slot on this date will be off.</p>
-                  <Popover open={singleCalOpen} onOpenChange={setSingleCalOpen}>
+                  <Popover open={singleCalOpenD} onOpenChange={setSingleCalOpenD}>
                     <PopoverTrigger asChild>
                       <Button variant="outline"
                         className={cn("w-full justify-start text-left font-normal h-10", !singleDate && "text-muted-foreground")}>
@@ -1000,10 +1006,10 @@ export default function TrainerDashboard() {
                         {singleDate ? format(singleDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0" align="start" avoidCollisions={false}>
                       <Calendar mode="single" selected={singleDate}
-                        onSelect={(d) => { setSingleDate(d); setSingleCalOpen(false); }}
-                        initialFocus captionLayout="dropdown" fromYear={2024} toYear={2030}
+                        onSelect={(d) => { setSingleDate(d); setSingleCalOpenD(false); }}
+                        initialFocus numberOfMonths={1}
                         disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                         className={cn("p-3 pointer-events-auto")} />
                     </PopoverContent>

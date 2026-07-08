@@ -134,27 +134,17 @@ export function ProfileTab({ userId }: { userId: string }) {
     );
   }, [trainers, societyId]);
 
-  // Slots the selected trainer runs in the selected society — admin-defined
-  // (Admin → Trainers) plus the batch slots their existing customers already
-  // use there, so the dropdown works even before slots are formally set up.
+  // Slots the selected trainer runs in the selected society — strictly the
+  // admin-defined slots (Admin → Trainers → Time slots per society).
   const { data: trainerSlots = [] } = useQuery({
     queryKey: ["trainer-slots", trainerId, societyId],
     enabled: !!trainerId && !!societyId,
     queryFn: async () => {
-      const [defined, derived] = await Promise.all([
-        supabase
-          .from("trainer_slots").select("time_slot")
-          .eq("trainer_id", trainerId).eq("society_id", societyId)
-          .order("time_slot"),
-        supabase
-          .from("profiles").select("time_slot")
-          .eq("trainer_id", trainerId).eq("society_id", societyId)
-          .not("time_slot", "is", null),
-      ]);
-      const set = new Set<string>();
-      for (const r of defined.data ?? []) set.add(r.time_slot);
-      for (const r of derived.data ?? []) if (r.time_slot) set.add(r.time_slot);
-      return [...set].sort();
+      const { data } = await supabase
+        .from("trainer_slots").select("time_slot")
+        .eq("trainer_id", trainerId).eq("society_id", societyId)
+        .order("time_slot");
+      return (data ?? []).map((r) => r.time_slot);
     },
   });
 
