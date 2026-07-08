@@ -21,7 +21,8 @@ const DIET_FORM_URL =
   "https://docs.google.com/forms/d/e/1FAIpQLSehQwl6IAFkeWIRfFux5CzR3vgvAH6mozius4IHcaMv6TQcZQ/viewform";
 
 // Rotating daily wellness tips — same tip for everyone on a given day,
-// changes automatically the next day.
+// changes automatically the next day. Admin-managed tips (daily_tips table)
+// take priority; these are the built-in fallback when none are set up.
 const DAILY_TIPS = [
   "Start your day with a glass of warm water — it kickstarts digestion and hydration.",
   "Aim for a fistful of protein at every meal to stay full and protect muscle.",
@@ -45,13 +46,27 @@ const DAILY_TIPS = [
   "Add curd or a probiotic food to support gut health.",
 ];
 
-function todaysTip(): string {
+function pickDailyTip(tips: string[]): string {
+  if (tips.length === 0) return "";
   const dayIndex = Math.floor(Date.now() / 86_400_000);
-  return DAILY_TIPS[dayIndex % DAILY_TIPS.length];
+  return tips[dayIndex % tips.length];
 }
 
 export default function Health() {
   const { user } = useAuth();
+
+  // Admin-managed tips take priority; fall back to the built-in list.
+  const { data: adminTips = [] } = useQuery({
+    queryKey: ["daily-tips"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("daily_tips").select("text").eq("active", true)
+        .order("sort_order").order("created_at");
+      if (error) return []; // table not set up yet → use fallback
+      return (data ?? []).map((t) => t.text);
+    },
+  });
+  const tip = pickDailyTip(adminTips.length > 0 ? adminTips : DAILY_TIPS);
 
   const { data: reports = [] } = useQuery({
     queryKey: ["reports", user?.id],
@@ -97,7 +112,7 @@ export default function Health() {
               Tip of the day
             </p>
           </div>
-          <p style={{ fontSize: 14, color: NAVY, lineHeight: 1.5 }}>{todaysTip()}</p>
+          <p style={{ fontSize: 14, color: NAVY, lineHeight: 1.5 }}>{tip}</p>
         </div>
 
         {/* Diet behaviour questionnaire */}
@@ -196,7 +211,7 @@ export default function Health() {
               <Lightbulb className="h-5 w-5" style={{ color: GOLD_DEEP }} />
               <p className="font-semibold uppercase text-xs tracking-wider" style={{ color: GOLD_DEEP }}>Tip of the day</p>
             </div>
-            <p className="text-base" style={{ color: NAVY, lineHeight: 1.5 }}>{todaysTip()}</p>
+            <p className="text-base" style={{ color: NAVY, lineHeight: 1.5 }}>{tip}</p>
           </Card>
 
           <a href={DIET_FORM_URL} target="_blank" rel="noopener noreferrer" className="block">
