@@ -131,6 +131,22 @@ export function PlanTab({ userId }: { userId: string }) {
   const lostFromPauses = lostDays.pausedLost;
   const lostFromTrainerOffs = lostDays.offLost;
 
+  // Extra classes already taken to compensate trainer off-days — each one
+  // consumes an off-day bonus (recorded in the Extra classes tab).
+  const { data: compClasses = [] } = useQuery({
+    queryKey: ["comp-classes", userId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("comp_classes").select("id, class_date").eq("client_id", userId);
+      return data ?? [];
+    },
+  });
+  const compTaken = useMemo(
+    () => (startDate ? compClasses.filter((c: any) => c.class_date >= startDate).length : 0),
+    [compClasses, startDate],
+  );
+  const netOffBonus = Math.max(0, lostFromTrainerOffs - compTaken);
+
   // Capped pause extension (max 1/3 of plan total sessions)
   const allowedPauseExtension = useMemo(() => {
     if (!totalSessions) return 0;
@@ -138,7 +154,7 @@ export function PlanTab({ userId }: { userId: string }) {
     return Math.min(lostFromPauses, maxCarryForward);
   }, [lostFromPauses, totalSessions]);
 
-  const totalExtension = allowedPauseExtension + lostFromTrainerOffs;
+  const totalExtension = allowedPauseExtension + netOffBonus;
 
   // Auto-recompute end + renewal whenever start/sessions/days/extension change
   useEffect(() => {
@@ -198,14 +214,31 @@ export function PlanTab({ userId }: { userId: string }) {
         if (status === "active") {
           const netAmt = amount - discount;
           if (netAmt > 0) {
-            // Check if billing record with this description already exists for this user
-            const { data: existing } = await supabase
-              .from("billing_history")
-              .select("id")
-              .eq("user_id", userId)
-              .eq("notes", desc)
-              .limit(1)
-              .maybeSingle();
+            // One payment row per plan: match by plan_id first so edits to the
+            // plan (dates, sessions, price) UPDATE the same row instead of
+            // inserting a duplicate. Fall back to the note text for legacy
+            // rows created before plan_id existed.
+            let existing: { id: string } | null = null;
+            if (saved?.id) {
+              const { data } = await (supabase as any)
+                .from("billing_history")
+                .select("id")
+                .eq("plan_id", saved.id)
+                .eq("type", "payment")
+                .limit(1)
+                .maybeSingle();
+              existing = data ?? null;
+            }
+            if (!existing) {
+              const { data } = await supabase
+                .from("billing_history")
+                .select("id")
+                .eq("user_id", userId)
+                .eq("notes", desc)
+                .limit(1)
+                .maybeSingle();
+              existing = data ?? null;
+            }
 
             const billingPayload: any = {
               user_id: userId,
@@ -214,6 +247,8 @@ export function PlanTab({ userId }: { userId: string }) {
               method: paymentMethod || null,
               type: "payment",
               notes: desc,
+              // Link to the plan so income can be prorated across its months
+              plan_id: saved?.id ?? null,
             };
 
             if (existing?.id) {
@@ -367,13 +402,15 @@ export function PlanTab({ userId }: { userId: string }) {
       // Record the renewal payment
       const netAmt = nextCycle.amount - nextCycle.discount;
       if (netAmt > 0) {
-        const { error: billErr } = await supabase.from("billing_history").insert({
+        const { error: billErr } = await (supabase as any).from("billing_history").insert({
           user_id: userId,
           payment_date: renewStartISO,
           amount: netAmt,
           method: plan.payment_method ?? null,
           type: "payment",
           notes: `Plan: ${nextCycle.sessions} sessions (starts ${renewStartISO})`,
+          // Link to new plan so income is prorated across its months
+          plan_id: created?.id ?? null,
         });
         if (billErr) console.warn("Renewal billing insert failed:", billErr);
       }
@@ -507,7 +544,10 @@ export function PlanTab({ userId }: { userId: string }) {
             <> (extends by {allowedPauseExtension}, capped at 1/3 of the plan)</>
           )}
           {" "}· Trainer off-days hit: <span className="font-medium text-foreground">{lostFromTrainerOffs}</span>
-          {lostFromTrainerOffs > 0 && <> (bonus classes, no cap)</>}
+          {compTaken > 0 && (
+            <> − <span className="font-medium text-foreground">{compTaken}</span> compensated by extra classes = <span className="font-medium text-foreground">{netOffBonus}</span> bonus left</>
+          )}
+          {compTaken === 0 && lostFromTrainerOffs > 0 && <> (bonus classes, no cap)</>}
           {totalExtension > 0 && (
             <> · end date pushed by <span className="font-medium text-foreground">{totalExtension}</span> training day(s) total</>
           )}

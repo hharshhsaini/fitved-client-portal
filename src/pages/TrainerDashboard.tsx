@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import {
   Building2, Users, Clock, ChevronRight, ArrowLeft,
   CalendarOff, Plus, Trash2, UserCircle2, MapPin, X,
-  Phone as PhoneIcon, Eye, ShieldAlert, LogOut,
+  Phone as PhoneIcon, Eye, ShieldAlert, LogOut, Lock,
 } from "lucide-react";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { TrainerClientPauseModal } from "@/components/dashboard/TrainerClientPauseModal";
@@ -226,11 +226,52 @@ export default function TrainerDashboard() {
       } else {
         if (!singleDate) throw new Error("Pick a date");
         if (!slotInput.trim()) throw new Error("Enter the time slot");
+
+        // Validate if the slot is in the past for today
+        const slot = slotInput.trim();
+        const now = new Date();
+        const isToday = 
+          singleDate.getFullYear() === now.getFullYear() &&
+          singleDate.getMonth() === now.getMonth() &&
+          singleDate.getDate() === now.getDate();
+
+        if (isToday) {
+          const parts = slot.split(/\s*(?:–|-|to)\s*/i);
+          if (parts.length >= 2) {
+            const firstAmPmMatch = parts[0].match(/(AM|PM)/i);
+            const secondAmPmMatch = parts[1].match(/(AM|PM)/i);
+            const ampm = (secondAmPmMatch?.[0] || firstAmPmMatch?.[0] || "").toUpperCase();
+
+            const parsePart = (part: string, defaultAmPm?: string) => {
+              const m = part.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+              if (!m) return null;
+              let h = parseInt(m[1], 10);
+              const min = m[2] ? parseInt(m[2], 10) : 0;
+              const partAmpm = (m[3] || defaultAmPm || "").toUpperCase();
+              if (partAmpm === "PM" && h < 12) h += 12;
+              if (partAmpm === "AM" && h === 12) h = 0;
+              return { hour: h, minute: min };
+            };
+
+            const startTime = parsePart(parts[0], ampm);
+            if (startTime) {
+              const currentHour = now.getHours();
+              const currentMinute = now.getMinutes();
+              if (
+                currentHour > startTime.hour || 
+                (currentHour === startTime.hour && currentMinute >= startTime.minute)
+              ) {
+                throw new Error("This time slot has already started or passed today. You cannot select a past time slot.");
+              }
+            }
+          }
+        }
+
         const { error } = await (supabase as any).from("trainer_off_times").insert({
           trainer_id: trainer.id,
           from_date:  localDate(singleDate),
           to_date:    localDate(singleDate),
-          time_slot:  slotInput.trim(),
+          time_slot:  slot,
           reason:     reason.trim() || null,
         });
         if (error) throw new Error(error.message);
@@ -691,13 +732,24 @@ export default function TrainerDashboard() {
                     </div>
                   </div>
                   {!isViewAs && (
-                    <button
-                      onClick={() => removeOff.mutate(o.id)}
-                      className="ml-2 flex-shrink-0 border-none bg-transparent cursor-pointer p-1 rounded-lg"
-                      style={{ color: RED }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    o.from_date > today ? (
+                      <button
+                        onClick={() => removeOff.mutate(o.id)}
+                        className="ml-2 flex-shrink-0 border-none bg-transparent cursor-pointer p-1 rounded-lg"
+                        style={{ color: RED }}
+                        title="Remove off-time"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    ) : (
+                      <span
+                        className="ml-2 flex-shrink-0 p-1 rounded-lg cursor-default"
+                        style={{ color: MUTED }}
+                        title="Off-time has started — contact admin to remove"
+                      >
+                        <Lock size={13} />
+                      </span>
+                    )
                   )}
                 </li>
               );
@@ -1071,11 +1123,20 @@ export default function TrainerDashboard() {
                           </div>
                         </div>
                         {!isViewAs && (
-                          <Button variant="ghost" size="sm"
-                            onClick={() => removeOff.mutate(o.id)}
-                            className="text-destructive hover:text-destructive h-8 w-8 p-0">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          o.from_date > today ? (
+                            <Button variant="ghost" size="sm"
+                              onClick={() => removeOff.mutate(o.id)}
+                              className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                              title="Remove off-time">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <span
+                              className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground cursor-default"
+                              title="Off-time has started — contact admin to remove">
+                              <Lock className="h-4 w-4" />
+                            </span>
+                          )
                         )}
                       </li>
                     );

@@ -56,6 +56,39 @@ export default function Plan() {
     },
   });
 
+  // Extra classes taken by the trainer to compensate off-days — each one
+  // consumes a bonus class.
+  const { data: compClasses = [] } = useQuery({
+    queryKey: ["comp-classes", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("comp_classes").select("id, class_date").eq("client_id", user!.id);
+      return (data ?? []) as { id: string; class_date: string }[];
+    },
+  });
+
+  // Plan catalog — used to compute per-month savings on the active plan card
+  const { data: planOptions = [] } = useQuery({
+    queryKey: ["plan-options"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plan_options").select("*").eq("active", true)
+        .order("sort_order").order("duration_months");
+      return (data ?? []) as { id: string; duration_months: number; price: number; total_sessions: number | null }[];
+    },
+  });
+
+  const { data: priceOverrides = [] } = useQuery({
+    queryKey: ["plan-price-overrides", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plan_price_overrides").select("plan_option_id,price").eq("user_id", user!.id);
+      return data ?? [];
+    },
+  });
+
   // Local toggle state for optimistic update
   const [autoRenewLocal, setAutoRenewLocal] = useState<boolean | null>(null);
   const autoRenew = autoRenewLocal !== null ? autoRenewLocal : (plan?.auto_renew ?? false);
@@ -125,6 +158,39 @@ export default function Plan() {
   const netAmount   = Math.max(0, Number(plan.amount) - discount);
   const hasDiscount = discount > 0;
 
+  // ── Per-month savings computation (mirrors PlanOptionsList logic exactly) ─
+  // 1. Try to find how many months this plan covers from the catalog.
+  //    Match by total_sessions so any custom plan duration works.
+  const catalogOption = planOptions.find(
+    (o) => o.total_sessions != null && o.total_sessions === plan.total_sessions,
+  );
+  // Fallback hardcoded map covers standard plans even before catalog loads.
+  const FALLBACK_MONTHS: Record<number, number> = { 8: 1, 12: 1, 36: 3, 48: 4, 72: 6 };
+  const durationMonths =
+    catalogOption?.duration_months ??
+    FALLBACK_MONTHS[plan.total_sessions] ??
+    1;
+
+  // 2. Baseline = this customer's effective 1-month price.
+  //    Use the catalog 1-month option → apply per-customer override → fallback ₹3,499.
+  const overrideMap = new Map(priceOverrides.map((o) => [o.plan_option_id, Number(o.price)]));
+  const baselineOption = planOptions.find((o) => o.duration_months === 1);
+  const baselineMonthly: number =
+    baselineOption
+      ? (overrideMap.get(baselineOption.id) ?? Number(baselineOption.price))
+      : 3499; // absolute fallback = standard 1-month price
+
+  // 3. Per-month cost for this plan.
+  const perMonth = durationMonths > 1 ? netAmount / durationMonths : netAmount;
+
+  // 4. Savings vs 1-month baseline.
+  const saveAmt = durationMonths > 1 ? Math.max(0, baselineMonthly - perMonth) : 0;
+  const savePct =
+    baselineMonthly > 0 && saveAmt > 0
+      ? Math.round((saveAmt / baselineMonthly) * 100)
+      : 0;
+  const showSavings = durationMonths > 1 && savePct > 0;
+
   const totalDays   = daysBetween(plan.start_date, plan.end_date);
   const elapsedDays = daysBetween(plan.start_date, new Date().toISOString());
   const progress    = totalDays > 0 ? Math.min(100, Math.round((elapsedDays / totalDays) * 100)) : 0;
@@ -141,12 +207,15 @@ export default function Plan() {
   const baseEnd        = calculatePlanEndDate(plan.start_date, plan.total_sessions, planDaysFull);
   const baseEndISO     = isoDate(baseEnd);
   // Pause carry-forward is capped at 1/3 of the plan; trainer off-day bonuses
-  // are never capped — matching recalculatePlanDates.
+  // are never capped — matching recalculatePlanDates. Extra classes already
+  // taken to compensate off-days reduce the bonus.
   const lostDays = countLostTrainingDays(
     plan.start_date, baseEndISO, planDaysFull, allPauses, offTimes, profile?.time_slot ?? null,
   );
+  const compTaken = compClasses.filter((c) => c.class_date >= plan.start_date).length;
   const carriedClasses =
-    Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) + lostDays.offLost;
+    Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) +
+    Math.max(0, lostDays.offLost - compTaken);
   const projectedEndISO = isoDate(extendEndDateBySessions(baseEnd, carriedClasses, planDaysFull));
   const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
   const oldRenewalISO  = isoDate(calculatePlanRenewalDate(baseEnd, planDaysFull));
@@ -187,9 +256,26 @@ export default function Plan() {
               <p className="font-display font-bold text-white" style={{ fontSize: 34, lineHeight: 1, marginTop: hasDiscount ? 3 : 0 }}>
                 ₹{netAmount.toLocaleString("en-IN")}
               </p>
-              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 3 }}>
-                {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle · {formatPlanName(plan.total_sessions)}
+              {/* Per-month line — always shown for multi-month plans */}
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", marginTop: 3 }}>
+                {durationMonths > 1
+                  ? `₹${Math.round(perMonth).toLocaleString("en-IN")}/month · ${formatPlanName(plan.total_sessions)}`
+                  : `${formatPlanName(plan.total_sessions)} plan`
+                }
               </p>
+              {/* Savings badge — shown when there's a multi-month discount */}
+              {showSavings && (
+                <span className="inline-block rounded-full font-bold mt-2"
+                  style={{ fontSize: 11, color: "#1b7a43", background: "#e6f7ed", padding: "3px 10px" }}>
+                  {savePct}% off · save ₹{Math.round(saveAmt).toLocaleString("en-IN")}/month
+                </span>
+              )}
+              {/* Legacy per-plan discount (admin manually set a discount amount) */}
+              {hasDiscount && !showSavings && (
+                <p style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
+                  ₹{discount.toLocaleString("en-IN")} off · per cycle
+                </p>
+              )}
             </div>
             <span className="rounded-full font-bold" style={{ background: GREEN_LIGHT, color: GREEN, fontSize: 12, padding: "4px 12px" }}>
               Active
@@ -226,6 +312,11 @@ export default function Plan() {
                 <p style={{ fontSize: 12, color: GOLD_SUB, marginTop: 3, lineHeight: 1.45 }}>
                   for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
                 </p>
+                {compTaken > 0 && (
+                  <p style={{ fontSize: 12, color: GOLD_DEEP, marginTop: 4, fontWeight: 600 }}>
+                    ✓ {compTaken} already made up with extra {compTaken === 1 ? "class" : "classes"} by your trainer
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between rounded-xl mt-3" style={{ background: "#fff", padding: "11px 14px" }}>
@@ -339,8 +430,18 @@ export default function Plan() {
                 )}
                 <p className="font-display text-2xl">₹{netAmount.toLocaleString("en-IN")}</p>
                 <p className="text-sm text-muted-foreground">
-                  {hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · ` : ""}per cycle
+                  {durationMonths > 1
+                    ? `₹${Math.round(perMonth).toLocaleString("en-IN")}/month`
+                    : hasDiscount ? `₹${discount.toLocaleString("en-IN")} off · per cycle` : "per cycle"
+                  }
                 </p>
+                {/* Savings badge for multi-month plans */}
+                {showSavings && (
+                  <span className="inline-block rounded-full font-bold mt-1.5"
+                    style={{ fontSize: 11, color: "#1b7a43", background: "#e6f7ed", padding: "3px 10px" }}>
+                    {savePct}% off · save ₹{Math.round(saveAmt).toLocaleString("en-IN")}/month
+                  </span>
+                )}
               </div>
             </div>
             <Badge variant="secondary" className="flex items-center gap-1">
@@ -401,6 +502,11 @@ export default function Plan() {
                 <p className="text-sm mt-1" style={{ color: GOLD_SUB }}>
                   for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
                 </p>
+                {compTaken > 0 && (
+                  <p className="text-sm mt-1.5 font-semibold" style={{ color: GOLD_DEEP }}>
+                    ✓ {compTaken} already made up with extra {compTaken === 1 ? "class" : "classes"} by your trainer
+                  </p>
+                )}
                 <div className="mt-4 flex items-center gap-4 flex-wrap">
                   <div>
                     <p className="text-xs" style={{ color: MUTED }}>Old renewal date</p>
