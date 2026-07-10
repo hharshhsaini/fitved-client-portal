@@ -1,156 +1,137 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Lightbulb, Plus, Trash2, Pencil } from "lucide-react";
+import { Lightbulb, Save, Eye, EyeOff, BrainCircuit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-
-interface Tip {
-  id: string;
-  text: string;
-  active: boolean;
-  sort_order: number;
-  created_at: string;
-}
 
 export default function Tips() {
   const qc = useQueryClient();
-  const [draft, setDraft] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
 
-  const { data: tips = [], isLoading } = useQuery({
-    queryKey: ["daily-tips-admin"],
+  // Fetch the existing Gemini API key from the daily_tips table
+  const { data: savedKey = "", isLoading } = useQuery({
+    queryKey: ["admin-gemini-key"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("daily_tips").select("*").order("sort_order").order("created_at");
-      if (error) throw error;
-      return data as Tip[];
+        .from("daily_tips")
+        .select("text");
+      if (error) return "";
+      const row = (data ?? []).find((t) => t.text.startsWith("gemini_api_key:"));
+      return row ? row.text.replace("gemini_api_key:", "") : "";
     },
   });
 
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["daily-tips-admin"] });
-    qc.invalidateQueries({ queryKey: ["daily-tips"] });
-  };
+  // Load the saved key into local state
+  useEffect(() => {
+    if (savedKey) {
+      setApiKey(savedKey);
+    }
+  }, [savedKey]);
 
-  const add = useMutation({
+  // Mutation to save the API key
+  const save = useMutation({
     mutationFn: async () => {
-      if (!draft.trim()) throw new Error("Write a tip first");
-      const { error } = await supabase.from("daily_tips").insert({ text: draft.trim() });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Tip added"); setDraft(""); invalidate(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed — run the daily_tips migration in Supabase first"),
-  });
+      // 1. Delete all existing rows starting with gemini_api_key:
+      const { error: deleteError } = await supabase
+        .from("daily_tips")
+        .delete()
+        .like("text", "gemini_api_key:%");
+      if (deleteError) throw deleteError;
 
-  const saveEdit = useMutation({
-    mutationFn: async () => {
-      if (!editText.trim()) throw new Error("Tip can't be empty");
-      const { error } = await supabase.from("daily_tips").update({ text: editText.trim() }).eq("id", editingId!);
-      if (error) throw error;
+      // 2. Insert the new key if provided
+      const trimmedKey = apiKey.trim();
+      if (trimmedKey) {
+        const { error: insertError } = await supabase
+          .from("daily_tips")
+          .insert({
+            text: `gemini_api_key:${trimmedKey}`,
+            active: true,
+            sort_order: 0,
+          });
+        if (insertError) throw insertError;
+      }
     },
-    onSuccess: () => { toast.success("Tip updated"); setEditingId(null); invalidate(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Update failed"),
-  });
-
-  const toggle = useMutation({
-    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
-      const { error } = await supabase.from("daily_tips").update({ active }).eq("id", id);
-      if (error) throw error;
+    onSuccess: () => {
+      toast.success(apiKey.trim() ? "Gemini API Key saved successfully!" : "Gemini API Key removed");
+      qc.invalidateQueries({ queryKey: ["admin-gemini-key"] });
+      qc.invalidateQueries({ queryKey: ["daily-tips"] });
     },
-    onSuccess: () => invalidate(),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Failed"),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("daily_tips").delete().eq("id", id);
-      if (error) throw error;
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Failed to save API key");
     },
-    onSuccess: () => { toast.success("Tip deleted"); invalidate(); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
   });
-
-  const activeCount = tips.filter((t) => t.active).length;
 
   return (
     <div className="space-y-6 max-w-2xl">
       <header>
-        <h1 className="font-display text-3xl text-foreground">Daily tips</h1>
+        <h1 className="font-display text-3xl text-foreground flex items-center gap-2">
+          <BrainCircuit className="h-8 w-8 text-primary" /> Daily wellness tips (AI)
+        </h1>
         <p className="mt-1 text-muted-foreground">
-          Wellness tips shown on the customer Health page — one per day, rotating through your active tips.
-          {activeCount > 0 && ` · ${activeCount} active`}
+          Wellness tips shown on the client Health page are now automatically generated by Gemini AI every 24 hours.
         </p>
       </header>
 
-      {/* Add form */}
-      <Card className="rounded-2xl shadow-card p-5 space-y-3">
+      <Card className="rounded-2xl shadow-card p-5 md:p-6 space-y-4">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-4 w-4 text-fv-orange" style={{ color: "#f0a720" }} />
-          <p className="font-medium text-sm">New tip</p>
+          <Lightbulb className="h-5 w-5 text-fv-orange" style={{ color: "#f0a720" }} />
+          <p className="font-semibold text-sm">Gemini AI Configuration</p>
         </div>
-        <Textarea
-          rows={2}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="e.g. Start your day with a glass of warm water to kickstart digestion."
-        />
-        <Button onClick={() => add.mutate()} disabled={!draft.trim() || add.isPending} className="gap-2">
-          <Plus className="h-4 w-4" /> {add.isPending ? "Adding…" : "Add tip"}
-        </Button>
-      </Card>
 
-      {/* List */}
-      <div className="space-y-2">
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : tips.length === 0 ? (
-          <Card className="rounded-2xl shadow-card p-8 text-center">
-            <Lightbulb className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">No tips yet — add your first one above.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Until you add any, customers see a built-in set of default tips.
-            </p>
-          </Card>
-        ) : tips.map((t) => (
-          <Card key={t.id} className={`rounded-xl p-4 flex items-start gap-3 ${t.active ? "" : "opacity-60"}`}>
-            {editingId === t.id ? (
-              <div className="flex-1 space-y-2">
-                <Textarea rows={2} value={editText} onChange={(e) => setEditText(e.target.value)} />
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => saveEdit.mutate()} disabled={saveEdit.isPending}>
-                    {saveEdit.isPending ? "Saving…" : "Save"}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>Cancel</Button>
-                </div>
-              </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Provide your Google Gemini API key. Once set, the system will use it to securely query Gemini for a fresh, random wellness tip each day. Tips are cached locally on client devices for 24 hours to ensure high performance and minimize API requests.
+        </p>
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            Gemini API Key
+          </label>
+          <div className="relative">
+            <Input
+              type={showKey ? "text" : "password"}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="AIzaSy..."
+              className="pr-10 h-11 rounded-xl"
+              disabled={isLoading || save.isPending}
+            />
+            <button
+              type="button"
+              onClick={() => setShowKey(!showKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              disabled={isLoading || save.isPending}
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            onClick={() => save.mutate()}
+            disabled={isLoading || save.isPending}
+            className="rounded-xl px-5 h-11 gap-2"
+          >
+            {save.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <>
-                <p className="flex-1 text-sm text-foreground">{t.text}</p>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Badge variant={t.active ? "secondary" : "outline"} className="mr-1">
-                    {t.active ? "Live" : "Hidden"}
-                  </Badge>
-                  <Switch checked={t.active} onCheckedChange={(v) => toggle.mutate({ id: t.id, active: v })} />
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0"
-                    onClick={() => { setEditingId(t.id); setEditText(t.text); }}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0"
-                    onClick={() => { if (confirm("Delete this tip?")) remove.mutate(t.id); }}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </>
+              <Save className="h-4 w-4" />
             )}
-          </Card>
-        ))}
-      </div>
+            {save.isPending ? "Saving..." : "Save Key"}
+          </Button>
+
+          {savedKey && (
+            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-none px-2.5 py-1 text-[11px]">
+              AI Generation Active
+            </Badge>
+          )}
+        </div>
+      </Card>
     </div>
   );
 }

@@ -46,27 +46,81 @@ const DAILY_TIPS = [
   "Add curd or a probiotic food to support gut health.",
 ];
 
-function pickDailyTip(tips: string[]): string {
-  if (tips.length === 0) return "";
-  const dayIndex = Math.floor(Date.now() / 86_400_000);
-  return tips[dayIndex % tips.length];
-}
-
 export default function Health() {
   const { user } = useAuth();
 
-  // Admin-managed tips take priority; fall back to the built-in list.
-  const { data: adminTips = [] } = useQuery({
-    queryKey: ["daily-tips"],
+  // Query to get the Gemini API Key from the daily_tips table
+  const { data: geminiApiKey = "" } = useQuery({
+    queryKey: ["daily-tip-api-key"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("daily_tips").select("text").eq("active", true)
-        .order("sort_order").order("created_at");
-      if (error) return []; // table not set up yet → use fallback
-      return (data ?? []).map((t) => t.text);
+        .from("daily_tips")
+        .select("text");
+      if (error) return "";
+      const row = (data ?? []).find((t) => t.text.startsWith("gemini_api_key:"));
+      return row ? row.text.replace("gemini_api_key:", "") : "";
     },
   });
-  const tip = pickDailyTip(adminTips.length > 0 ? adminTips : DAILY_TIPS);
+
+  // Query to get the daily wellness tip (either cached, generated from Gemini, or fallback)
+  const { data: tip = "" } = useQuery({
+    queryKey: ["daily-wellness-tip", geminiApiKey],
+    queryFn: async () => {
+      const now = Date.now();
+      const cachedTip = localStorage.getItem("fitved_daily_tip");
+      const cachedTime = localStorage.getItem("fitved_daily_tip_time");
+
+      // Check if the cached tip is less than 24 hours old
+      if (cachedTip && cachedTime) {
+        const diff = now - parseInt(cachedTime, 10);
+        if (diff < 24 * 60 * 60 * 1000) {
+          return cachedTip;
+        }
+      }
+
+      // If we have an API key, try to generate a new tip via Gemini
+      if (geminiApiKey) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [{
+                  parts: [{
+                    text: "Generate a single, short, actionable health, fitness, or wellness tip for a client. Keep it under 20 words, inspiring, and direct. Do not include quotes, headers, bullets, or any markdown formatting. Just output the clean tip."
+                  }]
+                }]
+              })
+            }
+          );
+          if (!response.ok) throw new Error("Gemini API call failed");
+          const resData = await response.json();
+          const generatedText = resData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+          if (generatedText) {
+            // Clean up any enclosing quotes
+            const cleanTip = generatedText.replace(/^["']|["']$/g, "").trim();
+            localStorage.setItem("fitved_daily_tip", cleanTip);
+            localStorage.setItem("fitved_daily_tip_time", now.toString());
+            return cleanTip;
+          }
+        } catch (err) {
+          console.warn("Failed to generate tip from Gemini, using fallback:", err);
+        }
+      }
+
+      // Fallback: pick a rotating tip from the daily list
+      const dayIndex = Math.floor(now / 86_400_000);
+      const fallbackTip = DAILY_TIPS[dayIndex % DAILY_TIPS.length];
+      localStorage.setItem("fitved_daily_tip", fallbackTip);
+      localStorage.setItem("fitved_daily_tip_time", now.toString());
+      return fallbackTip;
+    },
+    staleTime: Infinity,
+  });
 
   const { data: reports = [] } = useQuery({
     queryKey: ["reports", user?.id],
