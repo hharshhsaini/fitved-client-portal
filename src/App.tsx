@@ -22,7 +22,6 @@ import AdminPlans from "./pages/admin/Plans";
 import Trainers from "./pages/admin/Trainers";
 import Societies from "./pages/admin/Societies";
 import Marketing from "./pages/admin/Marketing";
-import Tips from "./pages/admin/Tips";
 import Corporate from "./pages/Corporate";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import NotFound from "./pages/NotFound";
@@ -63,7 +62,6 @@ const App = () => (
                 <Route path="/admin/trainers" element={<ProtectedRoute allow={["admin"]}><Trainers /></ProtectedRoute>} />
                 <Route path="/admin/societies" element={<ProtectedRoute allow={["admin"]}><Societies /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute allow={["admin"]}><Marketing /></ProtectedRoute>} />
-                <Route path="/admin/tips" element={<ProtectedRoute allow={["admin"]}><Tips /></ProtectedRoute>} />
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />

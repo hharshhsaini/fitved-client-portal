@@ -48,19 +48,7 @@ const DAILY_TIPS = [
 
 export default function Health() {
   const { user } = useAuth();
-
-  // Query to get the Gemini API Key from the daily_tips table
-  const { data: geminiApiKey = "" } = useQuery({
-    queryKey: ["daily-tip-api-key"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("daily_tips")
-        .select("text");
-      if (error) return "";
-      const row = (data ?? []).find((t) => t.text.startsWith("gemini_api_key:"));
-      return row ? row.text.replace("gemini_api_key:", "") : "";
-    },
-  });
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
 
   // Query to get the daily wellness tip (either cached, generated from Gemini, or fallback)
   const { data: tip = "" } = useQuery({
