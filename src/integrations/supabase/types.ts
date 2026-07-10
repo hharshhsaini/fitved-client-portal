@@ -107,6 +107,33 @@ export type Database = {
         }
         Relationships: []
       }
+      comp_classes: {
+        Row: {
+          class_date: string
+          client_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          trainer_id: string | null
+        }
+        Insert: {
+          class_date: string
+          client_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          trainer_id?: string | null
+        }
+        Update: {
+          class_date?: string
+          client_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
       daily_tips: {
         Row: {
           active: boolean

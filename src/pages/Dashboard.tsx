@@ -10,11 +10,11 @@ import {
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
-import { calculatePlanEndDate, countLostTrainingDays, formatPlanName, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, countLostTrainingDays, extendEndDateBySessions, formatPlanName, isoDate } from "@/lib/sessionPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { usePauseStore } from "@/stores/pauseStore";
+import { usePauseStore, recalculatePlanDates } from "@/stores/pauseStore";
 import { toast } from "sonner";
 import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
@@ -109,9 +109,21 @@ export default function Dashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from("trainer_off_times")
-        .select("from_date,to_date,time_slot")
+        .select("from_date,to_date,time_slot,reason")
         .eq("trainer_id", profile!.trainer_id!);
       return data ?? [];
+    },
+  });
+
+  // Extra classes the trainer took to compensate off-days — they consume the
+  // customer's off-day bonus. (Empty until the comp_classes migration runs.)
+  const { data: compClasses = [] } = useQuery({
+    queryKey: ["comp-classes", user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("comp_classes").select("id, class_date").eq("client_id", user!.id);
+      return (data ?? []) as { id: string; class_date: string }[];
     },
   });
 
@@ -159,6 +171,7 @@ export default function Dashboard() {
   // Carry-forward = training days lost DURING the current plan period, both to
   // the customer's own pauses (capped at 1/3 of the plan) and to trainer
   // off-days (bonus classes — never capped), matching recalculatePlanDates.
+  // Extra classes the trainer already took to compensate reduce the bonus.
   const allPauses = [...history, ...(activePause ? [activePause] : [])];
   const planBaseEnd = plan
     ? isoDate(calculatePlanEndDate(plan.start_date, plan.total_sessions, plan.training_days ?? []))
@@ -169,14 +182,39 @@ export default function Dashboard() {
         allPauses, offTimes, profile?.time_slot ?? null,
       )
     : { pausedLost: 0, offLost: 0 };
+  const compTaken = plan
+    ? compClasses.filter((c) => c.class_date >= plan.start_date).length
+    : 0;
   const carryForward = plan
-    ? Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) + lostDays.offLost
+    ? Math.min(lostDays.pausedLost, Math.floor(plan.total_sessions / 3)) +
+      Math.max(0, lostDays.offLost - compTaken)
     : 0;
   const baseTotal  = plan?.total_sessions ?? 0;
   const capacity   = baseTotal + carryForward;            // all classes incl. carried
   // Bar segment widths (track scaled to full capacity; attended portion stays empty)
   const blueW   = capacity > 0 ? (sessionsLeft / capacity) * 100 : 0;
   const orangeW = capacity > 0 ? (carryForward / capacity) * 100 : 0;
+
+  // Self-heal: if the stored end date drifts from what pauses + trainer
+  // off-days − extra classes say it should be (e.g. data edited outside the
+  // app), recalculate once so every surface shows the same accurate dates.
+  useEffect(() => {
+    if (!plan || plan.status !== "active" || !user) return;
+    if (!(plan.training_days ?? []).length) return;
+    const expectedEnd = isoDate(
+      extendEndDateBySessions(
+        calculatePlanEndDate(plan.start_date, plan.total_sessions, plan.training_days),
+        carryForward,
+        plan.training_days,
+      ),
+    );
+    if (expectedEnd !== plan.end_date) {
+      recalculatePlanDates(user.id).then(() => {
+        qc.invalidateQueries({ queryKey: ["plan", user.id] });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.id, plan?.end_date, carryForward]);
 
   // Expired plans complete automatically (legacy "paused" rows migrate too).
   // Renewal is always a manual admin action.

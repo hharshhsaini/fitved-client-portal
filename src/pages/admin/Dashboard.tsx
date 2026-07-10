@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { buildMonthlyIncomeFromBilling, monthlyBreakdownArray, monthKey } from "@/lib/incomeAllocation";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Users, IndianRupee, Wallet, AlertTriangle, UserCog,
-  CalendarOff, CalendarX, Clock, Phone, CheckCircle2, ChevronRight,
+  CalendarOff, CalendarX, Clock, Phone, CheckCircle2, ChevronRight, TrendingUp, RotateCcw,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -59,14 +60,17 @@ export default function AdminDashboard() {
       const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "client");
       const ids = (roles ?? []).map((r) => r.user_id);
 
-      const [profilesRes, plansRes, pausesRes, billingRes, societiesRes, trainersRes, offRes] = await Promise.all([
+      const [profilesRes, plansRes, pausesRes, billingRes, societiesRes, trainersRes, offRes, allPlansRes] = await Promise.all([
         ids.length ? supabase.from("profiles").select("id, name, phone, society_id, trainer_id, time_slot").in("id", ids) : Promise.resolve({ data: [] as any[] }),
-        ids.length ? supabase.from("plans").select("id, user_id, amount, status, start_date, end_date, auto_renew, renewal_date").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
+        ids.length ? supabase.from("plans").select("id, user_id, amount, discount, status, start_date, end_date, auto_renew, renewal_date").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
         ids.length ? supabase.from("pauses").select("user_id, from_date, to_date, status").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
-        supabase.from("billing_history").select("amount, payment_date"),
+        // Fetch all billing with plan_id for proration (type marks refunds)
+        (supabase as any).from("billing_history").select("amount, payment_date, plan_id, type"),
         supabase.from("societies").select("id, name"),
         supabase.from("trainers").select("id, name"),
         (supabase as any).from("trainer_off_times").select("id, trainer_id, from_date, to_date, time_slot, reason").gte("to_date", todayISO).order("from_date"),
+        // ALL plans (incl. completed) for income proration — income belongs to the plan period not just active ones
+        (supabase as any).from("plans").select("id, start_date, end_date, amount, discount"),
       ]);
 
       const profiles = (profilesRes.data ?? []) as any[];
@@ -76,6 +80,8 @@ export default function AdminDashboard() {
       const societies = (societiesRes.data ?? []) as any[];
       const trainers = (trainersRes.data ?? []) as any[];
       const offRaw = (offRes.data ?? []) as any[];
+      // All plans (for income proration lookup)
+      const allPlansForIncome = (allPlansRes.data ?? []) as { id: string; start_date: string; end_date: string; amount: number; discount: number }[];
 
       const socName = new Map(societies.map((s) => [s.id, s.name]));
       const trName = new Map(trainers.map((t) => [t.id, t.name]));
@@ -90,24 +96,32 @@ export default function AdminDashboard() {
       );
       const activeClients = activeUsers.size;
 
-      // ── Monthly income breakdown ──────────────────────────────────
-      const monthTotals: Record<string, number> = {};
-      const currentMonthKey = todayISO.slice(0, 7); // "YYYY-MM"
-      monthTotals[currentMonthKey] = 0;
+      // ── Monthly income breakdown (prorated) ───────────────────────
+      // Build a plan lookup for proration: plan_id → { start_date, end_date }
+      const planMap = new Map<string, { start_date: string; end_date: string }>(
+        allPlansForIncome.map((p) => [p.id, { start_date: p.start_date, end_date: p.end_date }])
+      );
 
+      // Prorate billing entries that have plan_id; legacy entries go to payment_date month
+      const monthTotals = buildMonthlyIncomeFromBilling(billing, planMap);
+
+      // Ensure current month always appears in the breakdown
+      const currentMonthKey = todayISO.slice(0, 7);
+      if (!monthTotals[currentMonthKey]) monthTotals[currentMonthKey] = 0;
+
+      // Refunds per month — already subtracted from monthTotals (they're
+      // negative rows booked to their payment month); tracked separately so
+      // the admin can see how much of each month was refunded.
+      const refundsByMonth: Record<string, number> = {};
       for (const b of billing) {
-        if (!b.payment_date) continue;
-        const mKey = b.payment_date.slice(0, 7); // "YYYY-MM"
-        monthTotals[mKey] = (monthTotals[mKey] || 0) + Number(b.amount);
+        const amt = Number(b.amount);
+        if ((b.type === "refund" || amt < 0) && b.payment_date) {
+          const mKey = b.payment_date.slice(0, 7);
+          refundsByMonth[mKey] = (refundsByMonth[mKey] ?? 0) + Math.abs(amt);
+        }
       }
 
-      const monthlyBreakdown = Object.entries(monthTotals)
-        .map(([key, amount]) => {
-          const d = new Date(key + "-02");
-          const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-          return { key, label, amount };
-        })
-        .sort((a, b) => b.key.localeCompare(a.key));
+      const monthlyBreakdown = monthlyBreakdownArray(monthTotals);
 
       // ── Attention queue ────────────────────────────────────────────
       const renewals: RenewalRow[] = plans
@@ -176,7 +190,7 @@ export default function AdminDashboard() {
         reason: o.reason ?? null,
       }));
 
-      return { activeClients, monthlyBreakdown, renewals, notRenewed, gaps, paused, offTimes, plans };
+      return { activeClients, monthlyBreakdown, monthTotals, refundsByMonth, renewals, notRenewed, gaps, paused, offTimes, plans };
     },
   });
 
@@ -188,9 +202,27 @@ export default function AdminDashboard() {
   const monthlyBreakdown = data?.monthlyBreakdown ?? [];
   const selectedInfo = monthlyBreakdown.find((m) => m.key === selectedMonth) ?? {
     key: selectedMonth,
-    label: new Date(selectedMonth + "-02").toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    label: new Date(selectedMonth + "-02").toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
     amount: 0,
   };
+
+  // Prorated income for this month, next month, month after
+  const thisMonthKey  = monthKey(0);
+  const nextMonthKey  = monthKey(1);
+  const afterMonthKey = monthKey(2);
+
+  // All three cards read the same billing-based totals as the month picker:
+  // collected payments split across their plan months, refunds deducted.
+  const monthTotalsMap = data?.monthTotals ?? {};
+  const thisMonthProjected  = monthTotalsMap[thisMonthKey]  ?? 0;
+  const nextMonthProjected  = monthTotalsMap[nextMonthKey]  ?? 0;
+  const afterMonthProjected = monthTotalsMap[afterMonthKey] ?? 0;
+
+  const refundsByMonth = data?.refundsByMonth ?? {};
+  const selectedMonthRefunds = refundsByMonth[selectedMonth] ?? 0;
+
+  const labelFor = (key: string) =>
+    new Date(key + "-02T12:00:00").toLocaleDateString("en-IN", { month: "short", year: "numeric" });
 
   useEffect(() => {
     if (!plans.length) return;
@@ -237,50 +269,127 @@ export default function AdminDashboard() {
           </div>
           <p className="mt-2 text-xs text-muted-foreground">in a running program</p>
         </Card>
-
-        {/* Collected Income Card (Interactive Dropdown) */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Card className="rounded-2xl shadow-card p-5 cursor-pointer hover:bg-muted/30 hover:shadow-elevated transition-all border border-transparent hover:border-border select-none relative group">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-xl bg-green-500/10 text-green-600">
-                    <Wallet className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 font-medium">
-                      Income generated <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded font-normal transition-colors group-hover:bg-primary group-hover:text-white">Change month</span>
-                    </p>
-                    <p className="font-display text-2xl leading-tight text-foreground mt-0.5">
-                      {isLoading ? "…" : inr(selectedInfo.amount)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Collected in <span className="font-semibold text-foreground">{selectedInfo.label}</span>
-              </p>
-            </Card>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[280px] max-h-[300px] overflow-y-auto rounded-xl p-1.5 shadow-elevated">
-            <div className="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border-b mb-1">
-              Select month to view income
-            </div>
-            {monthlyBreakdown.map((m) => (
-              <DropdownMenuItem
-                key={m.key}
-                onClick={() => setSelectedMonth(m.key)}
-                className={`flex items-center justify-between rounded-lg px-2.5 py-2 cursor-pointer ${
-                  m.key === selectedMonth ? "bg-primary-soft text-primary font-medium" : ""
-                }`}
-              >
-                <span>{m.label}</span>
-                <span className="text-xs font-semibold text-muted-foreground">{inr(m.amount)}</span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
+
+      {/* ── Prorated Income Widget ───────────────────────────────────── */}
+      <Card className="rounded-2xl shadow-card p-5 md:p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <span className="grid h-11 w-11 place-items-center rounded-xl bg-green-500/10 text-green-600">
+            <TrendingUp className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-display text-lg">Income Breakdown</p>
+            <p className="text-sm text-muted-foreground">Multi-month plans split proportionally across months</p>
+          </div>
+        </div>
+
+        {/* 3-month grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+          {/* This month */}
+          <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary mb-1">This month</p>
+            <p className="font-display text-2xl font-bold text-foreground">
+              {isLoading ? "…" : inr(thisMonthProjected)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">{labelFor(thisMonthKey)}</p>
+            <p className="text-[11px] text-primary mt-2 font-medium">Actual + allocated</p>
+          </div>
+
+          {/* Next month */}
+          <div className="rounded-xl border border-border bg-muted/20 p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Next month</p>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">Projected</Badge>
+            </div>
+            <p className="font-display text-2xl font-bold text-foreground">
+              {isLoading ? "…" : nextMonthProjected > 0 ? inr(nextMonthProjected) : <span className="text-muted-foreground text-lg">—</span>}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">{labelFor(nextMonthKey)}</p>
+            <p className="text-[11px] text-muted-foreground mt-2">From payments already collected</p>
+          </div>
+
+          {/* Month after */}
+          <div className="rounded-xl border border-border bg-muted/20 p-4">
+            <div className="flex items-center gap-1.5 mb-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Month after</p>
+              <Badge variant="secondary" className="text-[9px] px-1.5 py-0">Projected</Badge>
+            </div>
+            <p className="font-display text-2xl font-bold text-foreground">
+              {isLoading ? "…" : afterMonthProjected > 0 ? inr(afterMonthProjected) : <span className="text-muted-foreground text-lg">—</span>}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">{labelFor(afterMonthKey)}</p>
+            <p className="text-[11px] text-muted-foreground mt-2">From payments already collected</p>
+          </div>
+        </div>
+
+        {/* Refunds in the selected month — already deducted from the totals above */}
+        <div className="mb-4 flex items-center justify-between rounded-xl border p-3"
+          style={{ borderColor: "rgba(210,59,52,0.25)", background: "rgba(210,59,52,0.04)" }}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: "rgba(210,59,52,0.1)" }}>
+              <RotateCcw className="h-4 w-4" style={{ color: "#d23b34" }} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#d23b34" }}>
+                Refunds · {selectedInfo.label}
+              </p>
+              <p className="text-[11px] text-muted-foreground">Deducted from that month's income</p>
+            </div>
+          </div>
+          <p className="font-display text-lg font-bold shrink-0" style={{ color: selectedMonthRefunds > 0 ? "#d23b34" : undefined }}>
+            {isLoading ? "…" : selectedMonthRefunds > 0 ? `−${inr(selectedMonthRefunds)}` : inr(0)}
+          </p>
+        </div>
+
+        {/* Month picker — includes every past AND upcoming month with income
+            (a 6-month plan bought in July shows slices through December) */}
+        <div className="border-t pt-4">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg px-2 py-1.5 hover:bg-muted/50">
+                <Wallet className="h-4 w-4" />
+                <span>Month: <strong className="text-foreground">{selectedInfo.label}</strong> · {inr(selectedInfo.amount)}</span>
+                <span className="text-xs bg-muted px-1.5 py-0.5 rounded">Change ▾</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[320px] max-h-[320px] overflow-y-auto rounded-xl p-1.5 shadow-elevated">
+              <div className="px-2.5 py-1.5 text-xs font-semibold text-muted-foreground border-b mb-1">
+                Monthly income (prorated) — past &amp; upcoming
+              </div>
+              {monthlyBreakdown.length === 0 && (
+                <p className="px-2.5 py-2 text-xs text-muted-foreground">No billing records yet</p>
+              )}
+              {monthlyBreakdown.map((m) => (
+                <DropdownMenuItem
+                  key={m.key}
+                  onClick={() => setSelectedMonth(m.key)}
+                  className={`flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 cursor-pointer ${
+                    m.key === selectedMonth ? "bg-primary-soft text-primary font-medium" : ""
+                  }`}
+                >
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <span className="truncate">{m.label}</span>
+                    {m.key > currentMonthKey && (
+                      <Badge variant="secondary" className="text-[9px] px-1.5 py-0 shrink-0">Upcoming</Badge>
+                    )}
+                    {m.key === currentMonthKey && (
+                      <Badge className="text-[9px] px-1.5 py-0 shrink-0">Current</Badge>
+                    )}
+                  </span>
+                  <span className="text-xs font-semibold shrink-0 text-right">
+                    <span className="text-muted-foreground">{inr(m.amount)}</span>
+                    {(refundsByMonth[m.key] ?? 0) > 0 && (
+                      <span className="block text-[10px]" style={{ color: "#d23b34" }}>
+                        −{inr(refundsByMonth[m.key])} refunded
+                      </span>
+                    )}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </Card>
 
       <div className="flex items-center gap-2 pt-2">
         <h2 className="font-display text-xl">Attention queue</h2>

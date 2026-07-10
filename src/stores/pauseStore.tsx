@@ -47,6 +47,19 @@ export async function recalculatePlanDates(userId: string) {
     offTimes = offs ?? [];
   }
 
+  // Compensation classes: extra classes the trainer already took to make up
+  // for off-days — each one consumes an off-day bonus, so the plan end date
+  // pulls back in. (Query fails silently until the comp_classes migration runs.)
+  let compTaken = 0;
+  try {
+    const { data: comps } = await (supabase as any)
+      .from("comp_classes")
+      .select("id")
+      .eq("client_id", userId)
+      .gte("class_date", plan.start_date);
+    compTaken = (comps ?? []).length;
+  } catch { /* table not created yet */ }
+
   const trainingDays = plan.training_days || [];
 
   // Base end date (if nothing was missed)
@@ -65,9 +78,10 @@ export async function recalculatePlanDates(userId: string) {
   );
 
   // Customer pauses carry forward at most 1/3 of the plan; trainer off-days
-  // are added in full on top.
+  // are added in full on top, minus any already compensated by extra classes.
   const maxCarryForward = Math.floor(plan.total_sessions / 3);
-  const actualExtension = Math.min(pausedLost, maxCarryForward) + offLost;
+  const netOffBonus = Math.max(0, offLost - compTaken);
+  const actualExtension = Math.min(pausedLost, maxCarryForward) + netOffBonus;
 
   currentEndDate = extendEndDateBySessions(currentEndDate, actualExtension, trainingDays);
 
