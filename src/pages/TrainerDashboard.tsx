@@ -206,6 +206,77 @@ export default function TrainerDashboard() {
     qc.invalidateQueries({ queryKey: ["trainer-clients"] });
   };
 
+  // ── Extra (make-up) classes ───────────────────────────────────────────────
+  // The trainer records an extra class they took to compensate an off-day.
+  // It credits every customer in that society batch (optionally one slot) —
+  // one off-day bonus consumed each. Admin manages/edits these from
+  // Admin → Trainers → Off-Days.
+  const [mkDate, setMkDate] = useState("");
+  const [mkSocietyId, setMkSocietyId] = useState("");
+  const [mkSlot, setMkSlot] = useState("");
+  const [mkNote, setMkNote] = useState("");
+
+  const makeupTargets = useMemo(() => {
+    if (!mkSocietyId) return [] as ClientRow[];
+    return allClients.filter(
+      (c) => c.society_id === mkSocietyId && (!mkSlot || c.time_slot === mkSlot)
+    );
+  }, [mkSocietyId, mkSlot, allClients]);
+
+  const makeupSlotOptions = useMemo(() => {
+    if (!mkSocietyId) return [] as string[];
+    const set = new Set<string>(slotsForSociety(mkSocietyId));
+    for (const c of allClients) if (c.society_id === mkSocietyId && c.time_slot) set.add(c.time_slot);
+    return [...set].sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mkSocietyId, mySlots, allClients]);
+
+  const { data: myMakeups = [] } = useQuery({
+    queryKey: ["trainer-makeups", trainer?.id],
+    enabled: !!trainer,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("comp_classes")
+        .select("id, client_id, class_date, notes")
+        .eq("trainer_id", trainer!.id)
+        .order("class_date", { ascending: false })
+        .limit(20);
+      return (data ?? []) as { id: string; client_id: string; class_date: string; notes: string | null }[];
+    },
+  });
+  const clientName = (id: string) => allClients.find((c) => c.id === id)?.name ?? "Client";
+
+  const addMakeup = useMutation({
+    mutationFn: async () => {
+      if (!trainer) throw new Error("Trainer not found");
+      if (!mkDate) throw new Error("Pick the class date");
+      if (mkDate < today) throw new Error("Extra classes can't be recorded for a past date");
+      if (!mkSocietyId) throw new Error("Pick the society");
+      if (makeupTargets.length === 0) throw new Error("No clients in this batch to credit");
+      const rows = makeupTargets.map((c) => ({
+        client_id: c.id,
+        trainer_id: trainer.id,
+        class_date: mkDate,
+        notes: mkNote.trim() || null,
+      }));
+      const { error } = await (supabase as any).from("comp_classes").insert(rows);
+      if (error) throw new Error(error.message);
+      await Promise.all(makeupTargets.map((c) => recalculatePlanDates(c.id)));
+    },
+    onSuccess: () => {
+      toast.success(`Extra class recorded for ${makeupTargets.length} client(s)`);
+      setMkDate(""); setMkSocietyId(""); setMkSlot(""); setMkNote("");
+      qc.invalidateQueries({ queryKey: ["trainer-makeups"] });
+      qc.invalidateQueries({ queryKey: ["trainer-clients"] });
+    },
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Failed";
+      toast.error(/comp_classes|schema cache|does not exist|Could not find|relation/i.test(msg)
+        ? "Extra-classes table isn't set up — ask admin to run the comp_classes migration."
+        : msg);
+    },
+  });
+
   // ── Mutations ─────────────────────────────────────────────────────────────
   const addOff = useMutation({
     mutationFn: async () => {
@@ -757,6 +828,112 @@ export default function TrainerDashboard() {
           </ul>
         </div>
       )}
+
+      <MakeupSection />
+    </div>
+  );
+
+  // Extra (make-up) class recorder — shared by mobile Off Time tab and the
+  // desktop Off Time column. Trainers can only ADD; admin edits/removes from
+  // Admin → Trainers → Off-Days.
+  const MakeupSection = () => (
+    <div className="rounded-[20px] p-4"
+      style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+      <p className="font-bold" style={{ fontSize: 14, color: NAVY }}>Extra class taken</p>
+      <p style={{ fontSize: 12, color: MUTED, marginTop: 2, marginBottom: 12 }}>
+        Took an extra class to make up for an off-day? Record it — every client in that
+        batch gets one bonus class marked as compensated.
+      </p>
+
+      <div className="space-y-3">
+        <input
+          type="date"
+          value={mkDate}
+          min={today}
+          onChange={(e) => setMkDate(e.target.value)}
+          className="w-full rounded-xl px-3 py-2.5 text-sm"
+          style={{ border: `2px solid ${mkDate ? NAVY : "#c8d4e3"}`, background: "#f8fafd", outline: "none", color: NAVY }}
+          aria-label="Extra class date"
+        />
+
+        <Select value={mkSocietyId || undefined} onValueChange={(v) => { setMkSocietyId(v); setMkSlot(""); }}>
+          <SelectTrigger className="w-full rounded-xl h-11"
+            style={{ border: `2px solid ${mkSocietyId ? NAVY : "#c8d4e3"}`, background: "#f8fafd", color: mkSocietyId ? NAVY : MUTED }}>
+            <SelectValue placeholder="Which society?" />
+          </SelectTrigger>
+          <SelectContent>
+            {societies.map((s) => (
+              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={mkSlot || "all"} onValueChange={(v) => setMkSlot(v === "all" ? "" : v)} disabled={!mkSocietyId}>
+          <SelectTrigger className="w-full rounded-xl h-11"
+            style={{ border: "2px solid #c8d4e3", background: "#f8fafd", color: mkSlot ? NAVY : MUTED }}>
+            <SelectValue placeholder="All slots" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All slots in society</SelectItem>
+            {makeupSlotOptions.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <input
+          value={mkNote}
+          onChange={(e) => setMkNote(e.target.value)}
+          placeholder="Note (optional) — e.g. make-up for 12 Jul"
+          className="w-full rounded-xl px-3 py-2.5 text-sm"
+          style={{ border: "2px solid #c8d4e3", background: "#f8fafd", outline: "none", color: NAVY }}
+        />
+
+        {mkSocietyId && (
+          <p style={{ fontSize: 12, color: MUTED }}>
+            Will credit <span style={{ fontWeight: 700, color: NAVY }}>{makeupTargets.length}</span> client(s)
+            {mkSlot ? ` in ${mkSlot}` : ""}.
+          </p>
+        )}
+
+        <button
+          onClick={() => addMakeup.mutate()}
+          disabled={addMakeup.isPending || isViewAs || !mkDate || !mkSocietyId || makeupTargets.length === 0}
+          className="w-full rounded-2xl border-none cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+          style={{ background: GOLD, padding: "13px", fontSize: 14, fontWeight: 700, color: "#5a3c05" }}>
+          <Plus size={16} /> {addMakeup.isPending ? "Saving…" : isViewAs ? "Read only" : "Record extra class"}
+        </button>
+      </div>
+
+      {myMakeups.length > 0 && (
+        <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <p className="font-semibold mb-2" style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Recently recorded
+          </p>
+          <ul>
+            {myMakeups.slice(0, 8).map((m, i) => (
+              <li key={m.id} className="flex items-center justify-between py-2"
+                style={{ borderTop: i > 0 ? `1px solid ${BORDER}` : "none" }}>
+                <div className="min-w-0">
+                  <p className="font-medium" style={{ fontSize: 13, color: NAVY }}>
+                    {format(new Date(m.class_date + "T12:00:00"), "PP")}
+                  </p>
+                  <p className="truncate" style={{ fontSize: 11, color: MUTED }}>
+                    {clientName(m.client_id)}{m.notes ? ` · ${m.notes}` : ""}
+                  </p>
+                </div>
+                <span className="rounded-full flex-shrink-0"
+                  style={{ fontSize: 10, fontWeight: 700, color: "#a07010", background: "rgba(240,167,32,0.15)", padding: "2px 8px" }}>
+                  −1 bonus
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontSize: 11, color: MUTED, marginTop: 6 }}>
+            Need to change one? Ask your admin.
+          </p>
+        </div>
+      )}
     </div>
   );
 
@@ -1144,6 +1321,8 @@ export default function TrainerDashboard() {
                 </ul>
               </div>
             )}
+
+            <MakeupSection />
           </div>
         </div>
 

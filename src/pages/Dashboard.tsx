@@ -10,11 +10,11 @@ import {
   CalendarOff as CalendarOffIcon, CreditCard, Download, MapPin, Clock, UserRound, ArrowRight,
 } from "lucide-react";
 import { formatDate, daysBetween } from "@/lib/dates";
-import { calculatePlanEndDate, countLostTrainingDays, formatPlanName, isoDate } from "@/lib/sessionPlan";
+import { calculatePlanEndDate, countLostTrainingDays, extendEndDateBySessions, formatPlanName, isoDate } from "@/lib/sessionPlan";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { usePauseStore } from "@/stores/pauseStore";
+import { usePauseStore, recalculatePlanDates } from "@/stores/pauseStore";
 import { toast } from "sonner";
 import { SocietyBatches } from "@/components/dashboard/SocietyBatches";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
@@ -194,6 +194,27 @@ export default function Dashboard() {
   // Bar segment widths (track scaled to full capacity; attended portion stays empty)
   const blueW   = capacity > 0 ? (sessionsLeft / capacity) * 100 : 0;
   const orangeW = capacity > 0 ? (carryForward / capacity) * 100 : 0;
+
+  // Self-heal: if the stored end date drifts from what pauses + trainer
+  // off-days − extra classes say it should be (e.g. data edited outside the
+  // app), recalculate once so every surface shows the same accurate dates.
+  useEffect(() => {
+    if (!plan || plan.status !== "active" || !user) return;
+    if (!(plan.training_days ?? []).length) return;
+    const expectedEnd = isoDate(
+      extendEndDateBySessions(
+        calculatePlanEndDate(plan.start_date, plan.total_sessions, plan.training_days),
+        carryForward,
+        plan.training_days,
+      ),
+    );
+    if (expectedEnd !== plan.end_date) {
+      recalculatePlanDates(user.id).then(() => {
+        qc.invalidateQueries({ queryKey: ["plan", user.id] });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.id, plan?.end_date, carryForward]);
 
   // Expired plans complete automatically (legacy "paused" rows migrate too).
   // Renewal is always a manual admin action.

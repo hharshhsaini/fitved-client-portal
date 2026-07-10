@@ -711,13 +711,13 @@ export default function Trainers() {
                 <div className="space-y-1.5">
                   <Label>Time slot <span className="text-muted-foreground font-normal">(optional — leave blank = all slots)</span></Label>
                   {trainerSlots.length > 0 ? (
-                    <Select value={offTimeSlot} onValueChange={setOffTimeSlot}>
+                    <Select value={offTimeSlot || "all"} onValueChange={(v) => setOffTimeSlot(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a time slot…" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All slots</SelectItem>
-                        {trainerSlots.map((s) => (
+                        <SelectItem value="all">All slots</SelectItem>
+                        {trainerSlots.filter(Boolean).map((s) => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
@@ -769,6 +769,7 @@ export default function Trainers() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <Label>Class date</Label>
+                  {/* Admin can backdate — only trainers are limited to today onward */}
                   <Input type="date" value={mkDate} onChange={(e) => setMkDate(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">

@@ -220,7 +220,12 @@ export default function Plan() {
   const newEndISO      = plan.end_date >= projectedEndISO ? plan.end_date : projectedEndISO;
   const oldRenewalISO  = isoDate(calculatePlanRenewalDate(baseEnd, planDaysFull));
   const newRenewalISO  = isoDate(calculatePlanRenewalDate(newEndISO, planDaysFull));
-  const showReward     = carriedClasses > 0;
+  // Show the card whenever there is a bonus OR classes were compensated — the
+  // customer should always see that missed classes were made up.
+  const showReward     = carriedClasses > 0 || compTaken > 0;
+  const compDates      = compClasses
+    .filter((c) => c.class_date >= plan.start_date)
+    .sort((a, b) => b.class_date.localeCompare(a.class_date));
 
   const dateCards = [
     { label: "Started", val: formatDate(plan.start_date).replace(/,?\s*\d{4}$/, ""), accent: false },
@@ -307,7 +312,9 @@ export default function Plan() {
               </div>
               <div className="min-w-0">
                 <p className="font-bold" style={{ fontSize: 15, color: GOLD_TEXT }}>
-                  You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
+                  {carriedClasses > 0
+                    ? `You earned ${carriedClasses} bonus ${carriedClasses === 1 ? "class" : "classes"}`
+                    : "Your missed classes were made up"}
                 </p>
                 <p style={{ fontSize: 12, color: GOLD_SUB, marginTop: 3, lineHeight: 1.45 }}>
                   for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
@@ -319,6 +326,21 @@ export default function Plan() {
                 )}
               </div>
             </div>
+            {compDates.length > 0 && (
+              <div className="rounded-xl mt-3" style={{ background: "#fff", padding: "10px 14px" }}>
+                <p style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700, marginBottom: 6 }}>
+                  Extra classes taken
+                </p>
+                {compDates.map((c) => (
+                  <div key={c.id} className="flex items-center justify-between py-1">
+                    <span style={{ fontSize: 13, color: NAVY, fontWeight: 500 }}>
+                      ✓ {formatDate(c.class_date).replace(/,?\s*\d{4}$/, "")}
+                    </span>
+                    <span style={{ fontSize: 11, color: GOLD_DEEP, fontWeight: 700 }}>1 bonus class used</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex items-center justify-between rounded-xl mt-3" style={{ background: "#fff", padding: "11px 14px" }}>
               <div>
                 <p style={{ fontSize: 11, color: MUTED }}>Old renewal date</p>
@@ -497,7 +519,9 @@ export default function Plan() {
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-display text-xl" style={{ color: GOLD_TEXT }}>
-                  You earned {carriedClasses} bonus {carriedClasses === 1 ? "class" : "classes"}
+                  {carriedClasses > 0
+                    ? `You earned ${carriedClasses} bonus ${carriedClasses === 1 ? "class" : "classes"}`
+                    : "Your missed classes were made up"}
                 </p>
                 <p className="text-sm mt-1" style={{ color: GOLD_SUB }}>
                   for classes missed during your pauses or your trainer's days off — FitVed added every one back to your plan.
@@ -506,6 +530,19 @@ export default function Plan() {
                   <p className="text-sm mt-1.5 font-semibold" style={{ color: GOLD_DEEP }}>
                     ✓ {compTaken} already made up with extra {compTaken === 1 ? "class" : "classes"} by your trainer
                   </p>
+                )}
+                {compDates.length > 0 && (
+                  <div className="mt-3 rounded-xl bg-white px-4 py-2.5 inline-block">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: MUTED }}>
+                      Extra classes taken
+                    </p>
+                    {compDates.map((c) => (
+                      <div key={c.id} className="flex items-center gap-6 justify-between py-0.5">
+                        <span className="text-sm font-medium" style={{ color: NAVY }}>✓ {formatDate(c.class_date)}</span>
+                        <span className="text-xs font-bold" style={{ color: GOLD_DEEP }}>1 bonus class used</span>
+                      </div>
+                    ))}
+                  </div>
                 )}
                 <div className="mt-4 flex items-center gap-4 flex-wrap">
                   <div>
