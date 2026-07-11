@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculatePlanDates } from "@/stores/pauseStore";
+import { trainerSessionsForMonth } from "@/lib/trainerSessions";
 import { toast } from "sonner";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -245,6 +246,47 @@ export default function TrainerDashboard() {
     },
   });
   const clientName = (id: string) => allClients.find((c) => c.id === id)?.name ?? "Client";
+
+  // ── Sessions taken this month ─────────────────────────────────────────────
+  // Same computation the admin sees: one session per batch (society + slot)
+  // per scheduled day, off-days excluded, extra classes and any admin
+  // correction included. Read-only here — only the admin can adjust it.
+  const currentMonthKey = today.slice(0, 7);
+  const clientIdsKey = allClients.map((c) => c.id).sort().join(",");
+  const { data: sessionsThisMonth } = useQuery({
+    queryKey: ["trainer-sessions-this-month", trainer?.id, currentMonthKey, clientIdsKey],
+    enabled: !!trainer && !clientsLoading,
+    queryFn: async () => {
+      const ids = allClients.map((c) => c.id);
+      const [plansRes, pausesRes, offsRes, compsRes, adjRes] = await Promise.all([
+        ids.length
+          ? supabase.from("plans").select("user_id, start_date, end_date, training_days").in("user_id", ids)
+          : Promise.resolve({ data: [] as any[] }),
+        ids.length
+          ? (supabase.from("pauses") as any).select("client_id, from_date, to_date").in("client_id", ids)
+          : Promise.resolve({ data: [] as any[] }),
+        (supabase as any).from("trainer_off_times").select("from_date, to_date, time_slot").eq("trainer_id", trainer!.id),
+        (supabase as any).from("comp_classes").select("client_id, class_date").eq("trainer_id", trainer!.id).gte("class_date", `${currentMonthKey}-01`),
+        (supabase as any).from("trainer_session_adjustments").select("delta").eq("trainer_id", trainer!.id).eq("month", currentMonthKey),
+      ]);
+      const plansByUser = new Map<string, { user_id: string; start_date: string; end_date: string; training_days: string[] | null }[]>();
+      for (const p of (plansRes.data ?? []) as any[]) {
+        const list = plansByUser.get(p.user_id) ?? [];
+        list.push(p);
+        plansByUser.set(p.user_id, list);
+      }
+      return trainerSessionsForMonth(
+        currentMonthKey,
+        today,
+        allClients.map((c) => ({ id: c.id, society_id: c.society_id, time_slot: c.time_slot })),
+        plansByUser,
+        (pausesRes.data ?? []) as any[],
+        (offsRes.data ?? []) as any[],
+        (compsRes.data ?? []) as any[],
+        ((adjRes.data ?? [])[0]?.delta as number | undefined) ?? 0,
+      ).total;
+    },
+  });
 
   const addMakeup = useMutation({
     mutationFn: async () => {
@@ -988,6 +1030,12 @@ export default function TrainerDashboard() {
               <p style={{ fontSize: 20, fontWeight: 700, color: GOLD }}>{offTimes.length}</p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>Off times</p>
             </div>
+            <div className="rounded-2xl px-3 py-2 text-center flex-1"
+              style={{ background: "rgba(255,255,255,0.10)" }}
+              title="Classes taken this month — off-days excluded, extra classes included">
+              <p style={{ fontSize: 20, fontWeight: 700, color: GOLD }}>{sessionsThisMonth ?? "—"}</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>Sessions this month</p>
+            </div>
           </div>
         </div>
 
@@ -1049,11 +1097,12 @@ export default function TrainerDashboard() {
         </header>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {[
             { label: "Total clients", value: societies.reduce((sum, s) => sum + (batchMap[s.id]?.reduce((a, b) => a + b.client_count, 0) ?? 0), 0) },
             { label: "Societies", value: societies.length },
             { label: "Upcoming off times", value: offTimes.length },
+            { label: "Sessions this month", value: sessionsThisMonth ?? "—" },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl p-5 shadow-sm"
               style={{ background: "#fff", border: `1px solid ${BORDER}` }}>

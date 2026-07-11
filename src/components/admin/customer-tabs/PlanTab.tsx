@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
-  WEEKDAYS, SESSION_OPTIONS,
+  WEEKDAYS,
   calculatePlanEndDate, calculatePlanRenewalDate,
   countLostTrainingDays, extendEndDateBySessions, isoDate,
 } from "@/lib/sessionPlan";
@@ -85,6 +85,9 @@ export function PlanTab({ userId }: { userId: string }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [autoRenew, setAutoRenew] = useState(true);
   const [status, setStatus] = useState<PlanStatus>("active");
+  // "Custom plan" mode: a one-off personal plan for this customer — any
+  // session count and price, without touching the Plans catalog.
+  const [customPlan, setCustomPlan] = useState(false);
   useEffect(() => {
     if (plan && plan.status === "active") {
       setTotalSessions(plan.total_sessions);
@@ -328,6 +331,45 @@ export function PlanTab({ userId }: { userId: string }) {
     return overrideMap.get(opt.id) ?? Number(opt.price);
   };
 
+  // Sessions dropdown, built from the live Plans catalog — a plan added in
+  // Admin → Plans shows up here automatically. Trial (8) is kept as a
+  // built-in when the catalog doesn't define it.
+  const sessionDropdownOptions = useMemo(() => {
+    const opts: { sessions: number; label: string }[] = [];
+    for (const o of planOptions) {
+      if (o.total_sessions == null) continue;
+      if (opts.some((x) => x.sessions === o.total_sessions)) continue;
+      const price = overrideMap.get(o.id) ?? Number(o.price);
+      opts.push({
+        sessions: o.total_sessions,
+        label: `${o.total_sessions} sessions · ${o.name} · ₹${price.toLocaleString("en-IN")}${overrideMap.has(o.id) ? " (custom price)" : ""}`,
+      });
+    }
+    if (!opts.some((x) => x.sessions === 8)) {
+      opts.push({ sessions: 8, label: "8 sessions · trial / recovery" });
+    }
+    return opts.sort((a, b) => a.sessions - b.sessions);
+  }, [planOptions, overrideMap]);
+
+  // A loaded plan whose session count isn't in the catalog is a custom plan.
+  useEffect(() => {
+    if (plan && plan.status === "active" && planOptions.length > 0) {
+      const inCatalog =
+        plan.total_sessions === 8 ||
+        planOptions.some((o) => o.total_sessions === plan.total_sessions);
+      setCustomPlan(!inCatalog);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.id, plan?.total_sessions, planOptions.length]);
+
+  // Duration of the custom plan, derived from the computed schedule
+  const customDurationMonths = useMemo(() => {
+    if (!startDate || !endDate) return null;
+    const days = (new Date(endDate).getTime() - new Date(startDate).getTime()) / 86_400_000 + 1;
+    if (!Number.isFinite(days) || days <= 0) return null;
+    return Math.max(1, Math.round(days / 30));
+  }, [startDate, endDate]);
+
   // "same" = renew the current plan as-is; otherwise a plan_options id.
   const [nextCyclePkg, setNextCyclePkg] = useState("same");
 
@@ -435,30 +477,59 @@ export function PlanTab({ userId }: { userId: string }) {
     <div className="space-y-5 max-w-2xl">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label>Number of sessions</Label>
-          <Select value={String(totalSessions)} onValueChange={(v) => {
-            const val = Number(v);
-            setTotalSessions(val);
-            // Price comes from the Plans catalog (per-customer override first),
-            // so it always matches whatever the admin has set there.
-            const catalogPrice = priceForSessions(val);
-            if (catalogPrice != null) setAmount(catalogPrice);
-            else if (val === 8) setAmount(0); // trial — not in the catalog
-          }}>
+          <Label>Plan / sessions</Label>
+          <Select
+            value={customPlan ? "custom" : String(totalSessions)}
+            onValueChange={(v) => {
+              if (v === "custom") {
+                setCustomPlan(true);
+                return;
+              }
+              setCustomPlan(false);
+              const val = Number(v);
+              setTotalSessions(val);
+              // Price comes from the Plans catalog (per-customer override first),
+              // so it always matches whatever the admin has set there.
+              const catalogPrice = priceForSessions(val);
+              if (catalogPrice != null) setAmount(catalogPrice);
+              else if (val === 8) setAmount(0); // trial — not in the catalog
+            }}
+          >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {SESSION_OPTIONS.map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  {n} sessions
-                  {n === 8 && " · trial / recovery"}
-                  {n === 12 && " · 1 month"}
-                  {n === 36 && " · 3 months"}
-                  {n === 72 && " · 6 months"}
-                  {priceForSessions(n) != null && ` · ₹${priceForSessions(n)!.toLocaleString("en-IN")}`}
-                </SelectItem>
+              {sessionDropdownOptions.map((o) => (
+                <SelectItem key={o.sessions} value={String(o.sessions)}>{o.label}</SelectItem>
               ))}
+              <SelectItem value="custom">Custom plan — set sessions &amp; price manually</SelectItem>
             </SelectContent>
           </Select>
+          {customPlan && (
+            <div className="rounded-lg border p-3 mt-1 space-y-2" style={{ borderColor: "rgba(240,167,32,0.5)", background: "rgba(240,167,32,0.06)" }}>
+              <div className="flex items-center gap-2">
+                <div className="space-y-1 flex-1">
+                  <Label className="text-xs">Sessions</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={totalSessions || ""}
+                    onChange={(e) => setTotalSessions(Math.max(0, Number(e.target.value)))}
+                    placeholder="e.g. 20"
+                  />
+                </div>
+                <div className="space-y-1 flex-1">
+                  <Label className="text-xs">Duration</Label>
+                  <div className="h-10 flex items-center px-3 rounded-md border bg-muted/40 text-sm">
+                    {customDurationMonths != null ? `≈ ${customDurationMonths} month${customDurationMonths === 1 ? "" : "s"}` : "—"}
+                  </div>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Personal plan for this customer only — not added to the catalog. Duration follows the
+                schedule ({trainingDays.length || "?"} day(s)/week), and income splits across those months.
+                Set the price on the right.
+              </p>
+            </div>
+          )}
         </div>
         <div className="space-y-1.5">
           <Label>Pricing (₹)</Label>

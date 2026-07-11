@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
 import monalisaFit from "@/assets/monalisa-fit.png";
 import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
+import razorpayRizeLogo from "@/assets/razorpay-rize.svg";
 const heroHands = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80";
 
 const PHONE = "+919890471383";
@@ -1337,6 +1338,10 @@ function Footer() {
             <li><Link to="/login" className="hover:text-fv-orange transition-colors">Client / Trainer Login</Link></li>
           </ul>
         </div>
+      </div>
+      <div className="mx-auto max-w-6xl px-4 mt-10 flex flex-col items-center gap-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Backed by</p>
+        <img src={razorpayRizeLogo} alt="Razorpay Rize" className="h-8 md:h-10 w-auto opacity-90" />
       </div>
       <div className="mx-auto max-w-6xl px-4 mt-8 pt-6 border-t border-white/10 text-xs text-white/40 text-left">
         © {new Date().getFullYear()} Fitved. All rights reserved.
