@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { recalculatePlanDates } from "@/stores/pauseStore";
+import { trainerSessionsForMonth, recentMonthKeys, monthLabel } from "@/lib/trainerSessions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -168,6 +169,131 @@ export default function Trainers() {
       return (data ?? []) as { id: string; name: string | null; society_id: string | null; time_slot: string | null }[];
     },
   });
+
+  // ── Sessions taken per month (selected trainer) ─────────────────────
+  // scheduled batches − off-days + extra classes ± admin adjustment
+  const trainerClientIdsKey = trainerClients.map((c) => c.id).sort().join(",");
+  const { data: sessionData } = useQuery({
+    queryKey: ["admin-trainer-sessions-data", offDialog.trainer?.id, trainerClientIdsKey],
+    enabled: !!offDialog.trainer,
+    queryFn: async () => {
+      const clientIds = trainerClients.map((c) => c.id);
+      const [plansRes, pausesRes, offsRes, compsRes, adjRes] = await Promise.all([
+        clientIds.length
+          ? supabase.from("plans").select("user_id, start_date, end_date, training_days").in("user_id", clientIds)
+          : Promise.resolve({ data: [] as any[] }),
+        clientIds.length
+          ? (supabase.from("pauses") as any).select("client_id, from_date, to_date").in("client_id", clientIds)
+          : Promise.resolve({ data: [] as any[] }),
+        (supabase as any).from("trainer_off_times").select("from_date, to_date, time_slot").eq("trainer_id", offDialog.trainer!.id),
+        (supabase as any).from("comp_classes").select("client_id, class_date").eq("trainer_id", offDialog.trainer!.id),
+        (supabase as any).from("trainer_session_adjustments").select("month, delta, notes").eq("trainer_id", offDialog.trainer!.id),
+      ]);
+      return {
+        plans: (plansRes.data ?? []) as { user_id: string; start_date: string; end_date: string; training_days: string[] | null }[],
+        pauses: (pausesRes.data ?? []) as { client_id: string; from_date: string; to_date: string }[],
+        offs: (offsRes.data ?? []) as { from_date: string; to_date: string; time_slot: string | null }[],
+        comps: (compsRes.data ?? []) as { client_id: string; class_date: string }[],
+        adjustments: (adjRes.data ?? []) as { month: string; delta: number; notes: string | null }[],
+      };
+    },
+  });
+
+  const monthlySessions = useMemo(() => {
+    if (!sessionData) return [];
+    const plansByUser = new Map<string, typeof sessionData.plans>();
+    for (const p of sessionData.plans) {
+      const list = plansByUser.get(p.user_id) ?? [];
+      list.push(p);
+      plansByUser.set(p.user_id, list);
+    }
+    const adjByMonth = new Map(sessionData.adjustments.map((a) => [a.month, a.delta]));
+    return recentMonthKeys(6).map((mk) =>
+      trainerSessionsForMonth(
+        mk, today, trainerClients, plansByUser,
+        sessionData.pauses, sessionData.offs, sessionData.comps,
+        adjByMonth.get(mk) ?? 0,
+      ),
+    );
+  }, [sessionData, trainerClients, today]);
+
+  // Admin adjustment editor state
+  const [adjMonth, setAdjMonth] = useState<string | null>(null);
+  const [adjValue, setAdjValue] = useState("");
+
+  const saveAdjustment = useMutation({
+    mutationFn: async () => {
+      if (!offDialog.trainer || !adjMonth) throw new Error("No month selected");
+      const delta = Number(adjValue);
+      if (!Number.isInteger(delta)) throw new Error("Enter a whole number (e.g. 2 or -1)");
+      const { error } = await (supabase as any)
+        .from("trainer_session_adjustments")
+        .upsert(
+          { trainer_id: offDialog.trainer.id, month: adjMonth, delta },
+          { onConflict: "trainer_id,month" },
+        );
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      toast.success("Adjustment saved");
+      setAdjMonth(null);
+      setAdjValue("");
+      qc.invalidateQueries({ queryKey: ["admin-trainer-sessions-data", offDialog.trainer?.id] });
+    },
+    onError: (e) => {
+      const msg = e instanceof Error ? e.message : "Failed";
+      toast.error(/trainer_session_adjustments|schema cache|does not exist|Could not find|relation/i.test(msg)
+        ? "Adjustments table isn't set up — run the trainer_session_adjustments migration in Supabase."
+        : msg);
+    },
+  });
+
+  // Current-month session counts for ALL trainers (table column)
+  const currentMonthKey = today.slice(0, 7);
+  const { data: allSessionsRaw } = useQuery({
+    queryKey: ["admin-all-trainer-sessions", currentMonthKey],
+    queryFn: async () => {
+      const [profilesRes, plansRes, pausesRes, offsRes, compsRes, adjRes] = await Promise.all([
+        supabase.from("profiles").select("id, trainer_id, society_id, time_slot").not("trainer_id", "is", null),
+        supabase.from("plans").select("user_id, start_date, end_date, training_days"),
+        (supabase.from("pauses") as any).select("client_id, from_date, to_date"),
+        (supabase as any).from("trainer_off_times").select("trainer_id, from_date, to_date, time_slot"),
+        (supabase as any).from("comp_classes").select("trainer_id, client_id, class_date").gte("class_date", `${currentMonthKey}-01`),
+        (supabase as any).from("trainer_session_adjustments").select("trainer_id, month, delta").eq("month", currentMonthKey),
+      ]);
+      return {
+        profiles: (profilesRes.data ?? []) as { id: string; trainer_id: string | null; society_id: string | null; time_slot: string | null }[],
+        plans: (plansRes.data ?? []) as { user_id: string; start_date: string; end_date: string; training_days: string[] | null }[],
+        pauses: (pausesRes.data ?? []) as { client_id: string; from_date: string; to_date: string }[],
+        offs: (offsRes.data ?? []) as { trainer_id: string; from_date: string; to_date: string; time_slot: string | null }[],
+        comps: (compsRes.data ?? []) as { trainer_id: string | null; client_id: string; class_date: string }[],
+        adjustments: (adjRes.data ?? []) as { trainer_id: string; month: string; delta: number }[],
+      };
+    },
+  });
+
+  const sessionsThisMonthByTrainer = useMemo(() => {
+    const map: Record<string, number> = {};
+    if (!allSessionsRaw) return map;
+    const plansByUser = new Map<string, typeof allSessionsRaw.plans>();
+    for (const p of allSessionsRaw.plans) {
+      const list = plansByUser.get(p.user_id) ?? [];
+      list.push(p);
+      plansByUser.set(p.user_id, list);
+    }
+    for (const t of trainers) {
+      const clients = allSessionsRaw.profiles.filter((c) => c.trainer_id === t.id);
+      const adj = allSessionsRaw.adjustments.find((a) => a.trainer_id === t.id)?.delta ?? 0;
+      map[t.id] = trainerSessionsForMonth(
+        currentMonthKey, today, clients, plansByUser,
+        allSessionsRaw.pauses.filter((p) => clients.some((c) => c.id === p.client_id)),
+        allSessionsRaw.offs.filter((o) => o.trainer_id === t.id),
+        allSessionsRaw.comps.filter((c) => c.trainer_id === t.id),
+        adj,
+      ).total;
+    }
+    return map;
+  }, [allSessionsRaw, trainers, currentMonthKey, today]);
 
   const { data: societies = [] } = useQuery({
     queryKey: ["societies"],
@@ -519,13 +645,16 @@ export default function Trainers() {
               <TableHead>Societies</TableHead>
               <TableHead>Password</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead className="hidden md:table-cell" title="Sessions taken this month so far — open Off-Days for the full monthly breakdown">
+                Sessions ({format(new Date(), "MMM")})
+              </TableHead>
               <TableHead>Off-Days</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {trainers.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No trainers yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No trainers yet</TableCell></TableRow>
             ) : trainers.map((t) => {
               const count = links.filter((l) => l.trainer_id === t.id).length;
               const offCount = offCountByTrainer[t.id] ?? 0;
@@ -540,6 +669,11 @@ export default function Trainers() {
                   <TableCell><Badge variant="secondary">{count}</Badge></TableCell>
                   <TableCell className="font-mono text-xs">{(t as any).password ?? "—"}</TableCell>
                   <TableCell><Badge variant={t.active ? "secondary" : "outline"}>{t.active ? "active" : "inactive"}</Badge></TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <Badge variant="outline" title="Sessions taken this month (off-days excluded, extra classes included)">
+                      {sessionsThisMonthByTrainer[t.id] ?? 0}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <button
                       onClick={() => openOffDialog(t)}
@@ -831,6 +965,57 @@ export default function Trainers() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* ── Sessions taken ──────────────────────────────────────────── */}
+          <div className="space-y-3 border-t pt-4">
+            <div>
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Dumbbell className="h-4 w-4 text-primary" /> Sessions taken
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Counted per batch (society + slot) from client schedules — off-days excluded, extra classes and your corrections included.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              {monthlySessions.map((ms) => (
+                <div key={ms.monthKey} className="rounded-lg border p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="text-sm">
+                      <span className="font-medium">{monthLabel(ms.monthKey)}</span>
+                      <span className="ml-2 font-semibold text-primary">{ms.total} session{ms.total === 1 ? "" : "s"}</span>
+                      {ms.monthKey === currentMonthKey && <span className="ml-1 text-xs text-muted-foreground">so far</span>}
+                    </div>
+                    <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs"
+                      onClick={() => {
+                        if (adjMonth === ms.monthKey) { setAdjMonth(null); }
+                        else { setAdjMonth(ms.monthKey); setAdjValue(String(ms.adjustment || "")); }
+                      }}>
+                      <Pencil className="h-3 w-3" /> Adjust
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {ms.scheduled} scheduled
+                    {ms.missedToOffDays > 0 && <> · {ms.missedToOffDays} missed to off-days</>}
+                    {ms.extra > 0 && <> · +{ms.extra} extra class{ms.extra === 1 ? "" : "es"}</>}
+                    {ms.adjustment !== 0 && <> · {ms.adjustment > 0 ? "+" : ""}{ms.adjustment} admin adjustment</>}
+                  </p>
+                  {adjMonth === ms.monthKey && (
+                    <div className="mt-2 flex items-end gap-2 rounded-md bg-muted/50 p-2">
+                      <div className="space-y-1 flex-1">
+                        <Label className="text-xs">Correction (+/− sessions)</Label>
+                        <Input type="number" step="1" placeholder="e.g. 2 or -1" value={adjValue}
+                          onChange={(e) => setAdjValue(e.target.value)} className="h-8" />
+                      </div>
+                      <Button size="sm" className="h-8" disabled={saveAdjustment.isPending || adjValue.trim() === ""}
+                        onClick={() => saveAdjustment.mutate()}>
+                        {saveAdjustment.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <DialogFooter>

@@ -552,6 +552,33 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_session_adjustments: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          month: string
+          notes: string | null
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta?: number
+          id?: string
+          month: string
+          notes?: string | null
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          month?: string
+          notes?: string | null
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       trainer_slots: {
         Row: {
           created_at: string
