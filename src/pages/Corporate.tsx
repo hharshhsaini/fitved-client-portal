@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { FitvedLogo } from "@/components/FitvedLogo";
+import razorpayRizeLogo from "@/assets/razorpay-rize.svg";
 import {
   Users, Building2, Hotel, CalendarCheck, ChevronRight, Check,
   Dumbbell, HeartHandshake, Star, Sparkles, ArrowRight, Phone,
@@ -126,7 +127,7 @@ function Hero() {
           {/* Quick stats */}
           <div className="mt-12 flex flex-wrap gap-8">
             {[
-              { val: "500+", label: "Events conducted" },
+              { val: "75+", label: "Events conducted" },
               { val: "50+", label: "Certified trainers" },
               { val: "5–500", label: "Participants per session" },
             ].map(({ val, label }) => (
@@ -618,6 +619,10 @@ function InquiryForm() {
 function Footer() {
   return (
     <footer className="bg-fv-navy text-white/60 py-10">
+      <div className="mx-auto max-w-6xl px-4 mb-8 pb-8 border-b border-white/10 flex flex-col items-center gap-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Backed by</p>
+        <img src={razorpayRizeLogo} alt="Razorpay Rize" className="h-8 md:h-10 w-auto opacity-90" />
+      </div>
       <div className="mx-auto max-w-6xl px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
         <div className="flex items-center gap-3">
           <FitvedLogo className="h-6 w-auto brightness-0 invert opacity-80" />

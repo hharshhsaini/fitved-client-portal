@@ -21,6 +21,7 @@ import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { ClassCalendar } from "@/components/dashboard/ClassCalendar";
 import { MarketingFeed } from "@/components/dashboard/MarketingFeed";
+import { AddEmailCard } from "@/components/dashboard/AddEmailCard";
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const GOLD       = "#f0a720";
@@ -130,9 +131,10 @@ export default function Dashboard() {
   // Renewal price comes from the plan catalog (matched by session count),
   // with this customer's custom price taking priority — not from whatever
   // the old plan happened to cost.
+  // Static catalog + per-user overrides — fetched in parallel with the plan
+  // query instead of waiting for it (they don't depend on its result).
   const { data: planOptions = [] } = useQuery({
     queryKey: ["plan-options"],
-    enabled: !!plan,
     queryFn: async () => {
       const { data } = await supabase
         .from("plan_options").select("id,price,total_sessions").eq("active", true);
@@ -142,7 +144,7 @@ export default function Dashboard() {
 
   const { data: priceOverrides = [] } = useQuery({
     queryKey: ["plan-price-overrides", user?.id],
-    enabled: !!user && !!plan,
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("plan_price_overrides").select("plan_option_id,price").eq("user_id", user!.id);
@@ -718,6 +720,12 @@ export default function Dashboard() {
 
   return (
     <>
+      {/* Existing customers pre-date the email step — offer to add one.
+          Rendered once above both layouts so the link-completion effect
+          only ever runs a single time. Clients only. */}
+      {role === "client" && profile && (
+        <AddEmailCard profileId={profile.id} profileEmail={profile.email} />
+      )}
       <div className="md:hidden"><MobileLayout /></div>
       <div className="hidden md:block"><DesktopLayout /></div>
     </>

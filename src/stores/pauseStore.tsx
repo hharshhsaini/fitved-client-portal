@@ -17,16 +17,21 @@ function getYesterdayLocalISO(todayStr?: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+// Recalculate end/renewal dates for ALL of a customer's plans — not just the
+// latest. This is what makes retroactive changes reconcile correctly: when a
+// plan is backdated, or a pause/off-day is added into an OLD plan's window,
+// that plan's own timeline is recomputed from its own start_date. Each plan
+// only ever sees the pauses/offs inside its own window (countLostTrainingDays
+// bounds by [start, baseEnd]), and each extra class is credited to the plan
+// whose period it falls in.
 export async function recalculatePlanDates(userId: string) {
-  const { data: plan, error: planError } = await supabase
+  const { data: plans, error: plansError } = await supabase
     .from("plans")
     .select("*")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("start_date", { ascending: true });
 
-  if (planError || !plan) return;
+  if (plansError || !plans?.length) return;
 
   const { data: pauses, error: pausesError } = await (supabase.from("pauses") as any)
     .select("*")
@@ -48,55 +53,68 @@ export async function recalculatePlanDates(userId: string) {
   }
 
   // Compensation classes: extra classes the trainer already took to make up
-  // for off-days — each one consumes an off-day bonus, so the plan end date
-  // pulls back in. (Query fails silently until the comp_classes migration runs.)
-  let compTaken = 0;
+  // for off-days — each one consumes an off-day bonus of the plan whose
+  // period it falls in. (Query fails silently until the migration runs.)
+  let compDates: string[] = [];
   try {
     const { data: comps } = await (supabase as any)
       .from("comp_classes")
-      .select("id")
-      .eq("client_id", userId)
-      .gte("class_date", plan.start_date);
-    compTaken = (comps ?? []).length;
+      .select("class_date")
+      .eq("client_id", userId);
+    compDates = (comps ?? []).map((c: { class_date: string }) => c.class_date);
   } catch { /* table not created yet */ }
 
-  const trainingDays = plan.training_days || [];
+  for (let i = 0; i < plans.length; i++) {
+    const plan = plans[i];
+    const trainingDays = plan.training_days || [];
+    if (!trainingDays.length || !plan.start_date || !plan.total_sessions) continue;
 
-  // Base end date (if nothing was missed)
-  let currentEndDate = calculatePlanEndDate(plan.start_date, plan.total_sessions, trainingDays);
-  const baseEndISO = isoDate(currentEndDate);
+    // Base end date (if nothing was missed)
+    let currentEndDate = calculatePlanEndDate(plan.start_date, plan.total_sessions, trainingDays);
+    const baseEndISO = isoDate(currentEndDate);
 
-  // Count lost training days inside this plan's window. Overlapping
-  // pause + off days only count once (as paused).
-  const { pausedLost, offLost } = countLostTrainingDays(
-    plan.start_date,
-    baseEndISO,
-    trainingDays,
-    (pauses ?? []).map((p: any) => ({ from: p.from_date, to: p.to_date })),
-    offTimes,
-    profile?.time_slot ?? null,
-  );
+    // Count lost training days inside THIS plan's window. Overlapping
+    // pause + off days only count once (as paused).
+    const { pausedLost, offLost } = countLostTrainingDays(
+      plan.start_date,
+      baseEndISO,
+      trainingDays,
+      (pauses ?? []).map((p: any) => ({ from: p.from_date, to: p.to_date })),
+      offTimes,
+      profile?.time_slot ?? null,
+    );
 
-  // Customer pauses carry forward at most 1/3 of the plan; trainer off-days
-  // are added in full on top, minus any already compensated by extra classes.
-  const maxCarryForward = Math.floor(plan.total_sessions / 3);
-  const netOffBonus = Math.max(0, offLost - compTaken);
-  const actualExtension = Math.min(pausedLost, maxCarryForward) + netOffBonus;
+    // An extra class belongs to the plan whose period contains it: from this
+    // plan's start up to the next plan's start (open-ended for the latest).
+    const nextStart = plans[i + 1]?.start_date as string | undefined;
+    const compTaken = compDates.filter(
+      (d) => d >= plan.start_date && (!nextStart || d < nextStart),
+    ).length;
 
-  currentEndDate = extendEndDateBySessions(currentEndDate, actualExtension, trainingDays);
+    // Customer pauses carry forward at most 1/3 of the plan; trainer off-days
+    // are added in full on top, minus any already compensated by extra classes.
+    const maxCarryForward = Math.floor(plan.total_sessions / 3);
+    const netOffBonus = Math.max(0, offLost - compTaken);
+    const actualExtension = Math.min(pausedLost, maxCarryForward) + netOffBonus;
 
-  const renewalDate = calculatePlanRenewalDate(currentEndDate, trainingDays);
+    currentEndDate = extendEndDateBySessions(currentEndDate, actualExtension, trainingDays);
+    const renewalDate = calculatePlanRenewalDate(currentEndDate, trainingDays);
 
-  const { error: updateError } = await supabase
-    .from("plans")
-    .update({
-      end_date: isoDate(currentEndDate),
-      renewal_date: isoDate(renewalDate),
-    })
-    .eq("id", plan.id);
-    
-  if (updateError) {
-    console.error("Failed to update plan dates:", updateError);
+    const newEnd = isoDate(currentEndDate);
+    const newRenewal = isoDate(renewalDate);
+
+    // Skip the write when nothing changed — recalc runs from many flows and
+    // most plans are already correct.
+    if (plan.end_date === newEnd && plan.renewal_date === newRenewal) continue;
+
+    const { error: updateError } = await supabase
+      .from("plans")
+      .update({ end_date: newEnd, renewal_date: newRenewal })
+      .eq("id", plan.id);
+
+    if (updateError) {
+      console.error(`Failed to update plan ${plan.id} dates:`, updateError);
+    }
   }
 }
 

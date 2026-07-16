@@ -43,6 +43,20 @@ export default function Societies() {
     },
   });
 
+  // How many customers belong to each society (profiles.society_id).
+  const { data: memberCounts = {} } = useQuery({
+    queryKey: ["society-member-counts"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles").select("society_id").not("society_id", "is", null);
+      const counts: Record<string, number> = {};
+      for (const p of data ?? []) {
+        if (p.society_id) counts[p.society_id] = (counts[p.society_id] ?? 0) + 1;
+      }
+      return counts;
+    },
+  });
+
   const startNew = () => { setEditing(null); setName(""); setAddress(""); setOpen(true); };
   const startEdit = (s: Society) => { setEditing(s); setName(s.name); setAddress(s.address ?? ""); setOpen(true); };
 
@@ -94,19 +108,22 @@ export default function Societies() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead className="hidden md:table-cell">Address</TableHead>
+              <TableHead title="Customers in this society">Members</TableHead>
               <TableHead>Trainers</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {societies.length === 0 ? (
-              <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No societies yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No societies yet</TableCell></TableRow>
             ) : societies.map((s) => {
               const count = trainerLinks.filter((l) => l.society_id === s.id).length;
+              const members = memberCounts[s.id] ?? 0;
               return (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell className="hidden md:table-cell">{s.address ?? "—"}</TableCell>
+                  <TableCell><Badge variant="secondary">{members}</Badge></TableCell>
                   <TableCell><Badge variant="secondary">{count}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" onClick={() => startEdit(s)}><Pencil className="h-4 w-4" /></Button>

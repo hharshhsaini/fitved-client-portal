@@ -57,31 +57,32 @@ export default function AdminDashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin-dashboard"],
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "client");
-      const ids = (roles ?? []).map((r) => r.user_id);
-
-      const [profilesRes, plansRes, pausesRes, billingRes, societiesRes, trainersRes, offRes, allPlansRes] = await Promise.all([
-        ids.length ? supabase.from("profiles").select("id, name, phone, society_id, trainer_id, time_slot").in("id", ids) : Promise.resolve({ data: [] as any[] }),
-        ids.length ? supabase.from("plans").select("id, user_id, amount, discount, status, start_date, end_date, auto_renew, renewal_date").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
-        ids.length ? supabase.from("pauses").select("user_id, from_date, to_date, status").in("user_id", ids) : Promise.resolve({ data: [] as any[] }),
+      // Everything in ONE parallel round trip — the tables are small, so it's
+      // cheaper to fetch them whole and filter by role client-side than to pay
+      // a serial roles-then-data waterfall (each round trip is a full RTT).
+      const [rolesRes, profilesRes, allPlansRes, pausesRes, billingRes, societiesRes, trainersRes, offRes] = await Promise.all([
+        supabase.from("user_roles").select("user_id").eq("role", "client"),
+        supabase.from("profiles").select("id, name, phone, society_id, trainer_id, time_slot"),
+        // ALL plans (incl. completed) — used both for the client widgets and
+        // for income proration, so fetch once with the union of columns
+        (supabase as any).from("plans").select("id, user_id, amount, discount, status, start_date, end_date, auto_renew, renewal_date"),
+        supabase.from("pauses").select("user_id, from_date, to_date, status"),
         // Fetch all billing with plan_id for proration (type marks refunds)
         (supabase as any).from("billing_history").select("amount, payment_date, plan_id, type"),
         supabase.from("societies").select("id, name"),
         supabase.from("trainers").select("id, name"),
         (supabase as any).from("trainer_off_times").select("id, trainer_id, from_date, to_date, time_slot, reason").gte("to_date", todayISO).order("from_date"),
-        // ALL plans (incl. completed) for income proration — income belongs to the plan period not just active ones
-        (supabase as any).from("plans").select("id, start_date, end_date, amount, discount"),
       ]);
 
-      const profiles = (profilesRes.data ?? []) as any[];
-      const plans = (plansRes.data ?? []) as any[];
-      const pauses = (pausesRes.data ?? []) as any[];
+      const clientIds = new Set(((rolesRes.data ?? []) as any[]).map((r) => r.user_id));
+      const profiles = ((profilesRes.data ?? []) as any[]).filter((p) => clientIds.has(p.id));
+      const allPlansForIncome = (allPlansRes.data ?? []) as any[];
+      const plans = allPlansForIncome.filter((p) => clientIds.has(p.user_id));
+      const pauses = ((pausesRes.data ?? []) as any[]).filter((p) => clientIds.has(p.user_id));
       const billing = (billingRes.data ?? []) as any[];
       const societies = (societiesRes.data ?? []) as any[];
       const trainers = (trainersRes.data ?? []) as any[];
       const offRaw = (offRes.data ?? []) as any[];
-      // All plans (for income proration lookup)
-      const allPlansForIncome = (allPlansRes.data ?? []) as { id: string; start_date: string; end_date: string; amount: number; discount: number }[];
 
       const socName = new Map(societies.map((s) => [s.id, s.name]));
       const trName = new Map(trainers.map((t) => [t.id, t.name]));
@@ -443,11 +444,11 @@ export default function AdminDashboard() {
               <div className="min-w-0">
                 <p className="font-medium text-sm truncate">{r.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {r.society} · {inr(r.amount)} · ended {format(parseISO(r.endDate), "d MMM")}
+                  {r.society} · {inr(r.amount)} · {ago >= 0 ? "ended" : "was to end"} {format(parseISO(r.endDate), "d MMM")}
                 </p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                <Badge variant="destructive" className="whitespace-nowrap">{ago}d ago</Badge>
+                <Badge variant="destructive" className="whitespace-nowrap">{ago >= 0 ? `${ago}d ago` : "ended early"}</Badge>
                 {links && <ContactButtons links={links} />}
               </div>
             </button>

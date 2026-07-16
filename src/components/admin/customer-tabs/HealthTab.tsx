@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,9 +26,14 @@ export function HealthTab({ userId }: { userId: string }) {
 
   const upload = useMutation({
     mutationFn: async () => {
-      if (!file) throw new Error("Select a PDF");
+      if (!file) throw new Error("Select a PDF or HTML report");
       const path = `${userId}/${Date.now()}-${file.name}`;
-      const { error: upErr } = await supabase.storage.from("health-reports").upload(path, file);
+      // Explicit content type so the browser renders (not downloads) the file
+      // when the customer views it — HTML reports open right in the app.
+      const contentType =
+        file.type || (/\.html?$/i.test(file.name) ? "text/html" : "application/pdf");
+      const { error: upErr } = await supabase.storage
+        .from("health-reports").upload(path, file, { contentType });
       if (upErr) throw upErr;
       const { error } = await supabase.from("health_reports").insert({
         client_id: userId, title, report_date: date, file_path: path,
@@ -43,32 +48,19 @@ export function HealthTab({ userId }: { userId: string }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Upload failed"),
   });
 
-  // Auto-delete reports older than 30 days from database and storage
-  useEffect(() => {
-    const cleanup = async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { data } = await supabase
-        .from("health_reports")
-        .select("*")
-        .lt("report_date", thirtyDaysAgo.toISOString());
-
-      if (data && data.length > 0) {
-        for (const r of data) {
-          if (r.file_path) {
-            await supabase.storage.from("health-reports").remove([r.file_path]);
-          }
-          await supabase.from("health_reports").delete().eq("id", r.id);
-        }
-        qc.invalidateQueries({ queryKey: ["customer-reports", userId] });
-      }
-    };
-    cleanup();
-  }, [userId, qc]);
 
   const view = async (path: string) => {
     const { data, error } = await supabase.storage.from("health-reports").createSignedUrl(path, 60);
     if (error || !data) { toast.error("Could not open"); return; }
+    // Storage serves HTML as text/plain (anti-XSS) — re-wrap it in a blob so
+    // the browser actually renders the report instead of showing source code.
+    if (/\.html?$/i.test(path)) {
+      try {
+        const html = await (await fetch(data.signedUrl)).text();
+        window.open(URL.createObjectURL(new Blob([html], { type: "text/html" })), "_blank");
+        return;
+      } catch { /* fall through to raw URL */ }
+    }
     window.open(data.signedUrl, "_blank");
   };
 
@@ -98,13 +90,16 @@ export function HealthTab({ userId }: { userId: string }) {
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>PDF file</Label>
-            <Input type="file" accept="application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <Label>Report file (PDF or HTML)</Label>
+            <Input type="file" accept="application/pdf,text/html,.pdf,.html,.htm" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </div>
         </div>
         <Button onClick={() => upload.mutate()} disabled={!title || !file || upload.isPending}>
           {upload.isPending ? "Uploading…" : "Upload"}
         </Button>
+        <p className="text-xs text-muted-foreground">
+          HTML reports open directly in the customer's browser. Reports are kept until you delete them.
+        </p>
       </div>
 
       <div className="space-y-2">

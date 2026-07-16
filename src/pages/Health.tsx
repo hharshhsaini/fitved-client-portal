@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, FileHeart, Lightbulb, ClipboardList, ArrowRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Download, FileHeart, Lightbulb, ClipboardList, ArrowRight, Eye, Info } from "lucide-react";
 import { formatDate } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +51,10 @@ const DAILY_TIPS = [
 export default function Health() {
   const { user } = useAuth();
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+  // In-app report viewer. PDFs render from the signed URL; HTML reports are
+  // fetched and rendered via iframe srcDoc, because Supabase storage serves
+  // HTML as text/plain (anti-XSS), which would otherwise show raw source.
+  const [viewer, setViewer] = useState<{ url: string; html?: string; title: string } | null>(null);
 
   // Query to get the daily wellness tip (either cached, generated from Gemini, or fallback)
   const { data: tip = "" } = useQuery({
@@ -124,13 +130,37 @@ export default function Health() {
   const handleDownload = async (filePath: string | null) => {
     if (!filePath) { toast.error("No file attached to this report"); return; }
     const { data, error } = await supabase.storage
-      .from("health-reports").createSignedUrl(filePath, 60);
+      .from("health-reports").createSignedUrl(filePath, 60, { download: true });
     if (error || !data) { toast.error("Could not generate download link"); return; }
     window.open(data.signedUrl, "_blank");
   };
 
+  // Open the report inside the app — HTML reports render directly in the
+  // browser, PDFs use the browser's built-in viewer. No download needed.
+  const handleView = async (filePath: string | null, title: string) => {
+    if (!filePath) { toast.error("No file attached to this report"); return; }
+    const { data, error } = await supabase.storage
+      .from("health-reports").createSignedUrl(filePath, 600);
+    if (error || !data) { toast.error("Could not open the report"); return; }
+    if (/\.html?$/i.test(filePath)) {
+      try {
+        const html = await (await fetch(data.signedUrl)).text();
+        setViewer({ url: data.signedUrl, html, title });
+        return;
+      } catch { /* fall back to direct URL below */ }
+    }
+    setViewer({ url: data.signedUrl, title });
+  };
+
   const latest = reports[0];
   const past   = reports.slice(1);
+
+  const retentionNote = (
+    <p className="flex items-start gap-1.5" style={{ fontSize: 12, color: MUTED, lineHeight: 1.45 }}>
+      <Info size={13} style={{ marginTop: 2, flexShrink: 0 }} />
+      Your reports stay saved here — download a copy anytime for your own records.
+    </p>
+  );
 
   return (
     <>
@@ -198,13 +228,24 @@ export default function Health() {
                 New
               </span>
             </div>
-            <button
-              onClick={() => handleDownload(latest.file_path)}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl border-none cursor-pointer"
-              style={{ background: NAVY, padding: "13px", fontSize: 14, fontWeight: 700, color: "#fff" }}
-            >
-              <Download size={16} color="#fff" /> Download PDF
-            </button>
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => handleView(latest.file_path, latest.title)}
+                className="flex-1 flex items-center justify-center gap-2 rounded-2xl border-none cursor-pointer"
+                style={{ background: NAVY, padding: "13px", fontSize: 14, fontWeight: 700, color: "#fff" }}
+              >
+                <Eye size={16} color="#fff" /> View report
+              </button>
+              <button
+                onClick={() => handleDownload(latest.file_path)}
+                className="flex items-center justify-center rounded-2xl cursor-pointer"
+                style={{ width: 48, background: "#f4f2ee", border: `1px solid ${BORDER}` }}
+                title="Download a copy"
+              >
+                <Download size={16} color={NAVY} />
+              </button>
+            </div>
+            <div className="mt-3">{retentionNote}</div>
           </div>
         ) : (
           <div className="mx-4 mb-3.5 rounded-[20px] p-8 text-center"
@@ -226,13 +267,24 @@ export default function Health() {
                   <p className="font-semibold" style={{ fontSize: 14, color: NAVY }}>{r.title}</p>
                   <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{formatDate(r.report_date)}</p>
                 </div>
-                <button
-                  onClick={() => handleDownload(r.file_path)}
-                  className="flex items-center justify-center rounded-xl border-none cursor-pointer"
-                  style={{ width: 32, height: 32, background: "#f4f2ee" }}
-                >
-                  <Download size={14} color={MUTED} />
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => handleView(r.file_path, r.title)}
+                    className="flex items-center justify-center rounded-xl border-none cursor-pointer"
+                    style={{ width: 32, height: 32, background: "#f4f2ee" }}
+                    title="View in browser"
+                  >
+                    <Eye size={14} color={NAVY} />
+                  </button>
+                  <button
+                    onClick={() => handleDownload(r.file_path)}
+                    className="flex items-center justify-center rounded-xl border-none cursor-pointer"
+                    style={{ width: 32, height: 32, background: "#f4f2ee" }}
+                    title="Download a copy"
+                  >
+                    <Download size={14} color={MUTED} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -285,10 +337,16 @@ export default function Health() {
                   <p className="mt-1 text-sm text-muted-foreground">Updated {formatDate(latest.report_date)}</p>
                 </div>
               </div>
-              <Button onClick={() => handleDownload(latest.file_path)} className="h-11">
-                <Download className="mr-2 h-4 w-4" /> Download Latest Report (PDF)
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => handleView(latest.file_path, latest.title)} className="h-11">
+                  <Eye className="mr-2 h-4 w-4" /> View report
+                </Button>
+                <Button variant="outline" onClick={() => handleDownload(latest.file_path)} className="h-11">
+                  <Download className="mr-2 h-4 w-4" /> Download
+                </Button>
+              </div>
             </div>
+            <div className="mt-4">{retentionNote}</div>
           </Card>
         ) : (
           <Card className="p-8 rounded-2xl shadow-card text-center">
@@ -306,15 +364,54 @@ export default function Health() {
                     <p className="font-medium">{r.title}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(r.report_date)}</p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => handleDownload(r.file_path)}>
-                    <Download className="mr-2 h-4 w-4" /> Download
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleView(r.file_path, r.title)}>
+                      <Eye className="mr-2 h-4 w-4" /> View
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDownload(r.file_path)}>
+                      <Download className="mr-2 h-4 w-4" /> Download
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
           </Card>
         )}
       </div>
+
+      {/* ── In-app report viewer ───────────────────────────────────── */}
+      <Dialog open={!!viewer} onOpenChange={(v) => !v && setViewer(null)}>
+        <DialogContent className="max-w-4xl w-[95vw] p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="pr-8 truncate">{viewer?.title}</DialogTitle>
+          </DialogHeader>
+          {viewer && (
+            <iframe
+              {...(viewer.html ? { srcDoc: viewer.html } : { src: viewer.url })}
+              title={viewer.title}
+              className="w-full rounded-lg border bg-white"
+              style={{ height: "75vh" }}
+            />
+          )}
+          <p className="text-xs text-muted-foreground">
+            Preview not loading?{" "}
+            <button
+              className="underline"
+              onClick={() => {
+                if (!viewer) return;
+                // HTML must open as a blob — the raw storage URL serves plain text
+                if (viewer.html) {
+                  window.open(URL.createObjectURL(new Blob([viewer.html], { type: "text/html" })), "_blank");
+                } else {
+                  window.open(viewer.url, "_blank");
+                }
+              }}
+            >
+              Open in a new tab
+            </button>
+          </p>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

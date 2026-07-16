@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/dates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell, BadgeCheck, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
 
 interface Trainer {
@@ -25,6 +25,7 @@ interface Trainer {
   contact: string | null;
   specialization: string | null;
   active: boolean;
+  email: string | null;
 }
 
 interface OffTimeRow {
@@ -116,6 +117,9 @@ export default function Trainers() {
       return data as Trainer[];
     },
   });
+
+  // Self-signed-up trainers awaiting admin approval (active === false).
+  const pendingTrainers = useMemo(() => trainers.filter((t) => !t.active), [trainers]);
 
   // ALL upcoming off-times — used for coverage widget + off-time dialog
   const { data: allOffTimes = [] } = useQuery({
@@ -458,6 +462,19 @@ export default function Trainers() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
+  // Approve a self-signed-up trainer (active=false → true), unlocking their app.
+  const approve = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("trainers").update({ active: true }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Trainer verified — they now have full access.");
+      qc.invalidateQueries({ queryKey: ["trainers"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Approve failed"),
+  });
+
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("trainers").delete().eq("id", id);
@@ -634,6 +651,44 @@ export default function Trainers() {
         </div>
         <Button onClick={startNew} className="gap-2"><Plus className="h-4 w-4" /> Add trainer</Button>
       </header>
+
+      {/* ── Pending verification ─────────────────────────────────────────── */}
+      {pendingTrainers.length > 0 && (
+        <Card className="rounded-2xl overflow-hidden border-2" style={{ borderColor: "rgba(240,167,32,0.5)", background: "rgba(240,167,32,0.05)" }}>
+          <div className="flex items-center gap-2.5 px-5 pt-4 pb-1">
+            <span className="grid h-8 w-8 place-items-center rounded-lg" style={{ background: "rgba(240,167,32,0.18)" }}>
+              <AlertTriangle className="h-4 w-4" style={{ color: "#b07d10" }} />
+            </span>
+            <div>
+              <h2 className="font-display text-lg leading-tight">Pending verification</h2>
+              <p className="text-xs text-muted-foreground">New trainers who signed up and are waiting for your approval.</p>
+            </div>
+            <Badge variant="secondary" className="ml-auto">{pendingTrainers.length}</Badge>
+          </div>
+          <div className="p-3 sm:p-4 space-y-2.5">
+            {pendingTrainers.map((t) => (
+              <div key={t.id} className="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{t.name}</p>
+                  <div className="mt-0.5 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 truncate"><Mail className="h-3 w-3 shrink-0" />{t.email ?? "—"}</span>
+                    <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3 shrink-0" />{t.contact ?? "not provided yet"}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button size="sm" className="gap-1.5" disabled={approve.isPending} onClick={() => approve.mutate(t.id)}>
+                    <BadgeCheck className="h-4 w-4" /> Approve
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-destructive" title="Reject & delete"
+                    onClick={() => { if (confirm(`Reject and delete ${t.name}'s request?`)) remove.mutate(t.id); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <Card className="rounded-2xl shadow-card overflow-hidden">
         <Table>
