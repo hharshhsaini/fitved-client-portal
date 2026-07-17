@@ -185,6 +185,9 @@ export function trainerMonthActivity(
     const weekday = WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()];
     const taught = new Set<string>();
     const blockedByOff = new Set<string>();
+    const presentIds: string[] = [];
+    const absentIds: string[] = [];
+    const offIds: string[] = [];
     for (const c of clients) {
       const plans = plansByUser.get(c.id) ?? [];
       const scheduledToday = plans.some(
@@ -194,13 +197,21 @@ export function trainerMonthActivity(
       const paused = (pausesByClient.get(c.id) ?? []).some(
         (p) => iso >= p.from_date && iso <= p.to_date,
       );
-      if (paused) continue;
+      if (paused) {
+        absentIds.push(c.id);
+        continue;
+      }
       const batchKey = `${c.society_id ?? "?"}|${c.time_slot ?? "?"}`;
       const trainerOff = offs.some(
         (o) => iso >= o.from_date && iso <= o.to_date && offTimeAffectsSlot(o.time_slot, c.time_slot),
       );
-      if (trainerOff) blockedByOff.add(batchKey);
-      else taught.add(batchKey);
+      if (trainerOff) {
+        blockedByOff.add(batchKey);
+        offIds.push(c.id);
+      } else {
+        taught.add(batchKey);
+        presentIds.push(c.id);
+      }
     }
     const future = iso > todayISO;
     out.push({
@@ -209,6 +220,9 @@ export function trainerMonthActivity(
       missedOff: blockedByOff.size,
       extra: future ? 0 : (extraByDay.get(iso)?.size ?? 0),
       upcoming: future ? taught.size : 0,
+      presentIds,
+      absentIds,
+      offIds,
     });
   }
   return out;

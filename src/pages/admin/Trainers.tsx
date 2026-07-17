@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { firebaseAuth } from "@/integrations/firebase/client";
+import { createUserWithEmailAndPassword, signOut as firebaseSignOut } from "firebase/auth";
 import { recalculatePlanDates } from "@/stores/pauseStore";
 import { trainerSessionsForMonth, recentMonthKeys, monthLabel } from "@/lib/trainerSessions";
 import { Card } from "@/components/ui/card";
@@ -75,7 +77,6 @@ export default function Trainers() {
   const [societyIds, setSocietyIds] = useState<string[]>([]);
   const [createLogin, setCreateLogin] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
   const [slotsBySociety, setSlotsBySociety] = useState<Record<string, string[]>>({});
   const [slotDraft, setSlotDraft] = useState<Record<string, { start: string; end: string }>>({});
 
@@ -120,6 +121,12 @@ export default function Trainers() {
 
   // Self-signed-up trainers awaiting admin approval (active === false).
   const pendingTrainers = useMemo(() => trainers.filter((t) => !t.active), [trainers]);
+
+  // Trainers still holding a stored password = not yet moved to Firebase.
+  const trainersNotInFirebase = useMemo(
+    () => trainers.filter((t) => { const pw = (t as { password?: string }).password; return !!pw && pw.length >= 6; }).length,
+    [trainers],
+  );
 
   // ALL upcoming off-times — used for coverage widget + off-time dialog
   const { data: allOffTimes = [] } = useQuery({
@@ -337,7 +344,7 @@ export default function Trainers() {
   const startNew = () => {
     setEditing(null); setName(""); setContact(""); setSpecialization("");
     setActive(true); setSocietyIds([]); setCreateLogin(false);
-    setLoginEmail(""); setLoginPassword("");
+    setLoginEmail("");
     setSlotsBySociety({}); setSlotDraft({});
     setOpen(true);
   };
@@ -347,7 +354,7 @@ export default function Trainers() {
     setName(t.name); setContact(t.contact ?? ""); setSpecialization(t.specialization ?? "");
     setActive(t.active);
     setSocietyIds(links.filter((l) => l.trainer_id === t.id).map((l) => l.society_id));
-    setCreateLogin(false); setLoginEmail(""); setLoginPassword("");
+    setCreateLogin(false); setLoginEmail("");
     const seeded: Record<string, string[]> = {};
     for (const s of allSlots.filter((s) => s.trainer_id === t.id)) {
       (seeded[s.society_id] ??= []).push(s.time_slot);
@@ -394,7 +401,7 @@ export default function Trainers() {
       let userId = editing?.user_id ?? null;
 
       if (createLogin && !editing) {
-        if (!loginEmail || loginPassword.length < 6) throw new Error("Email and password (6+ chars) required");
+        if (!loginEmail) throw new Error("Email required to create a login account");
 
         const { data: existing } = await supabase
           .from("trainers").select("id").eq("email", loginEmail).maybeSingle();
@@ -404,7 +411,9 @@ export default function Trainers() {
         const { data: created, error } = await supabase.from("trainers").insert({
           user_id: newUserId,
           name, contact: contact || null, specialization: specialization || null, active,
-          email: loginEmail, password: loginPassword,
+          // No plaintext password stored in Supabase — the trainer sets their
+          // own password in Firebase on first sign-in (or uses Google).
+          email: loginEmail, password: "",
         } as any).select("id").single();
         if (error) throw error;
 
@@ -462,6 +471,66 @@ export default function Trainers() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
+  // One-click onboarding of existing trainers into Firebase Auth. Runs
+  // entirely client-side: the admin's app session lives in localStorage (not
+  // Firebase), so temporarily creating trainer credentials here never logs the
+  // admin out. Trainers that still have a stored password are created in
+  // Firebase with it (so their password keeps working); that plaintext copy is
+  // then wiped from Supabase. Trainers with no stored password are left to set
+  // one on their own first login. Idempotent — already-onboarded ones are skipped.
+  const onboardFirebase = useMutation({
+    mutationFn: async () => {
+      const { data: rows } = await supabase
+        .from("trainers")
+        .select("id, name, email, password");
+      const list = (rows ?? []) as { id: string; name: string; email: string | null; password: string | null }[];
+
+      let created = 0, already = 0, deferred = 0, failed = 0;
+      for (const t of list) {
+        const email = (t.email ?? "").trim().toLowerCase();
+        if (!email) { deferred++; continue; }
+        if (!t.password || t.password.length < 6) {
+          // No usable password to migrate — they'll set one on first login.
+          deferred++;
+          continue;
+        }
+        try {
+          await createUserWithEmailAndPassword(firebaseAuth, email, t.password);
+          // Firebase is now the credential store → remove the plaintext copy.
+          await supabase.from("trainers").update({ password: "" }).eq("id", t.id);
+          created++;
+        } catch (e) {
+          const code = (e as { code?: string })?.code;
+          if (code === "auth/email-already-in-use") {
+            // Already in Firebase — just clear the leftover stored copy.
+            await supabase.from("trainers").update({ password: "" }).eq("id", t.id);
+            already++;
+          } else if (code === "auth/operation-not-allowed") {
+            throw new Error("Enable Email/Password in Firebase console → Authentication → Sign-in method first.");
+          } else {
+            console.warn(`Onboard failed for ${email}:`, e);
+            failed++;
+          }
+        }
+      }
+      // Drop the ephemeral Firebase session created during the loop; the admin's
+      // own app session (localStorage) is untouched.
+      await firebaseSignOut(firebaseAuth).catch(() => {});
+      return { created, already, deferred, failed };
+    },
+    onSuccess: ({ created, already, deferred, failed }) => {
+      qc.invalidateQueries({ queryKey: ["trainers"] });
+      const parts = [
+        created ? `${created} added to Firebase` : null,
+        already ? `${already} already there` : null,
+        deferred ? `${deferred} will onboard on first login` : null,
+        failed ? `${failed} failed` : null,
+      ].filter(Boolean).join(" · ");
+      toast.success(`Firebase sync done — ${parts || "nothing to do"}`);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Firebase sync failed"),
+  });
+
   // Approve a self-signed-up trainer (active=false → true), unlocking their app.
   const approve = useMutation({
     mutationFn: async (id: string) => {
@@ -477,12 +546,36 @@ export default function Trainers() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
+      // Look up the session key so we can also clear their role mapping.
+      const { data: t } = await supabase.from("trainers").select("user_id").eq("id", id).maybeSingle();
+
+      // Unlink any customers pointing at this trainer so they don't dangle.
+      await supabase.from("profiles").update({ trainer_id: null }).eq("trainer_id", id);
+
+      // Clean up all rows that reference this trainer (no DB cascade exists).
+      await Promise.all([
+        supabase.from("trainer_societies").delete().eq("trainer_id", id),
+        supabase.from("trainer_slots").delete().eq("trainer_id", id),
+        (supabase as any).from("trainer_off_times").delete().eq("trainer_id", id),
+        (supabase as any).from("comp_classes").delete().eq("trainer_id", id),
+        (supabase as any).from("trainer_session_adjustments").delete().eq("trainer_id", id),
+      ]);
+      if (t?.user_id) {
+        await supabase.from("user_roles").delete().eq("user_id", t.user_id);
+      }
+
       const { error } = await supabase.from("trainers").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Deleted");
+      // Note: their Firebase login (if any) is NOT removed — the client SDK
+      // can't delete other users. It's harmless: with no trainers row, sign-in
+      // is refused. To also purge the Firebase account, delete it in the
+      // Firebase console or deploy the onDelete Cloud Function (see README).
+      toast.success("Trainer and all their data deleted.");
       qc.invalidateQueries({ queryKey: ["trainers"] });
+      qc.invalidateQueries({ queryKey: ["trainer_societies"] });
+      qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
   });
@@ -651,6 +744,27 @@ export default function Trainers() {
         </div>
         <Button onClick={startNew} className="gap-2"><Plus className="h-4 w-4" /> Add trainer</Button>
       </header>
+
+      {/* One-click Firebase onboarding — offered while any trainer still has a
+          stored password (i.e. hasn't been moved to Firebase yet). */}
+      {trainersNotInFirebase > 0 && (
+        <Card className="rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3"
+          style={{ border: "1px solid rgba(30,58,95,0.15)", background: "rgba(30,58,95,0.03)" }}>
+          <div className="flex items-start gap-2.5 min-w-0">
+            <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{trainersNotInFirebase} trainer login(s)</span> aren't in
+              Firebase yet. Onboard them now (keeps their current password) — after this, passwords live only in Firebase.
+            </p>
+          </div>
+          <Button variant="outline" className="gap-2 shrink-0" disabled={onboardFirebase.isPending}
+            onClick={() => onboardFirebase.mutate()}>
+            {onboardFirebase.isPending
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Syncing…</>
+              : <><BadgeCheck className="h-4 w-4" /> Onboard to Firebase</>}
+          </Button>
+        </Card>
+      )}
 
       {/* ── Pending verification ─────────────────────────────────────────── */}
       {pendingTrainers.length > 0 && (
@@ -866,10 +980,11 @@ export default function Trainers() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>From date</Label>
+                  {/* Admin can backdate off-times (retroactive reconciliation) —
+                      only trainers are limited to today-onward in their own dashboard. */}
                   <Input
                     type="date"
                     value={offFromDate}
-                    min={today}
                     onChange={(e) => {
                       setOffFromDate(e.target.value);
                       if (!offToDate || e.target.value > offToDate) setOffToDate(e.target.value);
@@ -881,7 +996,7 @@ export default function Trainers() {
                   <Input
                     type="date"
                     value={offToDate}
-                    min={offFromDate || today}
+                    min={offFromDate || undefined}
                     onChange={(e) => setOffToDate(e.target.value)}
                   />
                 </div>
@@ -890,10 +1005,10 @@ export default function Trainers() {
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label>Date</Label>
+                  {/* Admin can backdate (no today floor) — see note above. */}
                   <Input
                     type="date"
                     value={offSingleDate}
-                    min={today}
                     onChange={(e) => setOffSingleDate(e.target.value)}
                   />
                 </div>
@@ -1200,11 +1315,10 @@ export default function Trainers() {
                     <div className="space-y-1.5">
                       <Label>Email</Label>
                       <Input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Temporary password (6+ chars)</Label>
-                      <Input type="text" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-                      <p className="text-xs text-muted-foreground">Share with trainer; they sign in via the Staff tab.</p>
+                      <p className="text-xs text-muted-foreground">
+                        No password needed here — the trainer opens the Staff tab and signs in with
+                        this email (their first password is set right then in Firebase), or uses Google.
+                      </p>
                     </div>
                   </div>
                 )}

@@ -352,6 +352,9 @@ export default function TrainerDashboard() {
     const n = new Date();
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
   });
+  // Day the trainer tapped — shows who was present / absent / off that day.
+  // Hoisted here (not inside ActivityCalendar) so it survives re-renders.
+  const [selectedActivityDay, setSelectedActivityDay] = useState<string | null>(null);
   const { data: activityRaw } = useQuery({
     queryKey: ["trainer-activity-data", trainer?.id, clientIdsKey],
     enabled: !!trainer && !clientsLoading,
@@ -597,9 +600,16 @@ export default function TrainerDashboard() {
     const shift = (delta: number) => {
       const d = new Date(yy, mm - 1 + delta, 1);
       setCalMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      setSelectedActivityDay(null);
     };
     const heldTotal = activityDays.reduce((s, d) => s + d.held + d.extra, 0);
     const missedTotal = activityDays.reduce((s, d) => s + d.missedOff, 0);
+    const absentTotal = activityDays.reduce((s, d) => s + d.absentIds.length, 0);
+    const nameOf = (id: string) => allClients.find((c) => c.id === id)?.name ?? "Client";
+    const selected = selectedActivityDay ? byDate.get(selectedActivityDay) : null;
+    const selectedLabel = selectedActivityDay
+      ? new Date(selectedActivityDay + "T12:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
+      : "";
     return (
       <div className="rounded-2xl p-4" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
         <div className="flex items-center justify-between mb-3">
@@ -630,41 +640,116 @@ export default function TrainerDashboard() {
             if (!iso) return <div key={`e${i}`} />;
             const a = byDate.get(iso);
             const isToday = iso === today;
+            const isSelected = iso === selectedActivityDay;
             const held = (a?.held ?? 0) > 0;
             const missed = (a?.missedOff ?? 0) > 0;
             const extra = (a?.extra ?? 0) > 0;
             const upcoming = (a?.upcoming ?? 0) > 0;
+            const absent = (a?.absentIds.length ?? 0) > 0;
             const bg = held ? GREEN_LIGHT : missed ? RED_LIGHT : upcoming ? "rgba(30,58,95,0.05)" : "transparent";
             const fg = held ? GREEN : missed ? RED : upcoming ? NAVY : MUTED;
             return (
-              <div key={iso}
+              <button key={iso}
+                type="button"
+                onClick={() => setSelectedActivityDay(isSelected ? null : iso)}
                 title={a ? [
                   held ? `${a.held} class(es) taken` : null,
                   missed ? `${a.missedOff} missed (off-day)` : null,
+                  absent ? `${a.absentIds.length} client(s) absent` : null,
                   extra ? `${a.extra} extra class(es)` : null,
                   upcoming ? `${a.upcoming} upcoming` : null,
                 ].filter(Boolean).join(" · ") || "No classes" : ""}
-                className="relative grid place-items-center rounded-lg"
+                className="relative grid place-items-center rounded-lg cursor-pointer"
                 style={{
                   height: 32, fontSize: 12, fontWeight: held || missed ? 700 : 500,
-                  background: bg, color: fg,
-                  border: isToday ? `1.5px solid ${NAVY}` : "1.5px solid transparent",
+                  background: bg, color: fg, padding: 0,
+                  border: isSelected ? `1.5px solid ${GOLD}` : isToday ? `1.5px solid ${NAVY}` : "1.5px solid transparent",
+                  boxShadow: isSelected ? "0 0 0 2px rgba(240,167,32,0.25)" : "none",
                 }}>
                 {Number(iso.slice(8, 10))}
                 {extra && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: GOLD, top: 3, right: 3 }} />}
+                {absent && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: "#f97316", bottom: 3, left: 3 }} />}
                 {held && missed && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: RED, bottom: 3, right: 3 }} />}
-              </div>
+              </button>
             );
           })}
         </div>
+
+        {/* Tap-a-day detail: who was there, who was absent, off-day info */}
+        {selected && (
+          <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(30,58,95,0.04)", border: `1px solid ${BORDER}` }}>
+            <div className="flex items-center justify-between">
+              <p style={{ fontSize: 12.5, fontWeight: 700, color: NAVY }}>{selectedLabel}</p>
+              <button onClick={() => setSelectedActivityDay(null)} aria-label="Close day details"
+                className="grid h-6 w-6 place-items-center rounded-md border-none cursor-pointer"
+                style={{ background: "rgba(30,58,95,0.06)" }}>
+                <X size={12} color={MUTED} />
+              </button>
+            </div>
+            {selected.presentIds.length === 0 && selected.absentIds.length === 0 && selected.offIds.length === 0 && selected.extra === 0 ? (
+              <p className="mt-1.5" style={{ fontSize: 12, color: MUTED }}>No classes scheduled this day.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {selected.offIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: RED, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      You were off — {selected.offIds.length} client(s) missed class
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.offIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: RED_LIGHT, color: RED, fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.presentIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: GREEN, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {selected.date > today ? "Scheduled" : "Attended"} ({selected.presentIds.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.presentIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: GREEN_LIGHT, color: GREEN, fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.absentIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: "#c2570a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Absent — on pause ({selected.absentIds.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.absentIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: "rgba(249,115,22,0.12)", color: "#c2570a", fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.extra > 0 && (
+                  <p style={{ fontSize: 11.5, color: "#a07010", fontWeight: 600 }}>
+                    ★ {selected.extra} extra (make-up) class(es) recorded this day
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3" style={{ fontSize: 10.5, color: MUTED }}>
           <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: GREEN_LIGHT, border: `1px solid ${GREEN}` }} /> Class taken</span>
           <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: RED_LIGHT, border: `1px solid ${RED}` }} /> Off-day missed</span>
           <span className="inline-flex items-center gap-1"><span className="rounded-full" style={{ width: 8, height: 8, background: GOLD }} /> Extra class</span>
+          <span className="inline-flex items-center gap-1"><span className="rounded-full" style={{ width: 8, height: 8, background: "#f97316" }} /> Client absent</span>
           <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: "rgba(30,58,95,0.08)" }} /> Upcoming</span>
         </div>
         <p className="mt-2" style={{ fontSize: 11.5, color: MUTED }}>
-          {heldTotal} class(es) taken{missedTotal > 0 ? ` · ${missedTotal} missed to off-days` : ""} in {monthLabel(calMonth)}
+          {heldTotal} class(es) taken{missedTotal > 0 ? ` · ${missedTotal} missed to off-days` : ""}{absentTotal > 0 ? ` · ${absentTotal} client absence(s)` : ""} in {monthLabel(calMonth)} — tap a day for details
         </p>
       </div>
     );
