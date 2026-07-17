@@ -12,6 +12,10 @@ export function isValidPhone(input: string): boolean {
   return p.length === 10;
 }
 
+export function isValidEmail(input: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((input || "").trim());
+}
+
 export function phoneToEmail(input: string): string {
   return `${normalizePhone(input)}@${PHONE_EMAIL_DOMAIN}`;
 }

@@ -13,5 +13,12 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // The app NEVER uses Supabase Auth sessions (custom localStorage auth +
+    // Firebase for credentials). Without this, a stray Supabase magic-link
+    // email could land with tokens in the URL hash and silently log the
+    // visitor in as a session-less "client" — which is exactly the bug where
+    // clicking the verification email skipped phone+DOB and showed the
+    // email username in the top bar.
+    detectSessionInUrl: false,
   }
 });

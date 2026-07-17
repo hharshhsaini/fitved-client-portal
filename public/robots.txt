@@ -1,14 +1,17 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
+# Fitved — allow crawling of public marketing pages, keep the logged-in app out of the index.
 User-agent: *
-Allow: /
+Allow: /$
+Allow: /corporate
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /trainer
+Disallow: /login
+Disallow: /signup
+Disallow: /reset-password
+Disallow: /pause
+Disallow: /plan
+Disallow: /health
+Disallow: /profile
+
+# Replace with your real domain if it isn't fitved.com
+Sitemap: https://www.fitved.com/sitemap.xml

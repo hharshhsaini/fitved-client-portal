@@ -26,7 +26,19 @@ import Corporate from "./pages/Corporate";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Cached-first data: pages render instantly from the last fetch while a
+// background refresh runs. Mutations still update immediately — every write
+// in the app calls invalidateQueries, which bypasses staleTime.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000, // reuse results for 30s instead of refetching on every mount
+      gcTime: 10 * 60_000, // keep unused page data cached for 10 min of navigation
+      refetchOnWindowFocus: false, // don't hammer the DB on every tab switch
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

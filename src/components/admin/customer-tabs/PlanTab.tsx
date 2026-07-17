@@ -199,6 +199,31 @@ export function PlanTab({ userId }: { userId: string }) {
         }
         return data[0];
       } else {
+        // A brand-new plan can't be "completed" while its end date is still in
+        // the future — that's a mis-set status dropdown, and it corrupts the
+        // Not-renewed queue on the dashboard.
+        const todayStr = new Date().toISOString().slice(0, 10);
+        if (status !== "active" && endDate > todayStr) {
+          throw new Error(
+            "This plan ends in the future — keep status Active, or use past dates to record an old plan.",
+          );
+        }
+        // Re-saving while the customer's latest plan isn't active used to
+        // insert a duplicate row on every click. Reuse the row for the same
+        // plan window instead.
+        const { data: dupe } = await supabase
+          .from("plans")
+          .select("id")
+          .eq("user_id", userId)
+          .eq("start_date", startDate)
+          .eq("total_sessions", totalSessions)
+          .limit(1)
+          .maybeSingle();
+        if (dupe?.id) {
+          const { data, error } = await supabase.from("plans").update(payload).eq("id", dupe.id).select();
+          if (error) throw error;
+          return data?.[0] ?? null;
+        }
         const { data, error } = await supabase.from("plans").insert(payload).select();
         if (error) throw error;
         return data?.[0] ?? null;

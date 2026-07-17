@@ -29,18 +29,19 @@ export default function Customers() {
   const { data: customers = [], isLoading, refetch } = useQuery({
     queryKey: ["admin-customer-list"],
     queryFn: async (): Promise<CustomerRow[]> => {
-      const { data: roles } = await supabase
-        .from("user_roles").select("user_id").eq("role", "client");
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (ids.length === 0) return [];
-
-      const [{ data: profiles }, { data: plans }, { data: trainers }, { data: societies }] = await Promise.all([
-        supabase.from("profiles").select("id, name, phone, society_id, trainer_id").in("id", ids),
-        supabase.from("plans").select("user_id, total_sessions, status, created_at").in("user_id", ids)
+      // One parallel round trip — roles are filtered client-side instead of
+      // paying a serial roles-then-data waterfall.
+      const [{ data: roles }, { data: allProfiles }, { data: plans }, { data: trainers }, { data: societies }] = await Promise.all([
+        supabase.from("user_roles").select("user_id").eq("role", "client"),
+        supabase.from("profiles").select("id, name, phone, society_id, trainer_id"),
+        supabase.from("plans").select("user_id, total_sessions, status, created_at")
           .order("created_at", { ascending: false }),
         supabase.from("trainers").select("id, name"),
         supabase.from("societies").select("id, name"),
       ]);
+
+      const clientIds = new Set((roles ?? []).map((r) => r.user_id));
+      const profiles = (allProfiles ?? []).filter((p) => clientIds.has(p.id));
 
       return (profiles ?? []).map((p) => {
         // Plans are newest-first, so the first match is the current cycle —

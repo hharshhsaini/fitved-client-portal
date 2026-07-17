@@ -105,7 +105,7 @@ export default function Landing() {
 
   // SEO meta
   useEffect(() => {
-    document.title = "Fitved | Society-Based Personal Training in Bangalore | Longevity Fitness";
+    document.title = "Yoga & Personal Trainers in Bangalore | At-Home Society Fitness — Fitved";
     const setMeta = (name: string, content: string) => {
       let el = document.querySelector(`meta[name="${name}"]`);
       if (!el) {
@@ -117,7 +117,7 @@ export default function Landing() {
     };
     setMeta(
       "description",
-      "Clinical-grade personal and group training at your doorstep. Serving 10+ Bangalore societies. Train for healthspan, not just aesthetics."
+      "Looking for yoga teachers or personal trainers near you in Bangalore? Fitved brings certified yoga instructors and fitness trainers to your society — 1-on-1 and small-group sessions at your doorstep. Book a free trial."
     );
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
@@ -384,7 +384,7 @@ function Hero() {
           </h1>
 
           <p className="mt-4 text-base md:text-lg text-white/75 max-w-lg leading-relaxed">
-            Fitness for the Busy Ones — Fitness at Your Doorstep
+            Certified yoga teachers &amp; personal trainers near you in Bangalore — fitness at your society's doorstep.
           </p>
 
           <div className="mt-5 flex flex-col sm:flex-row gap-3">

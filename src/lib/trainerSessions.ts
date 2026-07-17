@@ -138,6 +138,96 @@ export function trainerSessionsForMonth(
   };
 }
 
+/** Per-day activity for the calendar view: what happened (or will) each day. */
+export interface DayActivity {
+  date: string;       // "YYYY-MM-DD"
+  held: number;       // batch classes taken (past/today only)
+  missedOff: number;  // batch classes lost to the trainer's off-time
+  extra: number;      // make-up classes recorded that day
+  upcoming: number;   // batch classes scheduled after today
+  presentIds: string[]; // clients who attended (or will — for future days)
+  absentIds: string[];  // clients scheduled that day but paused (absent)
+  offIds: string[];     // clients whose class was lost to the trainer's off-time
+}
+
+export function trainerMonthActivity(
+  monthKey: string,
+  todayISO: string,
+  clients: TrainerClientRow[],
+  plansByUser: Map<string, PlanWindowRow[]>,
+  pauses: PauseRangeRow[],
+  offs: OffTimeRangeRow[],
+  comps: CompClassRow[],
+): DayActivity[] {
+  const [y, m] = [Number(monthKey.slice(0, 4)), Number(monthKey.slice(5, 7))];
+  const daysInMonth = new Date(y, m, 0).getDate();
+
+  const pausesByClient = new Map<string, PauseRangeRow[]>();
+  for (const p of pauses) {
+    const list = pausesByClient.get(p.client_id) ?? [];
+    list.push(p);
+    pausesByClient.set(p.client_id, list);
+  }
+  const clientById = new Map(clients.map((c) => [c.id, c]));
+  // Distinct (date|batch) extra classes, bucketed per day
+  const extraByDay = new Map<string, Set<string>>();
+  for (const cc of comps) {
+    if (!cc.class_date.startsWith(monthKey)) continue;
+    const c = clientById.get(cc.client_id);
+    const set = extraByDay.get(cc.class_date) ?? new Set<string>();
+    set.add(`${c?.society_id ?? "?"}|${c?.time_slot ?? "?"}`);
+    extraByDay.set(cc.class_date, set);
+  }
+
+  const out: DayActivity[] = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const iso = `${y}-${pad(m)}-${pad(d)}`;
+    const weekday = WEEKDAY_NAMES[new Date(y, m - 1, d).getDay()];
+    const taught = new Set<string>();
+    const blockedByOff = new Set<string>();
+    const presentIds: string[] = [];
+    const absentIds: string[] = [];
+    const offIds: string[] = [];
+    for (const c of clients) {
+      const plans = plansByUser.get(c.id) ?? [];
+      const scheduledToday = plans.some(
+        (p) => iso >= p.start_date && iso <= p.end_date && (p.training_days ?? []).includes(weekday),
+      );
+      if (!scheduledToday) continue;
+      const paused = (pausesByClient.get(c.id) ?? []).some(
+        (p) => iso >= p.from_date && iso <= p.to_date,
+      );
+      if (paused) {
+        absentIds.push(c.id);
+        continue;
+      }
+      const batchKey = `${c.society_id ?? "?"}|${c.time_slot ?? "?"}`;
+      const trainerOff = offs.some(
+        (o) => iso >= o.from_date && iso <= o.to_date && offTimeAffectsSlot(o.time_slot, c.time_slot),
+      );
+      if (trainerOff) {
+        blockedByOff.add(batchKey);
+        offIds.push(c.id);
+      } else {
+        taught.add(batchKey);
+        presentIds.push(c.id);
+      }
+    }
+    const future = iso > todayISO;
+    out.push({
+      date: iso,
+      held: future ? 0 : taught.size,
+      missedOff: blockedByOff.size,
+      extra: future ? 0 : (extraByDay.get(iso)?.size ?? 0),
+      upcoming: future ? taught.size : 0,
+      presentIds,
+      absentIds,
+      offIds,
+    });
+  }
+  return out;
+}
+
 /** "YYYY-MM" keys for the current month and the previous `count-1` months. */
 export function recentMonthKeys(count: number): string[] {
   const now = new Date();

@@ -28,3 +28,6 @@ dist-ssr
 .env.production
 .env.staging
 
+
+# Firebase Admin SDK service-account key (secret — never commit)
+scripts/firebase-service-account.json

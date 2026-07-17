@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -6,7 +6,10 @@ import {
   Building2, Users, Clock, ChevronRight, ArrowLeft,
   CalendarOff, Plus, Trash2, UserCircle2, MapPin, X,
   Phone as PhoneIcon, Eye, ShieldAlert, LogOut, Lock,
+  Loader2,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { TrainerPauses } from "@/components/dashboard/TrainerPauses";
 import { TrainerClientPauseModal } from "@/components/dashboard/TrainerClientPauseModal";
 import { MarketingFeed } from "@/components/dashboard/MarketingFeed";
@@ -20,8 +23,13 @@ import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { firebaseAuth } from "@/integrations/firebase/client";
+import {
+  onAuthStateChanged, linkWithCredential, EmailAuthProvider,
+  type User as FirebaseUser,
+} from "firebase/auth";
 import { recalculatePlanDates } from "@/stores/pauseStore";
-import { trainerSessionsForMonth } from "@/lib/trainerSessions";
+import { trainerSessionsForMonth, trainerMonthActivity, monthLabel, type DayActivity } from "@/lib/trainerSessions";
 import { toast } from "sonner";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -37,7 +45,7 @@ const RED_LIGHT   = "#fee2e2";
 const BG          = "#f4f2ee";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface TrainerRow { id: string; name: string; specialization: string | null; active: boolean; }
+interface TrainerRow { id: string; name: string; specialization: string | null; active: boolean; contact: string | null; email: string | null; }
 interface SocietyRow { id: string; name: string; address: string | null; }
 interface BatchRow   { time_slot: string | null; client_count: number; }
 interface ClientRow  { 
@@ -97,7 +105,7 @@ export default function TrainerDashboard() {
     queryKey: ["my-trainer", user?.id, viewAsId],
     enabled: !!user,
     queryFn: async () => {
-      const q = supabase.from("trainers").select("id, name, specialization, active");
+      const q = supabase.from("trainers").select("id, name, specialization, active, contact, email");
       const { data } = viewAsId
         ? await q.eq("id", viewAsId).maybeSingle()
         : await q.or(`user_id.eq.${user!.id},id.eq.${user!.id}`).maybeSingle();
@@ -212,6 +220,57 @@ export default function TrainerDashboard() {
   // It credits every customer in that society batch (optionally one slot) —
   // one off-day bonus consumed each. Admin manages/edits these from
   // Admin → Trainers → Off-Days.
+  // Firebase credential state — used to offer Google-only trainers a way to
+  // add a password without leaving the dashboard. onAuthStateChanged because
+  // Firebase restores its session asynchronously after a reload.
+  const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);
+  useEffect(() => onAuthStateChanged(firebaseAuth, setFbUser), []);
+  const [pwInput, setPwInput] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLinked, setPwLinked] = useState(false);
+
+  const savePassword = useMutation({
+    mutationFn: async () => {
+      if (pwInput.length < 6) throw new Error("Password must be at least 6 characters");
+      if (pwInput !== pwConfirm) throw new Error("Passwords don't match");
+      if (!fbUser?.email) throw new Error("Google session expired — sign in with Google again first");
+      await linkWithCredential(fbUser, EmailAuthProvider.credential(fbUser.email, pwInput));
+    },
+    onSuccess: () => {
+      setPwLinked(true);
+      setPwInput(""); setPwConfirm("");
+      toast.success("Password saved — you can now sign in with email + password too.");
+    },
+    onError: (e) => {
+      const code = (e as { code?: string })?.code;
+      if (code === "auth/provider-already-linked") { setPwLinked(true); return; }
+      if (code === "auth/requires-recent-login") {
+        toast.error("For security, sign out and sign in with Google again, then set your password.");
+        return;
+      }
+      toast.error(e instanceof Error ? e.message : "Could not save password");
+    },
+  });
+
+  // Profile-completion: collect a phone number when the trainer record has none
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneSaved, setPhoneSaved] = useState(false); // deterministic modal close
+  const savePhone = useMutation({
+    mutationFn: async () => {
+      const digits = phoneInput.replace(/\D/g, "");
+      if (digits.length !== 10) throw new Error("Please enter a valid 10-digit mobile number");
+      if (!trainer?.id) throw new Error("Trainer record not found");
+      const { error } = await supabase.from("trainers").update({ contact: digits }).eq("id", trainer.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Phone number saved");
+      setPhoneSaved(true); // close immediately; refetch keeps it closed
+      qc.invalidateQueries({ queryKey: ["my-trainer"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not save number"),
+  });
+
   const [mkDate, setMkDate] = useState("");
   const [mkSocietyId, setMkSocietyId] = useState("");
   const [mkSlot, setMkSlot] = useState("");
@@ -288,9 +347,60 @@ export default function TrainerDashboard() {
     },
   });
 
+  // ── Class activity calendar (taken / off / extra, any month) ─────────────
+  const [calMonth, setCalMonth] = useState(() => {
+    const n = new Date();
+    return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}`;
+  });
+  // Day the trainer tapped — shows who was present / absent / off that day.
+  // Hoisted here (not inside ActivityCalendar) so it survives re-renders.
+  const [selectedActivityDay, setSelectedActivityDay] = useState<string | null>(null);
+  const { data: activityRaw } = useQuery({
+    queryKey: ["trainer-activity-data", trainer?.id, clientIdsKey],
+    enabled: !!trainer && !clientsLoading,
+    queryFn: async () => {
+      const ids = allClients.map((c) => c.id);
+      const [plansRes, pausesRes, offsRes, compsRes] = await Promise.all([
+        ids.length
+          ? supabase.from("plans").select("user_id, start_date, end_date, training_days").in("user_id", ids)
+          : Promise.resolve({ data: [] as any[] }),
+        ids.length
+          ? (supabase.from("pauses") as any).select("client_id, from_date, to_date").in("client_id", ids)
+          : Promise.resolve({ data: [] as any[] }),
+        (supabase as any).from("trainer_off_times").select("from_date, to_date, time_slot").eq("trainer_id", trainer!.id),
+        (supabase as any).from("comp_classes").select("client_id, class_date").eq("trainer_id", trainer!.id),
+      ]);
+      return {
+        plans: (plansRes.data ?? []) as { user_id: string; start_date: string; end_date: string; training_days: string[] | null }[],
+        pauses: (pausesRes.data ?? []) as { client_id: string; from_date: string; to_date: string }[],
+        offs: (offsRes.data ?? []) as { from_date: string; to_date: string; time_slot: string | null }[],
+        comps: (compsRes.data ?? []) as { client_id: string; class_date: string }[],
+      };
+    },
+  });
+  const activityDays = useMemo<DayActivity[]>(() => {
+    if (!activityRaw) return [];
+    const plansByUser = new Map<string, typeof activityRaw.plans>();
+    for (const p of activityRaw.plans) {
+      const list = plansByUser.get(p.user_id) ?? [];
+      list.push(p);
+      plansByUser.set(p.user_id, list);
+    }
+    return trainerMonthActivity(
+      calMonth,
+      today,
+      allClients.map((c) => ({ id: c.id, society_id: c.society_id, time_slot: c.time_slot })),
+      plansByUser,
+      activityRaw.pauses,
+      activityRaw.offs,
+      activityRaw.comps,
+    );
+  }, [activityRaw, calMonth, allClients, today]);
+
   const addMakeup = useMutation({
     mutationFn: async () => {
       if (!trainer) throw new Error("Trainer not found");
+      if (!trainer.active && !isViewAs) throw new Error("Recording classes unlocks after an admin verifies your account.");
       if (!mkDate) throw new Error("Pick the class date");
       if (mkDate < today) throw new Error("Extra classes can't be recorded for a past date");
       if (!mkSocietyId) throw new Error("Pick the society");
@@ -323,6 +433,7 @@ export default function TrainerDashboard() {
   const addOff = useMutation({
     mutationFn: async () => {
       if (!trainer) throw new Error("Trainer not found");
+      if (!trainer.active && !isViewAs) throw new Error("Off-time scheduling unlocks after an admin verifies your account.");
       const localDate = (d: Date) =>
         `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
@@ -446,31 +557,15 @@ export default function TrainerDashboard() {
     );
   }
 
-  if (!trainer.active && !isViewAs) {
-    return (
-      <div className="min-h-[60vh] grid place-items-center px-6">
-        <div className="max-w-sm w-full rounded-3xl bg-white p-8 text-center"
-          style={{ border: `1px solid ${BORDER}`, boxShadow: "0 4px 16px rgba(30,58,95,0.07)" }}>
-          <div className="mx-auto mb-4 grid place-items-center rounded-full"
-            style={{ width: 64, height: 64, background: RED_LIGHT }}>
-            <ShieldAlert size={28} color={RED} />
-          </div>
-          <p className="font-display" style={{ fontSize: 20, fontWeight: 600, color: NAVY }}>
-            Account inactive
-          </p>
-          <p style={{ fontSize: 13, color: MUTED, marginTop: 8, lineHeight: 1.6 }}>
-            Your trainer account has been deactivated. If you believe this is a mistake, please contact your admin.
-          </p>
-          <button
-            onClick={() => signOut()}
-            className="mt-6 w-full rounded-2xl border-none cursor-pointer inline-flex items-center justify-center gap-2"
-            style={{ background: NAVY, padding: "12px", fontSize: 14, fontWeight: 700, color: "#fff" }}>
-            <LogOut size={15} /> Sign out
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Verification + profile-completion gating (real trainer, not admin view-as)
+  const isPending = !trainer.active && !isViewAs;
+  const needsPhone = !isViewAs && !(trainer.contact && trainer.contact.trim());
+  // Google-only login for THIS trainer → offer to add a password in-app
+  const needsPassword =
+    !isViewAs && !pwLinked &&
+    !!fbUser?.email && !!trainer.email &&
+    fbUser.email.toLowerCase() === trainer.email.toLowerCase() &&
+    !fbUser.providerData.some((p) => p.providerId === "password");
 
   // ── Helpers ───────────────────────────────────────────────────────────────
   const hour      = new Date().getHours();
@@ -488,6 +583,177 @@ export default function TrainerDashboard() {
   // ─────────────────────────────────────────────────────────────────────────
   // Shared sub-components
   // ─────────────────────────────────────────────────────────────────────────
+
+  // Month calendar of class activity: green = class taken, red = missed to an
+  // off-day, gold dot = extra (make-up) class, outlined = upcoming scheduled.
+  // Admins see the same thing via "view as trainer".
+  const ActivityCalendar = () => {
+    const yy = Number(calMonth.slice(0, 4));
+    const mm = Number(calMonth.slice(5, 7));
+    const firstDow = new Date(yy, mm - 1, 1).getDay(); // 0 = Sunday
+    const daysInMonth = new Date(yy, mm, 0).getDate();
+    const byDate = new Map(activityDays.map((d) => [d.date, d]));
+    const cells: (string | null)[] = [
+      ...Array(firstDow).fill(null),
+      ...Array.from({ length: daysInMonth }, (_, i) => `${calMonth}-${String(i + 1).padStart(2, "0")}`),
+    ];
+    const shift = (delta: number) => {
+      const d = new Date(yy, mm - 1 + delta, 1);
+      setCalMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+      setSelectedActivityDay(null);
+    };
+    const heldTotal = activityDays.reduce((s, d) => s + d.held + d.extra, 0);
+    const missedTotal = activityDays.reduce((s, d) => s + d.missedOff, 0);
+    const absentTotal = activityDays.reduce((s, d) => s + d.absentIds.length, 0);
+    const nameOf = (id: string) => allClients.find((c) => c.id === id)?.name ?? "Client";
+    const selected = selectedActivityDay ? byDate.get(selectedActivityDay) : null;
+    const selectedLabel = selectedActivityDay
+      ? new Date(selectedActivityDay + "T12:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })
+      : "";
+    return (
+      <div className="rounded-2xl p-4" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-semibold" style={{ fontSize: 14, color: NAVY }}>Class activity</p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => shift(-1)} aria-label="Previous month"
+              className="grid h-7 w-7 place-items-center rounded-lg border-none cursor-pointer"
+              style={{ background: "rgba(30,58,95,0.06)" }}>
+              <ArrowLeft size={13} color={NAVY} />
+            </button>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: NAVY, minWidth: 108, textAlign: "center" }}>
+              {monthLabel(calMonth)}
+            </span>
+            <button onClick={() => shift(1)} aria-label="Next month"
+              className="grid h-7 w-7 place-items-center rounded-lg border-none cursor-pointer"
+              style={{ background: "rgba(30,58,95,0.06)" }}>
+              <ChevronRight size={13} color={NAVY} />
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-1 mb-1">
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <div key={i} className="text-center" style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{d}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {cells.map((iso, i) => {
+            if (!iso) return <div key={`e${i}`} />;
+            const a = byDate.get(iso);
+            const isToday = iso === today;
+            const isSelected = iso === selectedActivityDay;
+            const held = (a?.held ?? 0) > 0;
+            const missed = (a?.missedOff ?? 0) > 0;
+            const extra = (a?.extra ?? 0) > 0;
+            const upcoming = (a?.upcoming ?? 0) > 0;
+            const absent = (a?.absentIds.length ?? 0) > 0;
+            const bg = held ? GREEN_LIGHT : missed ? RED_LIGHT : upcoming ? "rgba(30,58,95,0.05)" : "transparent";
+            const fg = held ? GREEN : missed ? RED : upcoming ? NAVY : MUTED;
+            return (
+              <button key={iso}
+                type="button"
+                onClick={() => setSelectedActivityDay(isSelected ? null : iso)}
+                title={a ? [
+                  held ? `${a.held} class(es) taken` : null,
+                  missed ? `${a.missedOff} missed (off-day)` : null,
+                  absent ? `${a.absentIds.length} client(s) absent` : null,
+                  extra ? `${a.extra} extra class(es)` : null,
+                  upcoming ? `${a.upcoming} upcoming` : null,
+                ].filter(Boolean).join(" · ") || "No classes" : ""}
+                className="relative grid place-items-center rounded-lg cursor-pointer"
+                style={{
+                  height: 32, fontSize: 12, fontWeight: held || missed ? 700 : 500,
+                  background: bg, color: fg, padding: 0,
+                  border: isSelected ? `1.5px solid ${GOLD}` : isToday ? `1.5px solid ${NAVY}` : "1.5px solid transparent",
+                  boxShadow: isSelected ? "0 0 0 2px rgba(240,167,32,0.25)" : "none",
+                }}>
+                {Number(iso.slice(8, 10))}
+                {extra && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: GOLD, top: 3, right: 3 }} />}
+                {absent && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: "#f97316", bottom: 3, left: 3 }} />}
+                {held && missed && <span className="absolute rounded-full" style={{ width: 5, height: 5, background: RED, bottom: 3, right: 3 }} />}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tap-a-day detail: who was there, who was absent, off-day info */}
+        {selected && (
+          <div className="mt-3 rounded-xl p-3" style={{ background: "rgba(30,58,95,0.04)", border: `1px solid ${BORDER}` }}>
+            <div className="flex items-center justify-between">
+              <p style={{ fontSize: 12.5, fontWeight: 700, color: NAVY }}>{selectedLabel}</p>
+              <button onClick={() => setSelectedActivityDay(null)} aria-label="Close day details"
+                className="grid h-6 w-6 place-items-center rounded-md border-none cursor-pointer"
+                style={{ background: "rgba(30,58,95,0.06)" }}>
+                <X size={12} color={MUTED} />
+              </button>
+            </div>
+            {selected.presentIds.length === 0 && selected.absentIds.length === 0 && selected.offIds.length === 0 && selected.extra === 0 ? (
+              <p className="mt-1.5" style={{ fontSize: 12, color: MUTED }}>No classes scheduled this day.</p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {selected.offIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: RED, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      You were off — {selected.offIds.length} client(s) missed class
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.offIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: RED_LIGHT, color: RED, fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.presentIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: GREEN, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      {selected.date > today ? "Scheduled" : "Attended"} ({selected.presentIds.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.presentIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: GREEN_LIGHT, color: GREEN, fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.absentIds.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: 10.5, fontWeight: 700, color: "#c2570a", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                      Absent — on pause ({selected.absentIds.length})
+                    </p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selected.absentIds.map((id) => (
+                        <span key={id} className="rounded-full px-2 py-0.5" style={{ background: "rgba(249,115,22,0.12)", color: "#c2570a", fontSize: 11, fontWeight: 600 }}>
+                          {nameOf(id)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selected.extra > 0 && (
+                  <p style={{ fontSize: 11.5, color: "#a07010", fontWeight: 600 }}>
+                    ★ {selected.extra} extra (make-up) class(es) recorded this day
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-3" style={{ fontSize: 10.5, color: MUTED }}>
+          <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: GREEN_LIGHT, border: `1px solid ${GREEN}` }} /> Class taken</span>
+          <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: RED_LIGHT, border: `1px solid ${RED}` }} /> Off-day missed</span>
+          <span className="inline-flex items-center gap-1"><span className="rounded-full" style={{ width: 8, height: 8, background: GOLD }} /> Extra class</span>
+          <span className="inline-flex items-center gap-1"><span className="rounded-full" style={{ width: 8, height: 8, background: "#f97316" }} /> Client absent</span>
+          <span className="inline-flex items-center gap-1"><span className="rounded" style={{ width: 10, height: 10, background: "rgba(30,58,95,0.08)" }} /> Upcoming</span>
+        </div>
+        <p className="mt-2" style={{ fontSize: 11.5, color: MUTED }}>
+          {heldTotal} class(es) taken{missedTotal > 0 ? ` · ${missedTotal} missed to off-days` : ""}{absentTotal > 0 ? ` · ${absentTotal} client absence(s)` : ""} in {monthLabel(calMonth)} — tap a day for details
+        </p>
+      </div>
+    );
+  };
 
   const SocietiesList = () => (
     <div>
@@ -536,12 +802,13 @@ export default function TrainerDashboard() {
                         ))
                       }
                     </div>
-                    {slotsForSociety(s.id).length > 0 && (
+                    {/* Only show admin-defined slots that aren't already listed as a batch above */}
+                    {slotsForSociety(s.id).filter((slot) => !batches.some((b) => b.time_slot === slot)).length > 0 && (
                       <div className="flex flex-wrap items-center gap-1.5 mt-1.5 ml-11">
                         <span style={{ fontSize: 10, color: MUTED, textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 700 }}>
                           Your slots
                         </span>
-                        {slotsForSociety(s.id).map((slot) => (
+                        {slotsForSociety(s.id).filter((slot) => !batches.some((b) => b.time_slot === slot)).map((slot) => (
                           <span key={slot}
                             className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
                             style={{ background: "rgba(30,58,95,0.07)", fontSize: 11, color: NAVY, fontWeight: 600 }}>
@@ -995,6 +1262,87 @@ export default function TrainerDashboard() {
         </div>
       )}
 
+      {/* Pending-verification banner */}
+      {isPending && (
+        <div className="flex items-start gap-3 px-4 sm:px-6 py-3"
+          style={{ background: "rgba(240,167,32,0.12)", borderBottom: "1px solid rgba(240,167,32,0.35)" }}>
+          <ShieldAlert size={18} color="#a07010" className="mt-0.5 shrink-0" />
+          <p style={{ fontSize: 13, color: "#8a5e0a", lineHeight: 1.5 }}>
+            <span style={{ fontWeight: 700 }}>Your account is pending admin verification.</span>{" "}
+            You can look around now — assigning clients and recording classes unlocks once an admin approves you.
+          </p>
+        </div>
+      )}
+
+      {/* Google-only trainers: set a password without leaving the dashboard */}
+      {needsPassword && (
+        <div className="mx-4 md:mx-6 mt-4 rounded-2xl border bg-white p-4"
+          style={{ borderColor: "rgba(30,58,95,0.25)", boxShadow: "0 2px 10px rgba(30,58,95,0.06)" }}>
+          <div className="flex items-start gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(30,58,95,0.08)" }}>
+              <Lock size={16} color={NAVY} />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold" style={{ color: NAVY }}>Set a password for your account</p>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                You signed in with Google. Add a password so you can also log in with {trainer.email} directly.
+              </p>
+              <form
+                onSubmit={(e) => { e.preventDefault(); savePassword.mutate(); }}
+                className="mt-2.5 flex flex-col sm:flex-row gap-2"
+              >
+                <Input type="password" autoComplete="new-password" placeholder="New password (6+ chars)"
+                  value={pwInput} onChange={(e) => setPwInput(e.target.value)} className="h-9 text-sm" />
+                <Input type="password" autoComplete="new-password" placeholder="Confirm password"
+                  value={pwConfirm} onChange={(e) => setPwConfirm(e.target.value)} className="h-9 text-sm" />
+                <Button type="submit" size="sm" className="h-9 shrink-0"
+                  disabled={savePassword.isPending || pwInput.length < 6 || pwInput !== pwConfirm}>
+                  {savePassword.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save password"}
+                </Button>
+              </form>
+              {pwInput && pwConfirm && pwInput !== pwConfirm && (
+                <p className="mt-1 text-xs" style={{ color: RED }}>Passwords don't match yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile completion: block the dashboard until a phone number is set */}
+      <Dialog open={needsPhone && !phoneSaved} onOpenChange={() => { /* required — can't dismiss */ }}>
+        <DialogContent className="sm:max-w-sm [&>button]:hidden" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <div className="mx-auto mb-1 grid place-items-center rounded-full" style={{ width: 52, height: 52, background: "rgba(30,58,95,0.08)" }}>
+              <PhoneIcon size={22} color={NAVY} />
+            </div>
+            <DialogTitle className="text-center">Complete your profile</DialogTitle>
+          </DialogHeader>
+          <p className="text-center text-sm text-muted-foreground">
+            Please enter your 10-digit mobile number so your clients and admin can reach you.
+          </p>
+          <form
+            onSubmit={(e) => { e.preventDefault(); savePhone.mutate(); }}
+            className="mt-2 space-y-3"
+          >
+            <Input
+              type="tel"
+              inputMode="numeric"
+              autoFocus
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              placeholder="10-digit mobile number"
+              className="text-center text-lg tracking-wide"
+            />
+            <Button type="submit" className="w-full h-11" disabled={savePhone.isPending || phoneInput.replace(/\D/g, "").length !== 10}>
+              {savePhone.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : "Save & continue"}
+            </Button>
+            <button type="button" onClick={() => signOut()} className="w-full text-xs text-muted-foreground hover:underline">
+              Sign out instead
+            </button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Mobile Layout ──────────────────────────────────────────── */}
       <div className="md:hidden" style={{ background: BG, minHeight: "100%" }}>
 
@@ -1067,6 +1415,9 @@ export default function TrainerDashboard() {
             : (
               <>
                 <SocietiesList />
+                <div className="mx-4 mt-4">
+                  <ActivityCalendar />
+                </div>
                 {!isViewAs && (
                   <div className="mx-4 mt-4">
                     <TrainerPauses />
@@ -1152,7 +1503,8 @@ export default function TrainerDashboard() {
                                   <Clock size={10} /> {b.time_slot} · {b.client_count}
                                 </span>
                               ))}
-                              {slotsForSociety(s.id).map((slot) => (
+                              {/* Skip admin-defined slots already shown as a batch chip */}
+                              {slotsForSociety(s.id).filter((slot) => !batches.some((b) => b.time_slot === slot)).map((slot) => (
                                 <span key={`def-${slot}`}
                                   className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs"
                                   style={{ background: "rgba(30,58,95,0.07)", color: NAVY, fontWeight: 600 }}>
@@ -1229,6 +1581,9 @@ export default function TrainerDashboard() {
                 )}
               </div>
             )}
+
+            {/* Class activity calendar — fills the space under the societies list */}
+            {!selectedSociety && <ActivityCalendar />}
           </div>
 
           {/* Off Time */}
