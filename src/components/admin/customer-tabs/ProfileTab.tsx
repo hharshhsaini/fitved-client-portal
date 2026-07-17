@@ -1,7 +1,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, AlertTriangle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ function parseSlot(slot: string): { start: string; end: string } {
 
 export function ProfileTab({ userId }: { userId: string }) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["customer-profile", userId],
@@ -179,6 +181,57 @@ export function ProfileTab({ userId }: { userId: string }) {
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Reset failed"),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      // 1. List and delete files in storage
+      try {
+        const { data: files } = await supabase.storage.from("health-reports").list(userId);
+        if (files && files.length > 0) {
+          const filePaths = files.map((f) => `${userId}/${f.name}`);
+          await supabase.storage.from("health-reports").remove(filePaths);
+        }
+      } catch (e) {
+        console.warn("Storage cleanup failed:", e);
+      }
+
+      // 2. Delete linked DB records
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+      await supabase.from("plans").delete().eq("user_id", userId);
+      await (supabase.from("pauses") as any).delete().eq("user_id", userId);
+      await (supabase.from("pauses") as any).delete().eq("client_id", userId);
+      await supabase.from("billing_history").delete().eq("user_id", userId);
+      await supabase.from("tasks").delete().eq("client_id", userId);
+      await supabase.from("health_reports").delete().eq("user_id", userId);
+
+      // 3. Delete profile
+      const { error } = await supabase.from("profiles").delete().eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Customer and all associated data deleted successfully");
+      qc.invalidateQueries({ queryKey: ["admin-customer-list"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
+      navigate("/admin/customers");
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Deletion failed");
+    },
+  });
+
+  const handleDelete = () => {
+    const confirm1 = window.confirm(
+      "Are you absolutely sure you want to delete this customer? This will permanently delete their profile, plans, pauses, tasks, health reports, and entire billing history. This action cannot be undone!"
+    );
+    if (!confirm1) return;
+
+    const confirm2 = window.confirm(
+      "This is your last warning! Click OK to permanently delete the customer."
+    );
+    if (!confirm2) return;
+
+    deleteMutation.mutate();
+  };
 
   const save = useMutation({
     mutationFn: async () => {
@@ -391,6 +444,23 @@ export function ProfileTab({ userId }: { userId: string }) {
             {resetDob.isPending ? "Resetting…" : "Reset"}
           </Button>
         </div>
+      </div>
+
+      <div className="border-t pt-5 mt-5 space-y-3 bg-red-500/[0.03] border-destructive/20 rounded-2xl p-4">
+        <h3 className="font-semibold text-destructive text-sm flex items-center gap-1.5">
+          <AlertTriangle className="h-4.5 w-4.5" /> Danger Zone
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Permanently delete this customer account, their active/paused plans, billing/payment history, health reports, and all other associated data.
+        </p>
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={handleDelete}
+          disabled={deleteMutation.isPending}
+        >
+          {deleteMutation.isPending ? "Deleting..." : "Delete Customer Account"}
+        </Button>
       </div>
     </div>
   );
