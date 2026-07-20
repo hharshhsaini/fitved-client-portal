@@ -52,6 +52,10 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Login />} />
+              {/* Firebase email-link lands on /__/auth/action — redirect to
+                  /signup so the existing isSignInWithEmailLink handler picks it up.
+                  Query params (apiKey, oobCode, mode, continueUrl) are preserved. */}
+              <Route path="/__/auth/action" element={<Navigate to={`/signup${window.location.search}`} replace />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 {/* Client pages — trainers are redirected to /trainer */}
