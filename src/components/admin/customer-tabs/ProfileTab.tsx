@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ClassCalendar } from "@/components/dashboard/ClassCalendar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,41 @@ export function ProfileTab({ userId }: { userId: string }) {
       return (data ?? []).map((r) => r.role as AppRole);
     },
   });
+
+  // ── Class-calendar data (the same view the customer sees) ──────────────
+  const { data: calPlan } = useQuery({
+    queryKey: ["customer-plan-cal", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("start_date, end_date, training_days, status")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data as { start_date: string; end_date: string; training_days: string[] | null; status: string } | null;
+    },
+  });
+  const { data: calPauses = [] } = useQuery({
+    queryKey: ["customer-pauses-cal", userId],
+    queryFn: async () => {
+      const { data } = await (supabase.from("pauses") as any)
+        .select("from_date, to_date").eq("client_id", userId);
+      return ((data ?? []) as { from_date: string; to_date: string }[]).map((p) => ({ from: p.from_date, to: p.to_date }));
+    },
+  });
+  const { data: calOffTimes = [] } = useQuery({
+    queryKey: ["customer-offtimes-cal", profile?.trainer_id],
+    enabled: !!profile?.trainer_id,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("trainer_off_times")
+        .select("from_date, to_date, time_slot, reason")
+        .eq("trainer_id", profile!.trainer_id!);
+      return (data ?? []) as { from_date: string; to_date: string; time_slot: string | null; reason: string | null }[];
+    },
+  });
+  const [calExpanded, setCalExpanded] = useState(true);
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -202,7 +238,7 @@ export function ProfileTab({ userId }: { userId: string }) {
       await (supabase.from("pauses") as any).delete().eq("client_id", userId);
       await supabase.from("billing_history").delete().eq("user_id", userId);
       await supabase.from("tasks").delete().eq("client_id", userId);
-      await supabase.from("health_reports").delete().eq("user_id", userId);
+      await supabase.from("health_reports").delete().eq("client_id", userId);
 
       // 3. Delete profile
       const { error } = await supabase.from("profiles").delete().eq("id", userId);
@@ -297,7 +333,8 @@ export function ProfileTab({ userId }: { userId: string }) {
   });
 
   return (
-    <div className="space-y-5 max-w-xl">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,34rem)_minmax(0,1fr)] items-start">
+      <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label>Name</Label>
@@ -461,6 +498,50 @@ export function ProfileTab({ userId }: { userId: string }) {
         >
           {deleteMutation.isPending ? "Deleting..." : "Delete Customer Account"}
         </Button>
+      </div>
+      </div>
+
+      {/* ── Class calendar (same view the customer sees) ─────────────────── */}
+      <div className="lg:pt-1">
+        <div className="mb-3">
+          <h3 className="font-display text-lg text-foreground">Class calendar</h3>
+          <p className="text-xs text-muted-foreground">Classes taken, upcoming, paused &amp; off-days — tap a day for details.</p>
+        </div>
+        {calPlan && (calPlan.training_days?.length ?? 0) > 0 ? (
+          <div className="space-y-3">
+            {(() => {
+              const todayISO = new Date().toISOString().slice(0, 10);
+              const ended = calPlan.status !== "active" || calPlan.end_date < todayISO;
+              if (!ended) return null;
+              return (
+                <div className="flex items-start gap-2 rounded-xl px-3 py-2.5"
+                  style={{ background: "rgba(210,59,52,0.08)", border: "1px solid rgba(210,59,52,0.3)" }}>
+                  <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#d23b34" }} />
+                  <p className="text-xs leading-relaxed" style={{ color: "#a02c26" }}>
+                    <span className="font-semibold">This customer's plan has ended</span> on{" "}
+                    {format(new Date(calPlan.end_date + "T12:00:00"), "d MMM yyyy")}. Their past classes are shown below,
+                    with the end date ringed in red.
+                  </p>
+                </div>
+              );
+            })()}
+            <ClassCalendar
+              startDate={calPlan.start_date}
+              endDate={calPlan.end_date}
+              trainingDays={calPlan.training_days ?? []}
+              pauses={calPauses}
+              offTimes={calOffTimes}
+              customerSlot={profile?.time_slot ?? null}
+              expanded={calExpanded}
+              onExpandedChange={setCalExpanded}
+              highlightDate={calPlan.end_date}
+            />
+          </div>
+        ) : (
+          <div className="rounded-2xl border p-6 text-sm text-muted-foreground text-center">
+            No plan yet — the calendar appears once this customer has had a plan with training days.
+          </div>
+        )}
       </div>
     </div>
   );
