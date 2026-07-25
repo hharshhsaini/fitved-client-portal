@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2, Gauge, Package, Megaphone } from "lucide-react";
+import { LayoutDashboard, CalendarOff, CreditCard, FileHeart, UserCircle2, Users, Dumbbell, Building2, Gauge, Package, Megaphone, Gift } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ const clientItems = [
 
 const trainerItems = [
   { title: "Dashboard", url: "/trainer", icon: LayoutDashboard },
+  { title: "Refer & Earn", url: "/trainer/referrals", icon: Gift },
   { title: "Profile", url: "/profile", icon: UserCircle2 },
 ];
 
@@ -43,6 +44,7 @@ export function AppSidebar() {
       { title: "Trainers", url: "/admin/trainers", icon: Dumbbell },
       { title: "Societies", url: "/admin/societies", icon: Building2 },
       { title: "Marketing", url: "/admin/marketing", icon: Megaphone },
+      { title: "Referrals", url: "/admin/referrals", icon: Gift },
       { title: "Profile", url: "/profile", icon: UserCircle2 },
     ];
   }

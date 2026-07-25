@@ -26,6 +26,7 @@ interface Props {
   customerSlot: string | null;
   expanded: boolean;
   onExpandedChange: (v: boolean) => void;
+  highlightDate?: string; // optional — rings a specific day (e.g. plan end date)
 }
 
 type DayState = "attended" | "upcoming" | "paused" | "off" | "rest" | "outside";
@@ -48,7 +49,7 @@ export { offTimeAffectsSlot } from "@/lib/sessionPlan";
 
 interface Cell { d: number; date: string; dow: number; state: DayState; isToday: boolean }
 
-export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTimes, customerSlot, expanded, onExpandedChange }: Props) {
+export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTimes, customerSlot, expanded, onExpandedChange, highlightDate }: Props) {
   const today = todayLocalISO();
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -186,7 +187,13 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
       box.background = "transparent"; box.border = "none";
       content = <span style={{ color: cell.state === "outside" ? "#d8dade" : FAINT }}>{cell.d}</span>;
     }
-    if (cell.isToday) box.boxShadow = `0 0 0 2px ${GOLD}`;
+    const isEnd = !!highlightDate && cell.date === highlightDate;
+    if (isEnd) {
+      // Plan end date — ring it in red so it stands out.
+      box.boxShadow = `0 0 0 2px ${RED}`;
+    } else if (cell.isToday) {
+      box.boxShadow = `0 0 0 2px ${GOLD}`;
+    }
 
     const desc = isSel ? describe(cell) : null;
     const align = col <= 1 ? "left" : col >= 5 ? "right" : "center";

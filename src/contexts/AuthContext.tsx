@@ -429,6 +429,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (code === "auth/invalid-email") {
         return { error: "That email address doesn't look valid." };
       }
+      if (code === "auth/quota-exceeded" || code === "auth/too-many-requests") {
+        return { error: "We couldn't send the verification email right now (email limit reached). Please try again in a little while, or contact support." };
+      }
       return { error: (e as { message?: string })?.message ?? "Could not send the verification email." };
     }
   }, []);

@@ -22,8 +22,10 @@ import AdminPlans from "./pages/admin/Plans";
 import Trainers from "./pages/admin/Trainers";
 import Societies from "./pages/admin/Societies";
 import Marketing from "./pages/admin/Marketing";
+import AdminReferrals from "./pages/admin/Referrals";
 import Corporate from "./pages/Corporate";
 import TrainerDashboard from "./pages/TrainerDashboard";
+import TrainerReferrals from "./pages/TrainerReferrals";
 import NotFound from "./pages/NotFound";
 
 // Cached-first data: pages render instantly from the last fetch while a
@@ -69,6 +71,7 @@ const App = () => (
 
                 {/* Trainer pages — clients are redirected to /dashboard */}
                 <Route path="/trainer" element={<ProtectedRoute allow={["trainer", "admin"]}><TrainerDashboard /></ProtectedRoute>} />
+                <Route path="/trainer/referrals" element={<ProtectedRoute allow={["trainer", "admin"]}><TrainerReferrals /></ProtectedRoute>} />
 
                 {/* Admin pages */}
                 <Route path="/admin" element={<ProtectedRoute allow={["admin"]}><AdminDashboard /></ProtectedRoute>} />
@@ -78,6 +81,7 @@ const App = () => (
                 <Route path="/admin/trainers" element={<ProtectedRoute allow={["admin"]}><Trainers /></ProtectedRoute>} />
                 <Route path="/admin/societies" element={<ProtectedRoute allow={["admin"]}><Societies /></ProtectedRoute>} />
                 <Route path="/admin/marketing" element={<ProtectedRoute allow={["admin"]}><Marketing /></ProtectedRoute>} />
+                <Route path="/admin/referrals" element={<ProtectedRoute allow={["admin"]}><AdminReferrals /></ProtectedRoute>} />
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />
