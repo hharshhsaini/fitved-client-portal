@@ -1,13 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace www.fitved.com with your real domain, then resubmit in Google Search Console. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.fitved.com/</loc>
+    <loc>https://getfitved.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.fitved.com/corporate</loc>
+    <loc>https://getfitved.com/corporate</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/online-training.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/blog/is-a-personal-trainer-worth-it-in-india.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-bellandur.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-whitefield.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-sarjapur-road.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-hsr-layout.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-marathahalli.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-varthur.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-electronic-city.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/personal-trainer-in-koramangala.html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
