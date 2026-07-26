@@ -1333,9 +1333,11 @@ function Footer() {
           </ul>
         </div>
         <div className="text-left">
-          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-3">Account</h4>
+          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-3">Explore</h4>
           <ul className="space-y-2 text-xs uppercase tracking-wider font-semibold">
             <li><Link to="/login" className="hover:text-fv-orange transition-colors">Client / Trainer Login</Link></li>
+            <li><a href="/online-training.html" className="hover:text-fv-orange transition-colors">Online Training</a></li>
+            <li><a href="/blog/is-a-personal-trainer-worth-it-in-india.html" className="hover:text-fv-orange transition-colors">Is a Personal Trainer Worth It?</a></li>
           </ul>
         </div>
       </div>
@@ -1343,7 +1345,26 @@ function Footer() {
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Backed by</p>
         <img src={razorpayRizeLogo} alt="Razorpay Rize" className="h-8 md:h-10 w-auto opacity-90" />
       </div>
-      <div className="mx-auto max-w-6xl px-4 mt-8 pt-6 border-t border-white/10 text-xs text-white/40 text-left">
+      <div className="mx-auto max-w-6xl px-4 mt-8 pt-6 border-t border-white/10">
+        <h4 className="text-white/70 font-black uppercase tracking-widest text-[10px] mb-3">Personal trainers across Bangalore</h4>
+        <nav className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] uppercase tracking-wider font-semibold text-white/45">
+          {[
+            ["Bellandur", "bellandur"],
+            ["Whitefield", "whitefield"],
+            ["Sarjapur Road", "sarjapur-road"],
+            ["HSR Layout", "hsr-layout"],
+            ["Marathahalli", "marathahalli"],
+            ["Varthur", "varthur"],
+            ["Electronic City", "electronic-city"],
+            ["Koramangala", "koramangala"],
+          ].map(([label, slug]) => (
+            <a key={slug} href={`/personal-trainer-in-${slug}.html`} className="hover:text-fv-orange transition-colors">
+              {label}
+            </a>
+          ))}
+        </nav>
+      </div>
+      <div className="mx-auto max-w-6xl px-4 mt-6 pt-6 border-t border-white/10 text-xs text-white/40 text-left">
         © {new Date().getFullYear()} Fitved. All rights reserved.
       </div>
     </footer>

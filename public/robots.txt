@@ -14,4 +14,4 @@ Disallow: /health
 Disallow: /profile
 
 # Replace with your real domain if it isn't fitved.com
-Sitemap: https://www.fitved.com/sitemap.xml
+Sitemap: https://getfitved.com/sitemap.xml
