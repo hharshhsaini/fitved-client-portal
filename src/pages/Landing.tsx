@@ -295,206 +295,131 @@ function Nav({
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-fv-navy/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <a href="/" className="flex items-center gap-2">
-          <img src={fitvedLogo} alt="Fitved — Personal Fitness Trainers & Yoga Coaches in Bangalore" className="h-10 w-auto rounded bg-white/10 p-1" />
-        </a>
-        <nav className="hidden lg:flex items-center gap-0.5">
-          {/* Dropdown menus */}
-          {NAV_DROPDOWNS.map((dd) => (
-            <div
-              key={dd.label}
-              className="relative"
-              onMouseEnter={() => setOpenDropdown(dd.label)}
-              onMouseLeave={() => setOpenDropdown(null)}
-            >
-              <button
-                className="flex items-center gap-1 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
-              >
-                {dd.label}
-                <ChevronDown className={cn("h-3 w-3 transition-transform", openDropdown === dd.label && "rotate-180")} />
-              </button>
-              {openDropdown === dd.label && (
-                dd.label === "Programs" ? (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[620px] rounded-2xl border border-white/10 bg-fv-navy/95 backdrop-blur-xl shadow-elevated p-6 z-50 grid grid-cols-3 gap-6 text-left animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* Column 1: Personal Training */}
-                    <div className="flex flex-col">
-                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
-                        Personal Training
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        <a href="/weight-loss-program-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Weight Loss Program
-                        </a>
-                        <a href="/womens-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Women's Fitness
-                        </a>
-                        <a href="/senior-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Senior Fitness (55+)
-                        </a>
-                        <a href="/clinical-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Clinical / Post-Surgery
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Column 2: Strength Training */}
-                    <div className="flex flex-col">
-                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
-                        Strength Training
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        <a href="/strength-training-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Strength Training
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Column 3: Yoga */}
-                    <div className="flex flex-col">
-                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
-                        Yoga
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        <a href="/yoga-classes-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Yoga Classes
-                        </a>
-                        <a href="/prenatal-postnatal-yoga-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
-                          Prenatal &amp; Postnatal Yoga
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="absolute top-full left-0 mt-0.5 min-w-[220px] rounded-lg border border-white/10 bg-fv-navy/95 backdrop-blur-lg shadow-elevated py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {dd.items.map((item, i) =>
-                      item.heading ? (
-                        <p
-                          key={`h-${item.heading}`}
-                          className={cn(
-                            "px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80",
-                            i === 0 ? "pt-1" : "pt-3 mt-1 border-t border-white/5"
-                          )}
-                        >
-                          {item.heading}
-                        </p>
-                      ) : (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          className="block px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange hover:bg-white/5 transition-colors"
-                        >
-                          {item.label}
-                        </a>
-                      )
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-          ))}
-          {/* Online Classes — highlighted */}
-          <a
-            href="/online-training.html"
-            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-fv-orange hover:text-white hover:bg-fv-orange/90 transition-colors"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
-          </a>
-          {/* Scroll links */}
-          {NAV_SCROLL.map((n) => (
-            <button
-              key={n.id}
-              onClick={() => scrollTo(n.id)}
-              className={cn(
-                "rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
-                active === n.id
-                  ? "text-fv-orange"
-                  : "text-white/70 hover:text-white"
-              )}
-            >
-              {n.label}
-            </button>
-          ))}
-          <Link
-            to="/corporate"
-            className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
-          >
-            Corporate
-          </Link>
-          <a
-            href="/societies/"
-            className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
-          >
-            Societies
-          </a>
-          <Button
-            onClick={() => scrollTo("contact")}
-            className="ml-2 bg-fv-orange text-white hover:bg-fv-orange/90 transition-all uppercase tracking-wider text-xs font-bold px-4"
-          >
-            Speak to a Coach
-          </Button>
-          <Link
-            to="/login"
-            className="ml-1 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white px-2 transition-colors"
-          >
-            Log in
-          </Link>
-        </nav>
-        <button
-          aria-label="Open menu"
-          className="lg:hidden rounded-md p-2 text-white"
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+    <>
+      {/* Blurred Backdrop Overlay on rest of website below top header */}
       {menuOpen && (
-        <div className="lg:hidden fixed inset-x-0 top-16 bottom-0 z-40 bg-fv-navy/95 backdrop-blur-2xl overflow-y-auto animate-in fade-in duration-200">
-          <div className="mx-auto max-w-6xl px-6 py-6 flex flex-col pb-24">
-            {/* Mobile dropdown sections */}
+        <div
+          className="lg:hidden fixed inset-0 top-16 z-30 bg-fv-navy/70 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setMenuOpen(false)}
+        />
+      )}
+
+      <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-fv-navy/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <a href="/" className="flex items-center gap-2">
+            <img src={fitvedLogo} alt="Fitved — Personal Fitness Trainers & Yoga Coaches in Bangalore" className="h-10 w-auto rounded bg-white/10 p-1" />
+          </a>
+          <nav className="hidden lg:flex items-center gap-0.5">
+            {/* Dropdown menus */}
             {NAV_DROPDOWNS.map((dd) => (
-              <div key={dd.label} className="border-b border-white/10">
+              <div
+                key={dd.label}
+                className="relative"
+                onMouseEnter={() => setOpenDropdown(dd.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+              >
                 <button
-                  onClick={() => setMobileExpanded(mobileExpanded === dd.label ? null : dd.label)}
-                  className="w-full py-4 text-left text-base font-bold uppercase tracking-wider text-white flex items-center justify-between"
+                  className="flex items-center gap-1 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
                 >
                   {dd.label}
-                  <ChevronDown className={cn("h-4 w-4 transition-transform text-white/50", mobileExpanded === dd.label && "rotate-180")} />
+                  <ChevronDown className={cn("h-3 w-3 transition-transform", openDropdown === dd.label && "rotate-180")} />
                 </button>
-                {mobileExpanded === dd.label && (
-                  <div className="pb-4 pl-4 flex flex-col gap-2">
-                    {dd.items.map((item) =>
-                      item.heading ? (
-                        <p key={`h-${item.heading}`} className="pt-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-fv-orange">
-                          {item.heading}
+                {openDropdown === dd.label && (
+                  dd.label === "Programs" ? (
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[620px] rounded-2xl border border-white/10 bg-fv-navy/95 backdrop-blur-xl shadow-elevated p-6 z-50 grid grid-cols-3 gap-6 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                      {/* Column 1: Personal Training */}
+                      <div className="flex flex-col">
+                        <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                          Personal Training
                         </p>
-                      ) : (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          className="py-2 text-sm font-semibold uppercase tracking-wider text-white/80 hover:text-fv-orange transition-colors"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          {item.label}
-                        </a>
-                      )
-                    )}
-                  </div>
+                        <div className="flex flex-col gap-2">
+                          <a href="/weight-loss-program-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Weight Loss Program
+                          </a>
+                          <a href="/womens-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Women's Fitness
+                          </a>
+                          <a href="/senior-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Senior Fitness (55+)
+                          </a>
+                          <a href="/clinical-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Clinical / Post-Surgery
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Column 2: Strength Training */}
+                      <div className="flex flex-col">
+                        <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                          Strength Training
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <a href="/strength-training-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Strength Training
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Column 3: Yoga */}
+                      <div className="flex flex-col">
+                        <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                          Yoga
+                        </p>
+                        <div className="flex flex-col gap-2">
+                          <a href="/yoga-classes-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Yoga Classes
+                          </a>
+                          <a href="/prenatal-postnatal-yoga-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                            Prenatal &amp; Postnatal Yoga
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="absolute top-full left-0 mt-0.5 min-w-[220px] rounded-lg border border-white/10 bg-fv-navy/95 backdrop-blur-lg shadow-elevated py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {dd.items.map((item, i) =>
+                        item.heading ? (
+                          <p
+                            key={`h-${item.heading}`}
+                            className={cn(
+                              "px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80",
+                              i === 0 ? "pt-1" : "pt-3 mt-1 border-t border-white/5"
+                            )}
+                          >
+                            {item.heading}
+                          </p>
+                        ) : (
+                          <a
+                            key={item.href}
+                            href={item.href}
+                            className="block px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange hover:bg-white/5 transition-colors"
+                          >
+                            {item.label}
+                          </a>
+                        )
+                      )}
+                    </div>
+                  )
                 )}
               </div>
             ))}
+            {/* Online Classes — highlighted */}
+            <a
+              href="/online-training.html"
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-fv-orange hover:text-white hover:bg-fv-orange/90 transition-colors"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
+            </a>
             {/* Scroll links */}
             {NAV_SCROLL.map((n) => (
               <button
                 key={n.id}
-                onClick={() => {
-                  scrollTo(n.id);
-                  setMenuOpen(false);
-                }}
+                onClick={() => scrollTo(n.id)}
                 className={cn(
-                  "py-4 text-left text-base font-bold uppercase tracking-wider border-b border-white/10",
-                  active === n.id ? "text-fv-orange" : "text-white"
+                  "rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
+                  active === n.id
+                    ? "text-fv-orange"
+                    : "text-white/70 hover:text-white"
                 )}
               >
                 {n.label}
@@ -502,36 +427,121 @@ function Nav({
             ))}
             <Link
               to="/corporate"
-              className="py-4 text-left text-base font-bold uppercase tracking-wider text-white border-b border-white/10"
-              onClick={() => setMenuOpen(false)}
+              className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
             >
-              Corporate Wellness
+              Corporate
             </Link>
             <a
-              href="/online-training.html"
-              className="py-4 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/10 inline-flex items-center gap-2"
-              onClick={() => setMenuOpen(false)}
-            >
-              <span className="h-2 w-2 rounded-full bg-fv-orange animate-pulse" /> Online Classes
-            </a>
-            <a
               href="/societies/"
-              className="py-4 text-left text-base font-bold uppercase tracking-wider text-white border-b border-white/10"
-              onClick={() => setMenuOpen(false)}
+              className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
             >
               Societies
             </a>
+            <Button
+              onClick={() => scrollTo("contact")}
+              className="ml-2 bg-fv-orange text-white hover:bg-fv-orange/90 transition-all uppercase tracking-wider text-xs font-bold px-4"
+            >
+              Speak to a Coach
+            </Button>
             <Link
               to="/login"
-              className="py-4 text-left text-base font-bold uppercase tracking-wider text-white/80"
-              onClick={() => setMenuOpen(false)}
+              className="ml-1 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white px-2 transition-colors"
             >
               Log in
             </Link>
-          </div>
+          </nav>
+          <button
+            aria-label="Open menu"
+            className="lg:hidden rounded-md p-2 text-white"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-      )}
-    </header>
+        {menuOpen && (
+          <div className="lg:hidden border-t border-white/10 bg-fv-navy max-h-[80vh] overflow-y-auto relative z-50">
+            <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col">
+              {/* Mobile dropdown sections */}
+              {NAV_DROPDOWNS.map((dd) => (
+                <div key={dd.label} className="border-b border-white/5">
+                  <button
+                    onClick={() => setMobileExpanded(mobileExpanded === dd.label ? null : dd.label)}
+                    className="w-full py-3 text-left text-base font-semibold uppercase tracking-wider text-white flex items-center justify-between"
+                  >
+                    {dd.label}
+                    <ChevronDown className={cn("h-4 w-4 transition-transform text-white/50", mobileExpanded === dd.label && "rotate-180")} />
+                  </button>
+                  {mobileExpanded === dd.label && (
+                    <div className="pb-3 pl-4 flex flex-col gap-1">
+                      {dd.items.map((item) =>
+                        item.heading ? (
+                          <p key={`h-${item.heading}`} className="pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80">
+                            {item.heading}
+                          </p>
+                        ) : (
+                          <a
+                            key={item.href}
+                            href={item.href}
+                            className="py-2 text-sm font-medium text-white/60 hover:text-fv-orange transition-colors"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            {item.label}
+                          </a>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {/* Scroll links */}
+              {NAV_SCROLL.map((n) => (
+                <button
+                  key={n.id}
+                  onClick={() => {
+                    scrollTo(n.id);
+                    setMenuOpen(false);
+                  }}
+                  className={cn(
+                    "py-3 text-left text-base font-semibold uppercase tracking-wider border-b border-white/5",
+                    active === n.id ? "text-fv-orange" : "text-white"
+                  )}
+                >
+                  {n.label}
+                </button>
+              ))}
+              <Link
+                to="/corporate"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+                onClick={() => setMenuOpen(false)}
+              >
+                Corporate Wellness
+              </Link>
+              <a
+                href="/online-training.html"
+                className="py-3 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/5 inline-flex items-center gap-2"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
+              </a>
+              <a
+                href="/societies/"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+                onClick={() => setMenuOpen(false)}
+              >
+                Societies
+              </a>
+              <Link
+                to="/login"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white/70"
+                onClick={() => setMenuOpen(false)}
+              >
+                Log in
+              </Link>
+            </div>
+          </div>
+        )}
+      </header>
+    </>
   );
 }
 
