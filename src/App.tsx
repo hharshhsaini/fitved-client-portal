@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,9 +25,17 @@ import Societies from "./pages/admin/Societies";
 import Marketing from "./pages/admin/Marketing";
 import AdminReferrals from "./pages/admin/Referrals";
 import Corporate from "./pages/Corporate";
+import FaqsPage from "./pages/FaqsPage";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import TrainerReferrals from "./pages/TrainerReferrals";
 import NotFound from "./pages/NotFound";
+
+const StaticPageRedirect = ({ file }: { file: string }) => {
+  useEffect(() => {
+    window.location.replace(file);
+  }, [file]);
+  return null;
+};
 
 // Cached-first data: pages render instantly from the last fetch while a
 // background refresh runs. Mutations still update immediately — every write
@@ -59,6 +68,20 @@ const App = () => (
                   Query params (apiKey, oobCode, mode, continueUrl) are preserved. */}
               <Route path="/__/auth/action" element={<Navigate to={`/signup${window.location.search}`} replace />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+
+              {/* Clean Static Marketing Page Routes */}
+              <Route path="/personal-training" element={<StaticPageRedirect file="/personal-training.html" />} />
+              <Route path="/weight-loss-program-bangalore" element={<StaticPageRedirect file="/weight-loss-program-bangalore.html" />} />
+              <Route path="/strength-training-bangalore" element={<StaticPageRedirect file="/strength-training-bangalore.html" />} />
+              <Route path="/yoga-classes-bangalore" element={<StaticPageRedirect file="/yoga-classes-bangalore.html" />} />
+              <Route path="/prenatal-postnatal-yoga" element={<StaticPageRedirect file="/prenatal-postnatal-yoga-bangalore.html" />} />
+              <Route path="/womens-fitness-bangalore" element={<StaticPageRedirect file="/womens-fitness-bangalore.html" />} />
+              <Route path="/senior-fitness-bangalore" element={<StaticPageRedirect file="/senior-fitness-bangalore.html" />} />
+              <Route path="/clinical-fitness-bangalore" element={<StaticPageRedirect file="/clinical-fitness-bangalore.html" />} />
+              <Route path="/diet-coaching-bangalore" element={<StaticPageRedirect file="/diet-coaching-bangalore.html" />} />
+              <Route path="/online-training" element={<StaticPageRedirect file="/online-training.html" />} />
+              <Route path="/service-areas" element={<StaticPageRedirect file="/service-areas.html" />} />
+
               <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
                 {/* Client pages — trainers are redirected to /trainer */}
                 <Route path="/dashboard" element={<ProtectedRoute allow={["client", "admin"]}><Dashboard /></ProtectedRoute>} />
@@ -85,6 +108,8 @@ const App = () => (
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />
+              <Route path="/faqs" element={<FaqsPage />} />
+              <Route path="/faqs.html" element={<FaqsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PauseProvider>

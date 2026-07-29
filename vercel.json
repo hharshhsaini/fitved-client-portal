@@ -1,5 +1,22 @@
 {
+  "cleanUrls": true,
+  "redirects": [
+    { "source": "/personal-training.html", "destination": "/personal-training", "permanent": true },
+    { "source": "/yoga-classes-bangalore.html", "destination": "/yoga-classes-bangalore", "permanent": true },
+    { "source": "/weight-loss-program-bangalore.html", "destination": "/weight-loss-program-bangalore", "permanent": true },
+    { "source": "/prenatal-postnatal-yoga-bangalore.html", "destination": "/prenatal-postnatal-yoga", "permanent": true },
+    { "source": "/clinical-fitness-bangalore.html", "destination": "/clinical-fitness-bangalore", "permanent": true },
+    { "source": "/womens-fitness-bangalore.html", "destination": "/womens-fitness-bangalore", "permanent": true },
+    { "source": "/senior-fitness-bangalore.html", "destination": "/senior-fitness-bangalore", "permanent": true },
+    { "source": "/strength-training-bangalore.html", "destination": "/strength-training-bangalore", "permanent": true },
+    { "source": "/diet-coaching-bangalore.html", "destination": "/diet-coaching-bangalore", "permanent": true },
+    { "source": "/online-training.html", "destination": "/online-training", "permanent": true },
+    { "source": "/service-areas.html", "destination": "/service-areas", "permanent": true },
+    { "source": "/faqs.html", "destination": "/faqs", "permanent": true },
+    { "source": "/blog/is-a-personal-trainer-worth-it-in-india.html", "destination": "/blog/is-a-personal-trainer-worth-it-in-india", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/prenatal-postnatal-yoga", "destination": "/prenatal-postnatal-yoga-bangalore.html" },
+    { "source": "/((?!societies)(?!.*\\.html$).*)", "destination": "/" }
   ]
 }

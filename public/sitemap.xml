@@ -1,62 +1,163 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
   <url>
     <loc>https://getfitved.com/</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- Core Service Pages -->
+  <url>
+    <loc>https://getfitved.com/personal-training</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/yoga-classes-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/weight-loss-program-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/strength-training-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/senior-fitness-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/prenatal-postnatal-yoga</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/clinical-fitness-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/womens-fitness-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/diet-coaching-bangalore</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
   <url>
     <loc>https://getfitved.com/corporate</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/online-training.html</loc>
+    <loc>https://getfitved.com/online-training</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
+  <!-- Content Hub -->
   <url>
-    <loc>https://getfitved.com/blog/is-a-personal-trainer-worth-it-in-india.html</loc>
+    <loc>https://getfitved.com/blog/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/blog/is-a-personal-trainer-worth-it-in-india</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <!-- Location Pages & FAQs -->
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-bellandur.html</loc>
+    <loc>https://getfitved.com/service-areas</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/faqs</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <!-- Societies Directory & Pages -->
+  <url>
+    <loc>https://getfitved.com/societies/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/societies/society/astro-rosewood</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-whitefield.html</loc>
+    <loc>https://getfitved.com/societies/society/bren-imperia</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-sarjapur-road.html</loc>
+    <loc>https://getfitved.com/societies/society/elan-homes</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-hsr-layout.html</loc>
+    <loc>https://getfitved.com/societies/society/lapalazzo</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-marathahalli.html</loc>
+    <loc>https://getfitved.com/societies/society/salarpuria-sattva-greenage</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-varthur.html</loc>
+    <loc>https://getfitved.com/societies/society/sattva-signet</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-electronic-city.html</loc>
+    <loc>https://getfitved.com/societies/society/shobha-dream-acers</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://getfitved.com/personal-trainer-in-koramangala.html</loc>
+    <loc>https://getfitved.com/societies/society/sjr-parkvista</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://getfitved.com/societies/society/trinity-acers-and-woods</loc>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
