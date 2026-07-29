@@ -216,7 +216,7 @@ export default function FaqsPage() {
               <Link to="/#contact" className="inline-flex items-center justify-center bg-fv-orange text-white hover:bg-fv-orange/90 h-12 px-8 text-xs font-bold uppercase tracking-wider rounded-full transition-all shadow-md">
                 Book a Free Trial Session
               </Link>
-              <a href="https://wa.me/919890471383" target="_blank" rel="noopener" className="inline-flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 h-12 px-6 text-xs font-bold uppercase tracking-wider rounded-full transition-all">
+              <a href="https://wa.me/919606047293" target="_blank" rel="noopener" className="inline-flex items-center justify-center border border-white/20 bg-white/10 text-white hover:bg-white/20 h-12 px-6 text-xs font-bold uppercase tracking-wider rounded-full transition-all">
                 Chat on WhatsApp
               </a>
             </div>

@@ -51,8 +51,8 @@ import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
 import razorpayRizeLogo from "@/assets/razorpay-rize.svg";
 const heroHands = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80";
 
-const PHONE = "+919890471383";
-const PHONE_DISPLAY = "+91 9890471383";
+const PHONE = "+919606047293";
+const PHONE_DISPLAY = "+91 9606047293";
 const WHATSAPP_TEXT = encodeURIComponent("Hi, I'm interested in Fitved training. Can you help me?");
 const WHATSAPP_URL = `https://wa.me/${PHONE.replace(/\D/g, "")}?text=${WHATSAPP_TEXT}`;
 

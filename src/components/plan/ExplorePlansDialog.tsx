@@ -10,7 +10,7 @@ const MUTED  = "#8a8f9e";
 const BORDER = "rgba(30,58,95,0.08)";
 const GOLD_DEEP = "#b07d10";
 const WHATSAPP = "#25D366";
-const WA_NUMBER = "919890471383";
+const WA_NUMBER = "919606047293";
 
 interface Props {
   userId: string;

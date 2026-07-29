@@ -1,7 +1,7 @@
 # Plan options + WhatsApp handoff — Spec
 
 **Status:** Building.
-**Decisions:** Overrides = custom price per plan per customer. Cards show sessions count + savings badge. WhatsApp message = plan + customer name prefilled (number 919890471383). Customer entry = a small "Explore other plans" button on the Plan page (just before Training days) that opens a popup/modal with the cards. Admin override panel = at the bottom of the customer's Plan tab.
+**Decisions:** Overrides = custom price per plan per customer. Cards show sessions count + savings badge. WhatsApp message = plan + customer name prefilled (number 919606047293). Customer entry = a small "Explore other plans" button on the Plan page (just before Training days) that opens a popup/modal with the cards. Admin override panel = at the bottom of the customer's Plan tab.
 
 ---
 
@@ -21,7 +21,7 @@ Effective price for a customer = override row if present, else `plan_options.pri
 
 ## Customer — Plan page section "Explore other plans"
 - 3 cards (sorted by sort_order). Each: name, duration, effective price, total_sessions, badge (if set).
-- Button "Chat on WhatsApp" → `https://wa.me/919890471383?text=...`
+- Button "Chat on WhatsApp" → `https://wa.me/919606047293?text=...`
   - Text: `Hi FitVed, I'd like the {name} ({duration_months}-month) plan — ₹{price}. — {customer name}`
 
 ## Admin

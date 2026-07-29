@@ -372,7 +372,7 @@
       console.error("[FitVed Modal] Submit error:", err);
       submitBtn.disabled = false;
       submitBtn.textContent = "Confirm Free Trial Session";
-      alert("Something went wrong. Please try again or WhatsApp us at +91 98904 71383");
+      alert("Something went wrong. Please try again or WhatsApp us at +91 9606047293");
     }
   }
 
