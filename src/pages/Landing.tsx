@@ -608,7 +608,7 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden text-white bg-fv-navy min-h-[85vh] py-16 md:py-24 lg:py-28 flex items-center border-b border-white/10"
+      className="relative overflow-hidden text-white bg-fv-navy md:min-h-[85vh] py-8 md:py-24 lg:py-28 flex items-center border-b border-white/10"
     >
       {/* Background Subtle Overlay */}
       <img
@@ -622,7 +622,7 @@ function Hero() {
         {/* Left Column: Clean, High-Impact Hero Copy */}
         <div className="md:col-span-7 lg:col-span-6 animate-fade-in text-left">
           {/* Badge Pill */}
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-6">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-4 sm:mb-6">
             <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> YOUR SOCIETY, YOUR TIME, OUR TRAINER
           </span>
 
@@ -640,12 +640,12 @@ function Hero() {
           </h1>
 
           {/* Subheadline */}
-          <p className="mt-4 fluid-subheading text-white/70 max-w-lg leading-relaxed font-normal">
+          <p className="mt-3 sm:mt-4 fluid-subheading text-white/70 max-w-lg leading-relaxed font-normal">
             Certified yoga teachers &amp; personal trainers near you in Bangalore — fitness at your society's doorstep.
           </p>
 
           {/* Clean Proportional Dual Pill CTAs */}
-          <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-sm sm:max-w-none mb-8">
+          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4 max-w-sm sm:max-w-none mb-6 sm:mb-8">
             <Button
               onClick={() => {
                 trackEvent("hero_cta_clicked");
@@ -665,7 +665,7 @@ function Hero() {
           </div>
 
           {/* Key Stats Row with Divider Line */}
-          <div className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
+          <div className="pt-4 sm:pt-5 border-t border-white/10 flex flex-wrap items-center gap-x-4 sm:gap-x-5 gap-y-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 110+ TRAINED</span>
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 10+ SOCIETIES</span>
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> EXPERT CLINICAL PROTOCOLS</span>
@@ -724,7 +724,7 @@ function OnlinePromotion() {
   const ref = useReveal();
 
   return (
-    <section className="py-20 md:py-28 bg-fv-navy/40 border-t border-b border-white/5 relative overflow-hidden">
+    <section className="py-10 md:py-24 lg:py-28 bg-fv-navy/40 border-t border-b border-white/5 relative overflow-hidden">
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-tr from-fv-orange/5 via-transparent to-transparent pointer-events-none"></div>
 
