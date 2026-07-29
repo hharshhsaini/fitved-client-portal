@@ -1,7 +1,10 @@
-# Fitved — allow crawling of public marketing pages, keep the logged-in app out of the index.
+# Fitved — allow crawling of public marketing pages, keep the logged-in app out of index.
+
 User-agent: *
 Allow: /$
+Allow: /*.html
 Allow: /corporate
+Allow: /blog/
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /trainer
@@ -13,5 +16,20 @@ Disallow: /plan
 Disallow: /health
 Disallow: /profile
 
-# Replace with your real domain if it isn't fitved.com
+# GEO (Generative Engine Optimization) — explicitly allow AI search crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
 Sitemap: https://getfitved.com/sitemap.xml

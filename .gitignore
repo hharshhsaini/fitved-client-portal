@@ -31,3 +31,4 @@ dist-ssr
 
 # Firebase Admin SDK service-account key (secret — never commit)
 scripts/firebase-service-account.json
+/public/booking-config.js

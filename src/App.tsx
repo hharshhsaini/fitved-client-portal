@@ -24,6 +24,7 @@ import Societies from "./pages/admin/Societies";
 import Marketing from "./pages/admin/Marketing";
 import AdminReferrals from "./pages/admin/Referrals";
 import Corporate from "./pages/Corporate";
+import FaqsPage from "./pages/FaqsPage";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import TrainerReferrals from "./pages/TrainerReferrals";
 import NotFound from "./pages/NotFound";
@@ -85,6 +86,8 @@ const App = () => (
               </Route>
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />
+              <Route path="/faqs" element={<FaqsPage />} />
+              <Route path="/faqs.html" element={<FaqsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PauseProvider>

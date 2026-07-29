@@ -49,14 +49,52 @@
     <meta name="twitter:description" content="Certified yoga &amp; fitness trainers who come to your Bangalore society. Book a free trial." />
     <meta name="twitter:image" content="https://getfitved.com/gallery/class-1.jpg" />
 
-    <!-- Structured data: local business, so Google understands Fitved is a Bangalore yoga/fitness service -->
+    <!-- Structured data: Organization (corporate identity) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://getfitved.com/#organization",
+      "name": "Fitved",
+      "url": "https://getfitved.com/",
+      "logo": "https://getfitved.com/favicon.svg",
+      "description": "Personal fitness trainers and yoga coaches in Bangalore. Society-based, at-home, and online training for all ages.",
+      "sameAs": ["https://www.instagram.com/fitved.h/"],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+919890471383",
+        "contactType": "customer service",
+        "areaServed": "IN",
+        "availableLanguage": ["English", "Hindi", "Kannada"]
+      }
+    }
+    </script>
+
+    <!-- Structured data: WebSite with SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "@id": "https://getfitved.com/#website",
+      "name": "Fitved",
+      "url": "https://getfitved.com/",
+      "publisher": { "@id": "https://getfitved.com/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://getfitved.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Structured data: LocalBusiness with expanded services and areas -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": ["LocalBusiness", "HealthClub"],
       "@id": "https://getfitved.com/#business",
       "name": "Fitved",
-      "description": "At-home and society-based yoga and personal training in Bangalore. Certified trainers deliver 1-on-1 and small-group sessions inside your residential society.",
+      "description": "Personal fitness trainers and yoga coaches in Bangalore. Train inside your apartment society, at home, or online. Strength, weight loss, yoga, mobility, and clinical fitness for all ages.",
       "url": "https://getfitved.com/",
       "logo": "https://getfitved.com/favicon.svg",
       "image": "https://getfitved.com/gallery/class-1.jpg",
@@ -74,11 +112,32 @@
         "latitude": 12.9716,
         "longitude": 77.5946
       },
-      "areaServed": {
-        "@type": "City",
-        "name": "Bengaluru"
-      },
+      "areaServed": [
+        { "@type": "City", "name": "Bengaluru" },
+        { "@type": "Neighborhood", "name": "HSR Layout, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Whitefield, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Sarjapur Road, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Bellandur, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Electronic City, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Koramangala, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Marathahalli, Bengaluru" },
+        { "@type": "Neighborhood", "name": "Varthur, Bengaluru" }
+      ],
+      "employee": [
+        { "@type": "Person", "name": "Suma Paniraj", "jobTitle": "Senior Longevity & Therapeutic Yoga Specialist" },
+        { "@type": "Person", "name": "Dhruvi Patel", "jobTitle": "Yoga Therapist & Posture Specialist" },
+        { "@type": "Person", "name": "Pramod Palve", "jobTitle": "Strength Conditioning & Fat Loss Coach" },
+        { "@type": "Person", "name": "Shubham Sahane", "jobTitle": "Society Group Fitness & Mobility Specialist" },
+        { "@type": "Person", "name": "Saurabh", "jobTitle": "Beginner Movement & Functional Rehab Coach" }
+      ],
       "sameAs": ["https://www.instagram.com/fitved.h/"],
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "bestRating": "5",
+        "ratingCount": "478",
+        "reviewCount": "128"
+      },
       "openingHoursSpecification": [{
         "@type": "OpeningHoursSpecification",
         "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
@@ -86,21 +145,103 @@
         "closes": "20:00"
       }],
       "makesOffer": [
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Yoga classes in Bangalore", "serviceType": "Yoga instruction" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Personal training in Bangalore", "serviceType": "Personal fitness training" } },
-        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Small-group & couples training", "serviceType": "Group fitness training" } }
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Personal Trainer in Bangalore", "serviceType": "Personal fitness training", "url": "https://getfitved.com/personal-training.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Yoga Classes in Bangalore", "serviceType": "Yoga instruction", "url": "https://getfitved.com/yoga-classes-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Prenatal Yoga in Bangalore", "serviceType": "Prenatal yoga", "url": "https://getfitved.com/prenatal-postnatal-yoga-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Postnatal Yoga in Bangalore", "serviceType": "Postnatal recovery", "url": "https://getfitved.com/postnatal-yoga-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Weight Loss Program in Bangalore", "serviceType": "Weight loss coaching", "url": "https://getfitved.com/weight-loss-program-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Senior Fitness in Bangalore", "serviceType": "Senior fitness training", "url": "https://getfitved.com/senior-fitness-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Corporate Wellness in Bangalore", "serviceType": "Corporate wellness", "url": "https://getfitved.com/corporate" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Diet & Nutrition Coaching", "serviceType": "Nutrition coaching", "url": "https://getfitved.com/diet-coaching-bangalore.html" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Online Fitness Coaching", "serviceType": "Online personal training", "url": "https://getfitved.com/online-training.html" } }
       ]
     }
     </script>
+
+    <!-- Structured data: Person schemas for trainers -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Suma",
+        "jobTitle": "Senior Longevity & Therapeutic Yoga Specialist",
+        "worksFor": { "@id": "https://getfitved.com/#organization" },
+        "description": "10+ years experience. Specializes in senior fitness, therapeutic yoga, and longevity training in Bangalore.",
+        "knowsAbout": ["Senior Fitness", "Therapeutic Yoga", "Longevity Training", "Balance Training"]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Dhruvi Patel",
+        "jobTitle": "Yoga Therapist",
+        "worksFor": { "@id": "https://getfitved.com/#organization" },
+        "description": "6 years experience. Blends functional yoga and breathwork for back pain relief, posture improvement, and joint mobility.",
+        "knowsAbout": ["Yoga Therapy", "Breathwork", "Posture Correction", "Joint Mobility"]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Pramod Palve",
+        "jobTitle": "Yoga & Fitness Coach",
+        "worksFor": { "@id": "https://getfitved.com/#organization" },
+        "description": "7 years experience. Fuses strength conditioning with yoga for busy professionals in Bangalore.",
+        "knowsAbout": ["Strength Training", "Yoga", "Fat Loss", "Stamina Building"]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Shubham Sahane",
+        "jobTitle": "Yoga & Mobility Trainer",
+        "worksFor": { "@id": "https://getfitved.com/#organization" },
+        "description": "5 years experience. High-energy mobility and strength training specialist in Bangalore apartment societies.",
+        "knowsAbout": ["Mobility Training", "Strength Training", "Group Fitness", "Community Fitness"]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Saurabh",
+        "jobTitle": "Yoga & Functional Training Coach",
+        "worksFor": { "@id": "https://getfitved.com/#organization" },
+        "description": "5 years experience. Guides beginners from their first stretch to confident, pain-free movement.",
+        "knowsAbout": ["Functional Training", "Beginner Yoga", "Pain-Free Movement", "Patient Coaching"]
+      }
+    ]
+    </script>
+
+    <!-- Structured data: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://getfitved.com/" }
+      ]
+    }
+    </script>
+
+    <!-- Structured data: FAQPage (expanded) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        { "@type": "Question", "name": "Do you offer yoga classes in Bangalore at home?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Fitved sends certified yoga instructors to your residential society in Bangalore for 1-on-1 or small-group sessions — no commute, train inside your own building." } },
-        { "@type": "Question", "name": "How is this different from a regular gym membership?", "acceptedAnswer": { "@type": "Answer", "text": "We come to your society (zero commute), provide 1-on-1 or small-group attention, use clinical protocols like posture correction and breath-led movement, and include nutrition guidance." } },
-        { "@type": "Question", "name": "Can I train with my spouse or friend?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Small-group training for 4–6 people is popular for couples and friend groups in the same society." } },
-        { "@type": "Question", "name": "What if I'm a complete beginner?", "acceptedAnswer": { "@type": "Answer", "text": "Most clients are beginners. We start with mobility, breathing and bodyweight movements, with gradual, safe progression." } }
+        { "@type": "Question", "name": "How much does a personal trainer cost in Bangalore?", "acceptedAnswer": { "@type": "Answer", "text": "Personal training typically costs ₹8,000–₹18,000 per month depending on session frequency and format (1-on-1 vs. small group). Book a free trial first — you only commit once you've trained with your coach." } },
+        { "@type": "Question", "name": "Do I need to buy equipment?", "acceptedAnswer": { "@type": "Answer", "text": "No. We work with your society gym equipment. If your society doesn't have a gym, we bring portable equipment (resistance bands, dumbbells, mats)." } },
+        { "@type": "Question", "name": "What if I'm a complete beginner?", "acceptedAnswer": { "@type": "Answer", "text": "Most of our clients are exactly that. We start with mobility, breathing, and bodyweight movements. Progressive overload is gradual and safe." } },
+        { "@type": "Question", "name": "What if I have diabetes, BP, or arthritis?", "acceptedAnswer": { "@type": "Answer", "text": "Fitved specializes in medical-history-based training. We design programs around your conditions, not despite them. Many clients reduce medication under doctor supervision." } },
+        { "@type": "Question", "name": "Can seniors (55+) safely do yoga and strength training?", "acceptedAnswer": { "@type": "Answer", "text": "Our senior fitness program is designed for adults 55+, focusing on balance, joint health, bone density, and fall prevention. Every exercise is modified for safety." } },
+        { "@type": "Question", "name": "Can I train after surgery?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, once your doctor clears you. Our clinical trainers specialize in post-surgery rehabilitation — safe, supervised progression from recovery to full fitness." } },
+        { "@type": "Question", "name": "Is yoga enough for weight loss?", "acceptedAnswer": { "@type": "Answer", "text": "Yoga improves flexibility and reduces stress, but for significant weight loss, we combine it with strength training and metabolic nutrition coaching for measurable results." } },
+        { "@type": "Question", "name": "Do you offer prenatal and postnatal yoga?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Our certified prenatal yoga instructors guide expectant mothers through safe pregnancy exercises. Postnatal programs help rebuild core strength and pelvic floor after delivery." } },
+        { "@type": "Question", "name": "How is this different from a regular gym membership?", "acceptedAnswer": { "@type": "Answer", "text": "We come to your society (zero commute), provide 1-on-1 or small group attention, use clinical protocols, and include metabolic nutrition plans. You're training for healthspan, not just aesthetics." } },
+        { "@type": "Question", "name": "Can I train with my spouse or friend?", "acceptedAnswer": { "@type": "Answer", "text": "Absolutely. Our small group training (4–6 people) is popular for couples and friend groups in the same society." } },
+        { "@type": "Question", "name": "How is Fitved different from Cult Fit?", "acceptedAnswer": { "@type": "Answer", "text": "Cult Fit is a gym chain with group classes at their centres. Fitved sends certified trainers to your society — zero commute, personalised attention, clinical protocols, and nutrition coaching included." } },
+        { "@type": "Question", "name": "Why choose a personal trainer over a gym?", "acceptedAnswer": { "@type": "Answer", "text": "A personal trainer gives you customized programming, form correction, injury prevention, and accountability. Our society model adds zero-commute convenience." } },
+        { "@type": "Question", "name": "What areas in Bangalore do you serve?", "acceptedAnswer": { "@type": "Answer", "text": "We currently serve HSR Layout, Whitefield, Sarjapur Road, Bellandur, Electronic City, Koramangala, Marathahalli, and Varthur. We're expanding rapidly." } },
+        { "@type": "Question", "name": "Do you offer online fitness coaching?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Our online coaching program includes video-guided workouts, personalized nutrition plans, and weekly check-ins with your trainer." } },
+        { "@type": "Question", "name": "What certifications do your trainers have?", "acceptedAnswer": { "@type": "Answer", "text": "Our trainers hold certifications from NSCA, ACE, ACSM, Yoga Alliance (RYT-200/500), and AYUSH. Many have 5–15 years of experience." } },
+        { "@type": "Question", "name": "How soon will I see results?", "acceptedAnswer": { "@type": "Answer", "text": "Week 4: better sleep, less pain, more energy. Week 8: visible body composition changes. Week 12: sustainable habits, measurable improvements in BP, cholesterol, body age." } }
       ]
     }
     </script>

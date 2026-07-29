@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[31453,["/societies/_next/static/chunks/3yx64khwlh9x_.js","/societies/_next/static/chunks/2vzw_q0nddst9.js","/societies/_next/static/chunks/2s-3f8x20labr.js","/societies/_next/static/chunks/1llcterizcl8v.js","/societies/_next/static/chunks/44cx4gn3cgpdw.js"],"default"]
+4:I[81440,["/societies/_next/static/chunks/3yx64khwlh9x_.js","/societies/_next/static/chunks/2vzw_q0nddst9.js"],"OutletBoundary"]
+5:"$Sreact.suspense"
+0:{"rsc":["$","$1","c",{"children":[["$","$L2",null,{"params":"$@3"}],[["$","script","script-0",{"src":"/societies/_next/static/chunks/2s-3f8x20labr.js","async":true}],["$","script","script-1",{"src":"/societies/_next/static/chunks/1llcterizcl8v.js","async":true}],["$","script","script-2",{"src":"/societies/_next/static/chunks/44cx4gn3cgpdw.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"OoQdsfBdaSZiGzdfG8Asv"}
+3:{"slug":"sjr-parkvista"}
+6:null

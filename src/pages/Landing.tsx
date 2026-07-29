@@ -13,10 +13,21 @@ import {
   Star,
   ShieldCheck,
   ChevronDown,
+  ChevronUp,
   ArrowRight,
   Stethoscope,
   Activity,
   HeartPulse,
+  MapPin,
+  Baby,
+  Heart,
+  Dumbbell,
+  Brain,
+  Salad,
+  MonitorSmartphone,
+  UserCheck,
+  Sparkles,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,10 +56,26 @@ const PHONE_DISPLAY = "+91 9890471383";
 const WHATSAPP_TEXT = encodeURIComponent("Hi, I'm interested in Fitved training. Can you help me?");
 const WHATSAPP_URL = `https://wa.me/${PHONE.replace(/\D/g, "")}?text=${WHATSAPP_TEXT}`;
 
-const NAV = [
-  { id: "home", label: "Home" },
-  { id: "services", label: "Services" },
+const NAV_SCROLL = [
   { id: "trainers", label: "Trainers" },
+];
+
+const NAV_DROPDOWNS = [
+  {
+    label: "Programs",
+    items: [
+      { heading: "Personal Training" },
+      { label: "Weight Loss Program", href: "/weight-loss-program-bangalore.html" },
+      { label: "Senior Fitness (55+)", href: "/senior-fitness-bangalore.html" },
+      { label: "Women's Fitness", href: "/womens-fitness-bangalore.html" },
+      { label: "Clinical / Post-Surgery", href: "/clinical-fitness-bangalore.html" },
+      { heading: "Strength Training" },
+      { label: "Strength Training", href: "/strength-training-bangalore.html" },
+      { heading: "Yoga" },
+      { label: "Yoga Classes", href: "/yoga-classes-bangalore.html" },
+      { label: "Prenatal & Postnatal Yoga", href: "/prenatal-postnatal-yoga-bangalore.html" },
+    ],
+  },
 ];
 
 const leadSchema = z.object({
@@ -61,6 +88,10 @@ const leadSchema = z.object({
 });
 
 const scrollTo = (id: string) => {
+  if (id === "contact") {
+    window.dispatchEvent(new Event("open_consult_modal"));
+    return;
+  }
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 };
 
@@ -81,6 +112,8 @@ function useReveal(threshold = 0.15) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    if (el.classList.contains("is-visible")) return;
+
     const obs = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -128,9 +161,18 @@ export default function Landing() {
     canonical.setAttribute("href", window.location.origin + "/");
   }, []);
 
+  // Listen for consult modal open trigger
+  useEffect(() => {
+    const onOpenConsult = () => {
+      setShowTimer(true);
+    };
+    window.addEventListener("open_consult_modal", onOpenConsult);
+    return () => window.removeEventListener("open_consult_modal", onOpenConsult);
+  }, []);
+
   // Active section observer
   useEffect(() => {
-    const sections = NAV.map((n) => document.getElementById(n.id)).filter(Boolean) as HTMLElement[];
+    const sections = NAV_SCROLL.map((n) => document.getElementById(n.id)).filter(Boolean) as HTMLElement[];
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -177,14 +219,41 @@ export default function Landing() {
       <Nav active={active} menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
 
       <main>
+        {/* Question 1: What is FitVed? */}
         <Hero />
-        <ZeroExcuse />
-        <ProblemSolution />
+
+        {/* Dedicated Flagship Online Classes Promotion */}
+        <OnlinePromotion />
+
+        {/* Question 3 & 4: What services & Who is it for? (Merged) */}
         <Services />
-        <Gallery />
+
+        {/* Question 5: Meet trainers */}
         <Trainers />
+
+        {/* Question 6: Success stories */}
         <Testimonials />
-        <EnquiryFormAndFAQ />
+
+        {/* Section 1: Where We Train & Flagship Programs */}
+        <section id="locations" className="pt-16 pb-12 md:pt-28 md:pb-16 bg-fv-navy border-t border-white/10">
+          <div className="fluid-container">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+              <LocationsSection />
+              <SpecializedProgramsSection />
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: How It Works & FAQ Hub */}
+        <section id="process" className="pt-12 pb-16 md:pt-16 md:pb-24 bg-fv-navy border-t border-white/10">
+          <div className="fluid-container">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+              <HowItWorksSection />
+              <FAQSectionOnly />
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <Footer />
@@ -192,12 +261,10 @@ export default function Landing() {
       <WhatsAppFloat />
       <DesktopFloatingCta />
 
-      <PopupModal
+      <LeadModal
         open={showTimer}
         onOpenChange={setShowTimer}
-        title="Wait — before you go!"
-        body="Get a FREE Body Composition Analysis + 30-min Consultation when you book your first session this week."
-        source="popup_exit"
+        source="consult_now_popup"
       />
     </div>
   );
@@ -213,39 +280,143 @@ function Nav({
   menuOpen: boolean;
   setMenuOpen: (v: boolean) => void;
 }) {
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-fv-navy/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <a href="#home" className="flex items-center gap-2" onClick={() => scrollTo("home")}>
-          <img src={fitvedLogo} alt="Fitved" className="h-10 w-auto rounded bg-white/10 p-1" />
+        <a href="/" className="flex items-center gap-2">
+          <img src={fitvedLogo} alt="Fitved — Personal Fitness Trainers & Yoga Coaches in Bangalore" className="h-10 w-auto rounded bg-white/10 p-1" />
         </a>
-        <nav className="hidden md:flex items-center gap-1">
-          {NAV.map((n) => (
+        <nav className="hidden lg:flex items-center gap-0.5">
+          {/* Dropdown menus */}
+          {NAV_DROPDOWNS.map((dd) => (
+            <div
+              key={dd.label}
+              className="relative"
+              onMouseEnter={() => setOpenDropdown(dd.label)}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                className="flex items-center gap-1 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+              >
+                {dd.label}
+                <ChevronDown className={cn("h-3 w-3 transition-transform", openDropdown === dd.label && "rotate-180")} />
+              </button>
+              {openDropdown === dd.label && (
+                dd.label === "Programs" ? (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[620px] rounded-2xl border border-white/10 bg-fv-navy/95 backdrop-blur-xl shadow-elevated p-6 z-50 grid grid-cols-3 gap-6 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* Column 1: Personal Training */}
+                    <div className="flex flex-col">
+                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                        Personal Training
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <a href="/weight-loss-program-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Weight Loss Program
+                        </a>
+                        <a href="/womens-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Women's Fitness
+                        </a>
+                        <a href="/senior-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Senior Fitness (55+)
+                        </a>
+                        <a href="/clinical-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Clinical / Post-Surgery
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Column 2: Strength Training */}
+                    <div className="flex flex-col">
+                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                        Strength Training
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <a href="/strength-training-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Strength Training
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Column 3: Yoga */}
+                    <div className="flex flex-col">
+                      <p className="pb-1.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange border-b border-white/5 mb-3">
+                        Yoga
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <a href="/yoga-classes-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Yoga Classes
+                        </a>
+                        <a href="/prenatal-postnatal-yoga-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          Prenatal &amp; Postnatal Yoga
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute top-full left-0 mt-0.5 min-w-[220px] rounded-lg border border-white/10 bg-fv-navy/95 backdrop-blur-lg shadow-elevated py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {dd.items.map((item, i) =>
+                      item.heading ? (
+                        <p
+                          key={`h-${item.heading}`}
+                          className={cn(
+                            "px-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80",
+                            i === 0 ? "pt-1" : "pt-3 mt-1 border-t border-white/5"
+                          )}
+                        >
+                          {item.heading}
+                        </p>
+                      ) : (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="block px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange hover:bg-white/5 transition-colors"
+                        >
+                          {item.label}
+                        </a>
+                      )
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          ))}
+          {/* Online Classes — highlighted */}
+          <a
+            href="/online-training.html"
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-fv-orange hover:text-white hover:bg-fv-orange/90 transition-colors"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
+          </a>
+          {/* Scroll links */}
+          {NAV_SCROLL.map((n) => (
             <button
               key={n.id}
               onClick={() => scrollTo(n.id)}
               className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wider transition-colors",
+                "rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
                 active === n.id
-                  ? "text-fv-orange font-bold"
+                  ? "text-fv-orange"
                   : "text-white/70 hover:text-white"
               )}
             >
               {n.label}
             </button>
           ))}
-          <a
-            href="/online-training.html"
-            className="rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wider text-white/70 hover:text-white transition-colors"
-          >
-            Online Training
-          </a>
           <Link
             to="/corporate"
-            className="rounded-md px-3 py-2 text-sm font-medium uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+            className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
           >
-            For Business
+            Corporate
           </Link>
+          <a
+            href="/societies/"
+            className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+          >
+            Societies
+          </a>
           <Button
             onClick={() => scrollTo("contact")}
             className="ml-2 bg-fv-orange text-white hover:bg-fv-orange/90 transition-all uppercase tracking-wider text-xs font-bold px-4"
@@ -254,23 +425,56 @@ function Nav({
           </Button>
           <Link
             to="/login"
-            className="ml-2 text-sm font-medium uppercase tracking-wider text-white/70 hover:text-white px-2 transition-colors"
+            className="ml-1 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white px-2 transition-colors"
           >
             Log in
           </Link>
         </nav>
         <button
           aria-label="Open menu"
-          className="md:hidden rounded-md p-2 text-white"
+          className="lg:hidden rounded-md p-2 text-white"
           onClick={() => setMenuOpen(!menuOpen)}
         >
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
       {menuOpen && (
-        <div className="md:hidden border-t border-white/10 bg-fv-navy">
+        <div className="lg:hidden border-t border-white/10 bg-fv-navy max-h-[80vh] overflow-y-auto">
           <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col">
-            {NAV.map((n) => (
+            {/* Mobile dropdown sections */}
+            {NAV_DROPDOWNS.map((dd) => (
+              <div key={dd.label} className="border-b border-white/5">
+                <button
+                  onClick={() => setMobileExpanded(mobileExpanded === dd.label ? null : dd.label)}
+                  className="w-full py-3 text-left text-base font-semibold uppercase tracking-wider text-white flex items-center justify-between"
+                >
+                  {dd.label}
+                  <ChevronDown className={cn("h-4 w-4 transition-transform text-white/50", mobileExpanded === dd.label && "rotate-180")} />
+                </button>
+                {mobileExpanded === dd.label && (
+                  <div className="pb-3 pl-4 flex flex-col gap-1">
+                    {dd.items.map((item) =>
+                      item.heading ? (
+                        <p key={`h-${item.heading}`} className="pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80">
+                          {item.heading}
+                        </p>
+                      ) : (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="py-2 text-sm font-medium text-white/60 hover:text-fv-orange transition-colors"
+                          onClick={() => setMenuOpen(false)}
+                        >
+                          {item.label}
+                        </a>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+            {/* Scroll links */}
+            {NAV_SCROLL.map((n) => (
               <button
                 key={n.id}
                 onClick={() => {
@@ -285,20 +489,27 @@ function Nav({
                 {n.label}
               </button>
             ))}
-            <a
-              href="/online-training.html"
-              className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Online Training
-            </a>
             <Link
               to="/corporate"
               className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
               onClick={() => setMenuOpen(false)}
             >
-              For Business
+              Corporate Wellness
             </Link>
+            <a
+              href="/online-training.html"
+              className="py-3 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/5 inline-flex items-center gap-2"
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
+            </a>
+            <a
+              href="/societies/"
+              className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+              onClick={() => setMenuOpen(false)}
+            >
+              Societies
+            </a>
             <Link
               to="/login"
               className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white/70"
@@ -313,12 +524,12 @@ function Nav({
   );
 }
 
-const HERO_PHRASES = [
-  "REDUCE WEIGHT",
-  "BUILD STRENGTH",
-  "REDUCE PAIN",
-  "BUILD STAMINA",
-  "FEEL ENERGETIC",
+const HERO_SERVICES = [
+  "Strength",
+  "Weight Loss",
+  "Yoga",
+  "Mobility",
+  "Clinical Fitness",
 ];
 
 const HERO_IMAGES = [
@@ -329,138 +540,402 @@ const HERO_IMAGES = [
   "/gallery/class-5.jpg",
 ];
 
+const HERO_LOCATIONS = [
+  { name: "HSR Layout", href: "/service-areas.html" },
+  { name: "Whitefield", href: "/service-areas.html" },
+  { name: "Sarjapur", href: "/service-areas.html" },
+  { name: "Bellandur", href: "/service-areas.html" },
+  { name: "Electronic City", href: "/service-areas.html" },
+  { name: "Koramangala", href: "/service-areas.html" },
+  { name: "Marathahalli", href: "/service-areas.html" },
+  { name: "Varthur", href: "/service-areas.html" },
+];
+
+const HERO_WORDS = [
+  "REDUCE PAIN",
+  "REDUCE WEIGHT",
+  "FEEL ENERGETIC",
+  "BUILD STRENGTH",
+  "REGAIN MOBILITY",
+  "STAY FIT",
+];
+
 /* ---------- HERO ---------- */
 function Hero() {
-  const [phraseIndex, setPhraseIndex] = useState(0);
   const [imageIndex, setImageIndex] = useState(0);
-
-  useEffect(() => {
-    const cycleText = setInterval(() => {
-      setPhraseIndex((i) => (i + 1) % HERO_PHRASES.length);
-    }, 2000);
-    return () => clearInterval(cycleText);
-  }, []);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [fade, setFade] = useState(true);
 
   useEffect(() => {
     const cycleImage = setInterval(() => {
-      setImageIndex((prev) => {
-        let next = prev;
-        while (next === prev) {
-          next = Math.floor(Math.random() * HERO_IMAGES.length);
-        }
-        return next;
-      });
-    }, 3000);
+      setImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
+    }, 4000);
     return () => clearInterval(cycleImage);
+  }, []);
+
+  useEffect(() => {
+    const cycleWord = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setWordIndex((prev) => (prev + 1) % HERO_WORDS.length);
+        setFade(true);
+      }, 300);
+    }, 2800);
+    return () => clearInterval(cycleWord);
   }, []);
 
   return (
     <section
       id="home"
-      className="relative overflow-hidden text-white bg-fv-navy py-10 md:py-14 flex items-center"
+      className="relative overflow-hidden text-white bg-fv-navy pt-12 pb-8 md:pt-20 md:pb-12 flex items-center border-b border-white/10"
     >
+      {/* Background Subtle Overlay */}
       <img
         src={heroHands}
-        alt="People doing yoga"
-        className="absolute inset-0 h-full w-full object-cover object-center hero-bg-zoom opacity-30"
+        alt="Yoga and personal training session in a Bangalore apartment society"
+        className="absolute inset-0 h-full w-full object-cover object-center opacity-20 hero-bg-zoom"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-fv-navy via-fv-navy/95 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-fv-navy via-fv-navy/90 to-fv-navy/60" />
 
-      <div className="relative mx-auto max-w-6xl px-4 py-4 grid md:grid-cols-12 gap-6 items-center w-full z-10">
-        {/* Left Column: Bold Typography & CTAs */}
+      <div className="relative fluid-container-hero py-0.5 grid md:grid-cols-12 gap-6 md:gap-8 items-center w-full z-10">
+        {/* Left Column: Clean, High-Impact Hero Copy */}
         <div className="md:col-span-7 animate-fade-in text-left">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-wider border border-white/15 mb-4">
-            <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> Your Society, Your Time, Our Trainer
+          {/* Badge Pill */}
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-3 md:mb-4">
+            <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> YOUR SOCIETY, YOUR TIME, OUR TRAINER
           </span>
           
-          <h1 className="font-sans font-black uppercase text-5xl md:text-7xl leading-[0.95] tracking-tighter mt-2">
-            Join us to <br />
+          {/* Headline with Animated Rotating Terms */}
+          <h1 className="font-sans font-black uppercase fluid-hero-title">
+            JOIN US TO <br />
             <span
-              key={phraseIndex}
-              className="text-fv-orange animate-slide-in-right block"
+              className={cn(
+                "text-fv-orange inline-block transition-all duration-300 transform",
+                fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+              )}
             >
-              {HERO_PHRASES[phraseIndex]}
+              {HERO_WORDS[wordIndex]}
             </span>
           </h1>
 
-          <p className="mt-4 text-base md:text-lg text-white/75 max-w-lg leading-relaxed">
+          {/* Subheadline */}
+          <p className="mt-3 fluid-subheading text-white/80 max-w-lg leading-relaxed font-normal">
             Certified yoga teachers &amp; personal trainers near you in Bangalore — fitness at your society's doorstep.
           </p>
 
-          <div className="mt-5 flex flex-col sm:flex-row gap-3">
+          {/* Clean Proportional Dual Pill CTAs */}
+          <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 max-w-sm sm:max-w-none">
             <Button
-              size="lg"
               onClick={() => {
                 trackEvent("hero_cta_clicked");
                 scrollTo("contact");
               }}
-              className="bg-fv-orange text-white hover:bg-fv-orange/90 h-12 px-8 text-sm font-black uppercase tracking-wider transition-all hover:scale-[1.03] hover:shadow-lg"
+              className="bg-fv-orange text-white hover:bg-fv-orange/90 h-11 sm:h-12 px-6 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fv-orange"
             >
-              Start Today
+              CONSULT NOW
             </Button>
             <Button
-              size="lg"
               variant="outline"
               onClick={() => scrollTo("services")}
-              className="border border-white/20 bg-transparent text-white hover:bg-white/10 h-12 px-8 text-sm font-black uppercase tracking-wider transition-all"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10 h-11 sm:h-12 px-6 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
-              Explore Programs
+              EXPLORE PROGRAMS
             </Button>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-4 text-xs font-bold uppercase tracking-wider text-white/70">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange"></span>
-              110+ Trained
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange"></span>
-              10+ Societies
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange"></span>
-              Expert Clinical Protocols
-            </div>
+          {/* Key Stats Row (matches uploaded image design) */}
+          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
+            <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 110+ TRAINED</span>
+            <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 10+ SOCIETIES</span>
+            <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> EXPERT CLINICAL PROTOCOLS</span>
           </div>
         </div>
 
-        {/* Right Column: Hero Accent Image/Overlay */}
+        {/* Right Column: Clean Visual Image Card */}
         <div className="md:col-span-5 animate-fade-in md:block hidden" style={{ animationDelay: "0.15s" }}>
           <div className="relative p-2">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-fv-orange to-amber-500 opacity-20 blur-lg"></div>
-            <div className="relative rounded-2xl border border-white/10 overflow-hidden aspect-[4/5] bg-fv-navy">
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-fv-orange to-amber-500 opacity-20 blur-xl"></div>
+            <div className="relative rounded-3xl border border-white/15 overflow-hidden aspect-[4/4.5] bg-fv-navy shadow-elevated">
               {HERO_IMAGES.map((imgUrl, idx) => (
                 <img
                   key={imgUrl}
                   src={imgUrl}
-                  alt="Fitved Training Session"
+                  alt={`Fitved personal training session in Bangalore society - ${idx + 1}`}
                   className={cn(
                     "absolute inset-0 w-full h-full object-cover grayscale contrast-125 transition-opacity duration-1000 ease-in-out",
-                    idx === imageIndex ? "opacity-80 z-0" : "opacity-0 pointer-events-none"
+                    idx === imageIndex ? "opacity-85 z-0" : "opacity-0 pointer-events-none"
                   )}
                 />
               ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-transparent to-transparent z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/30 to-transparent z-10"></div>
               
-              {/* Overlay Stat badge */}
-              <div className="absolute bottom-6 left-6 right-6 p-4 rounded-xl bg-fv-navy/80 backdrop-blur border border-white/10 z-20">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-fv-orange">Body Age Reversal</span>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-3xl font-black">42</span>
-                  <span className="text-xs text-white/50">to</span>
-                  <span className="text-3xl font-black text-fv-orange">38</span>
-                  <span className="text-xs text-white/60 ml-2">in 12 weeks</span>
+              {/* Overlay Stat badge: Body Age Reversal */}
+              <div className="absolute bottom-5 left-5 right-5 p-5 rounded-2xl bg-fv-navy/90 backdrop-blur border border-white/20 z-20 text-left">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-fv-orange block">BODY AGE REVERSAL</span>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-sans font-black text-3xl text-white">42</span>
+                  <span className="text-xs text-white/50 uppercase">to</span>
+                  <span className="font-sans font-black text-3xl text-fv-orange">38</span>
+                  <span className="text-[11px] text-white/60 ml-1">in 12 weeks</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Scroll Indicator */}
+      <div
+        onClick={() => scrollTo("services")}
+        className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-40 hover:opacity-85 transition-opacity cursor-pointer hidden md:flex"
+      >
+        <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white">Scroll</span>
+        <div className="h-8 w-px bg-white/50"></div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- ONLINE PROMOTION SECTION ---------- */
+function OnlinePromotion() {
+  const ref = useReveal();
+  
+  return (
+    <section className="py-20 md:py-28 bg-fv-navy/40 border-t border-b border-white/5 relative overflow-hidden">
+      {/* Background gradients */}
+      <div className="absolute inset-0 bg-gradient-to-tr from-fv-orange/5 via-transparent to-transparent pointer-events-none"></div>
       
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity cursor-pointer md:flex hidden" onClick={() => scrollTo("about")}>
-        <span className="text-[10px] font-bold uppercase tracking-widest">Scroll</span>
-        <span className="h-8 w-px bg-white/50 animate-pulse"></span>
+      <div className="fluid-container" ref={ref}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-16 items-center">
+          
+          {/* Left Column: Text Content */}
+          <div className="text-left">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-fv-orange/30 bg-fv-orange/10 text-fv-orange text-[10px] font-bold uppercase tracking-widest mb-6">
+              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse"></span>
+              Online Classes
+            </span>
+            
+            <h2 className="font-sans font-black uppercase text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-none mb-6">
+              Train live.<br/>
+              <span className="text-fv-orange">From anywhere.</span>
+            </h2>
+            
+            <p className="text-white/70 text-sm sm:text-base leading-relaxed mb-8 max-w-xl">
+              Join live yoga, strength, and mobility sessions with certified FitVed trainers from anywhere in the world. Coach-led sessions available worldwide.
+            </p>
+            
+            {/* Key benefits list */}
+            <ul className="space-y-3.5 mb-10 text-xs sm:text-sm font-semibold tracking-wide text-white/80">
+              <li className="flex items-center gap-3">
+                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span>Live interactive coach feedback</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span>Flexible schedules adjusted to any timezone</span>
+              </li>
+              <li className="flex items-center gap-3">
+                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
+                  <Check className="h-3.5 w-3.5" />
+                </div>
+                <span>Private &amp; small-group options tailored to your goals</span>
+              </li>
+            </ul>
+            
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => scrollTo("contact")}
+                className="rounded-full bg-fv-orange text-white px-7 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-fv-orange/90 transition-colors shadow-elevated"
+              >
+                Book Free Trial
+              </button>
+              <a
+                href="/online-training.html"
+                className="rounded-full border border-white/20 text-white hover:border-white hover:bg-white/5 px-7 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all"
+              >
+                Explore Online Programs
+              </a>
+            </div>
+          </div>
+          
+          {/* Right Column: Sized Symmetrical Image & Overlay Badge */}
+          <div className="relative flex justify-center items-center">
+            <div className="relative rounded-3xl border border-white/10 overflow-hidden w-full max-w-[340px] aspect-[4/5] shadow-card bg-fv-navy">
+              <img
+                src="/gallery/class-4.jpg"
+                alt="Client doing home workout session guided online"
+                className="w-full h-full object-cover grayscale opacity-90 contrast-125"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/20 to-transparent"></div>
+              
+              {/* Floating session status card - clean & editorial */}
+              <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-fv-navy/90 border border-white/20 backdrop-blur text-left">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-fv-orange block mb-1.5">LIVE SESSION</span>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h5 className="font-sans font-black uppercase text-xs text-white leading-none mb-1">Anjali Sharma</h5>
+                    <p className="text-[10px] text-white/50">Yoga &amp; Mobility Coach</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] font-bold text-white block">Private 1-on-1</span>
+                    <span className="text-[9px] text-white/50 block">6:00 AM (IST)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- STAGE 2: TRUST & CREDIBILITY BAR ---------- */
+function TrustBar() {
+  return (
+    <section className="hidden sm:block py-4 md:py-5 bg-fv-navy/95 border-b border-white/10">
+      <div className="fluid-container-hero">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 text-center md:text-left">
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-fv-orange/30 transition-all duration-200 shadow-card">
+            <div className="text-xl md:text-2xl font-black text-fv-orange shrink-0">110+</div>
+            <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-white/70 leading-tight">
+              Transformations Completed
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-fv-orange/30 transition-all duration-200 shadow-card">
+            <div className="text-xl md:text-2xl font-black text-fv-orange shrink-0">10+</div>
+            <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-white/70 leading-tight">
+              Top Societies Served
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-fv-orange/30 transition-all duration-200 shadow-card">
+            <div className="text-xl md:text-2xl font-black text-fv-orange shrink-0">0 Mins</div>
+            <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-white/70 leading-tight">
+              Commute Time (Home/Society)
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-fv-orange/30 transition-all duration-200 shadow-card">
+            <div className="text-xl md:text-2xl font-black text-fv-orange shrink-0">100%</div>
+            <div className="text-[10px] md:text-[11px] font-bold uppercase tracking-wider text-white/70 leading-tight">
+              AYUSH &amp; ACE Certified
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- WHO IS FITVED FOR? (Audience Targeting) ---------- */
+function WhoIsItFor() {
+  const ref = useReveal();
+  const audiences = [
+    {
+      icon: Briefcase,
+      title: "Working Professionals",
+      desc: "Desk-job posture fix, stress relief, and sustainable fitness — train before or after work in your society.",
+      href: "/personal-training.html",
+    },
+    {
+      icon: HeartPulse,
+      title: "Senior Citizens (55+)",
+      desc: "Doctor-approved movement for BP, diabetes, arthritis. Rebuild strength, balance, and independence.",
+      href: "/senior-fitness-bangalore.html",
+    },
+    {
+      icon: Heart,
+      title: "Women's Fitness",
+      desc: "Safe, private training designed for women — strength, flexibility, hormonal health, and confidence.",
+      href: "/womens-fitness-bangalore.html",
+    },
+    {
+      icon: Baby,
+      title: "Pregnancy Yoga",
+      desc: "Gentle, certified pregnancy yoga and postnatal recovery — at your home with expert guidance.",
+      href: "/prenatal-postnatal-yoga-bangalore.html",
+    },
+    {
+      icon: Dumbbell,
+      title: "Weight Loss",
+      desc: "Structured 12-week programs combining strength training, nutrition coaching, and accountability.",
+      href: "/weight-loss-program-bangalore.html",
+    },
+    {
+      icon: Stethoscope,
+      title: "Diabetes / BP / Arthritis",
+      desc: "Clinical fitness protocols for chronic conditions. Many clients reduce medication within months.",
+      href: "/clinical-fitness-bangalore.html",
+    },
+    {
+      icon: Building2,
+      title: "Corporate Teams",
+      desc: "Office yoga, team fitness, and wellness workshops for employee health and productivity.",
+      href: "/corporate",
+    },
+    {
+      icon: Users,
+      title: "Couples & Friends",
+      desc: "Semi-private sessions with your partner or neighbours — affordable, fun, and social.",
+      href: "#contact",
+    },
+    {
+      icon: Activity,
+      title: "Post-Surgery Recovery",
+      desc: "Medically-informed rehab training — safe progression from your doctor's clearance to full fitness.",
+      href: "/clinical-fitness-bangalore.html",
+    },
+  ];
+
+  return (
+    <section id="who" className="py-10 md:py-14 bg-fv-navy border-t border-white/10">
+      <div ref={ref} className="reveal mx-auto max-w-6xl px-4">
+        <div className="text-center max-w-2xl mx-auto mb-8">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="h-px w-8 bg-fv-orange"></span>
+            <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Who It&apos;s For</span>
+            <span className="h-px w-8 bg-fv-orange"></span>
+          </div>
+          <h2 className="font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none">
+            WHO IS <span className="text-fv-orange">FITVED</span> FOR?
+          </h2>
+          <p className="mt-4 text-white/60 text-sm leading-relaxed">
+            Whether you&apos;re 25 or 75, recovering from surgery or training for your first 5K — we have a certified specialist for you.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {audiences.map((a) => {
+            const Icon = a.icon;
+            const isExternal = !a.href.startsWith("#") && !a.href.startsWith("/corporate");
+            return (
+              <a
+                key={a.title}
+                href={a.href}
+                className="group bg-white/5 border border-white/10 rounded-xl p-5 transition-all duration-300 hover:border-fv-orange/30 hover:bg-white/[0.07] hover:-translate-y-1 text-left flex flex-col"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-fv-orange/10 text-fv-orange">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-sans font-black uppercase text-sm text-white tracking-wider leading-tight group-hover:text-fv-orange transition-colors">
+                      {a.title}
+                    </h3>
+                    <p className="mt-1.5 text-xs text-white/60 leading-relaxed">
+                      {a.desc}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-white/30 group-hover:text-fv-orange transition-colors shrink-0 mt-1" />
+                </div>
+              </a>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -683,107 +1158,385 @@ function ProblemSolution() {
   );
 }
 
-/* ---------- SERVICES (What We Do Best) ---------- */
-function Services() {
+/* ---------- VALUE COMPARISON MATRIX ---------- */
+function ValueComparisonMatrix() {
   const ref = useReveal();
-  const cards = [
+  const rows = [
     {
-      num: "01",
-      title: "1-on-1 Personal Training",
-      desc: "Fully customized programs in your society gym. Medical history analysis, body composition tracking, weekly progress reviews.",
-      ideal: "Corporate professionals, seniors, clinical recovery",
-      img: "/gallery/class-4.jpg",
+      feature: "Travel & Commute",
+      fitved: "0 Mins (Inside Your Building)",
+      gyms: "30–45 Mins Traffic Daily",
+      cult: "20–30 Mins Commute",
     },
     {
-      num: "02",
-      title: "Small Group Training (4–6)",
-      desc: "Semi-private sessions with friends or neighbors. Personalized attention at affordable pricing. Build community while building strength.",
-      ideal: "Society residents, couples, friend groups",
-      img: "/gallery/class-2.jpg",
+      feature: "Attention & Coaching",
+      fitved: "1-on-1 Dedicated / 4–6 Small Group",
+      gyms: "Shared Floor / Zero Form Check",
+      cult: "Crowded Group Classes (20+)",
     },
     {
-      num: "03",
-      title: "Tailored Diet Plans",
-      desc: "Custom metabolic nutrition program designed by experts. Weekly dietary updates, optimal macro breakdown, and gut health support.",
-      ideal: "Weight loss, muscle gain, chronic issue management",
-      img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
+      feature: "Medical History Review",
+      fitved: "Included (Clinical Protocols)",
+      gyms: "Ignored (Generic Routines)",
+      cult: "Ignored (Fixed Workout)",
     },
     {
-      num: "04",
-      title: "Yoga & Wellness Sessions",
-      desc: "Society-based classes blending strength conditioning with yoga. Breathwork, posture correction, and full-body mobility exercises.",
-      ideal: "Apartment communities, RWAs, corporate offices",
-      img: "/gallery/class-1.jpg",
+      feature: "Diet & Nutrition Plan",
+      fitved: "Custom Indian Metabolic Plan",
+      gyms: "Extra ₹5,000+ Fee or None",
+      cult: "None Included",
+    },
+    {
+      feature: "Missed Session Policy",
+      fitved: "100% Carry Forward Rollover",
+      gyms: "Lost Forever",
+      cult: "Class Penalty",
     },
   ];
 
   return (
-    <section id="services" className="py-8 md:py-12 bg-fv-navy border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-4">
+    <section id="difference" className="py-12 md:py-16 bg-fv-navy border-t border-white/10">
+      <div ref={ref} className="reveal mx-auto max-w-6xl px-4">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="h-px w-8 bg-fv-orange"></span>
+            <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Why FitVed Wins</span>
+            <span className="h-px w-8 bg-fv-orange"></span>
+          </div>
+          <h2 className="font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none">
+            THE FITVED <span className="text-fv-orange">DIFFERENCE</span>
+          </h2>
+          <p className="mt-3 text-white/60 text-sm leading-relaxed">
+            See how society-based personal training compares to traditional commercial gyms and group fitness chains.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5 shadow-elevated">
+          <table className="w-full text-left border-collapse min-w-[640px]">
+            <thead>
+              <tr className="border-b border-white/10 bg-fv-navy/90 text-xs font-black uppercase tracking-wider text-white">
+                <th className="py-4 px-6 w-1/4">Key Feature</th>
+                <th className="py-4 px-6 w-1/3 bg-fv-orange/15 text-fv-orange border-x border-fv-orange/20">
+                  ✨ FitVed Society Fitness
+                </th>
+                <th className="py-4 px-6 w-1/5 text-white/50">Commercial Gyms</th>
+                <th className="py-4 px-6 w-1/5 text-white/50">Cult.fit Centers</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5 text-xs md:text-sm">
+              {rows.map((r, i) => (
+                <tr key={i} className="hover:bg-white/[0.03] transition-colors">
+                  <td className="py-4 px-6 font-bold text-white uppercase tracking-wider text-xs">
+                    {r.feature}
+                  </td>
+                  <td className="py-4 px-6 font-bold text-white bg-fv-orange/10 border-x border-fv-orange/15">
+                    <span className="text-fv-orange mr-1.5">✓</span> {r.fitved}
+                  </td>
+                  <td className="py-4 px-6 text-white/50">{r.gyms}</td>
+                  <td className="py-4 px-6 text-white/50">{r.cult}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- SERVICES (Personal Fitness Services) ---------- */
+function Services() {
+  const ref = useReveal();
+  const [filter, setFilter] = useState("all");
+  const [showMore, setShowMore] = useState(false);
+
+  const services = [
+    {
+      num: "01",
+      title: "Personal Trainer",
+      audience: "For Working Professionals",
+      category: "professionals",
+      desc: "1-on-1 customized programs in your society gym. Medical history analysis, body composition tracking, weekly progress reviews.",
+      href: "/personal-training.html",
+      img: "/gallery/class-4.jpg",
+    },
+    {
+      num: "02",
+      title: "Yoga Classes",
+      audience: "For Flexibility & Posture",
+      category: "yoga",
+      desc: "Society-based yoga blending strength, breathwork, posture correction, and full-body mobility. All levels welcome.",
+      href: "/yoga-classes-bangalore.html",
+      img: "/gallery/class-1.jpg",
+    },
+    {
+      num: "03",
+      title: "Prenatal Yoga",
+      audience: "For Expectant Mothers",
+      category: "women",
+      desc: "Safe, gentle pregnancy yoga with certified instructors. Breath-led movement, pelvic strength, and stress relief.",
+      href: "/prenatal-postnatal-yoga-bangalore.html",
+      img: "/gallery/class-3.jpg",
+    },
+    {
+      num: "04",
+      title: "Postnatal Recovery",
+      audience: "For Postpartum Moms",
+      category: "women",
+      desc: "Rebuild core strength, pelvic floor, and energy after delivery — at your own pace with expert support.",
+      href: "/prenatal-postnatal-yoga-bangalore.html",
+      img: "/gallery/class-2.jpg",
+    },
+    {
+      num: "05",
+      title: "Weight Loss Program",
+      audience: "For Sustainable Fat Loss",
+      category: "professionals",
+      desc: "12-week structured fat loss with strength training, metabolic nutrition plans, and weekly accountability.",
+      href: "/weight-loss-program-bangalore.html",
+      img: "/gallery/class-5.jpg",
+    },
+    {
+      num: "06",
+      title: "Senior Fitness (55+)",
+      audience: "For Seniors & Active Aging",
+      category: "seniors",
+      desc: "Safe, supervised exercise for older adults — BP, diabetes, arthritis management with medically-informed training.",
+      href: "/senior-fitness-bangalore.html",
+      img: "/gallery/class-4.jpg",
+    },
+    {
+      num: "07",
+      title: "Corporate Wellness",
+      audience: "For Office Teams",
+      category: "professionals",
+      desc: "Office yoga, team fitness sessions, and wellness workshops. Boost employee productivity and reduce sick days.",
+      href: "/corporate",
+      img: "/gallery/class-2.jpg",
+    },
+    {
+      num: "08",
+      title: "Clinical Rehab & Exercise",
+      audience: "For Back Pain & Rehab",
+      category: "rehab",
+      desc: "Medically-informed rehab for post-knee surgery, back pain, discectomy recovery, and cardiac protocols.",
+      href: "/clinical-fitness-bangalore.html",
+      img: "/gallery/class-5.jpg",
+    },
+    {
+      num: "09",
+      title: "Diet & Nutrition",
+      audience: "For Metabolic Nutrition",
+      category: "professionals",
+      desc: "Custom metabolic nutrition programs. Weekly dietary updates, optimal macro breakdown, and gut health support.",
+      href: "/diet-coaching-bangalore.html",
+      img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
+    },
+    {
+      num: "10",
+      title: "Online Coaching",
+      audience: "For Remote & Global Clients",
+      category: "professionals",
+      desc: "Train from anywhere with video-guided sessions, personalized programs, and real-time trainer feedback.",
+      href: "/online-training.html",
+      img: "/gallery/class-3.jpg",
+    },
+  ];
+
+  const filterTabs = [
+    { id: "all", label: "All Services" },
+    { id: "professionals", label: "Working Professionals" },
+    { id: "seniors", label: "Seniors 55+" },
+    { id: "women", label: "Women & Maternity" },
+    { id: "rehab", label: "Medical Rehab" },
+  ];
+
+  const filteredServices = filter === "all" ? services : services.filter((s) => s.category === filter);
+  const displayedServices = showMore ? filteredServices : filteredServices.slice(0, 4);
+
+  return (
+    <section id="services" className="pt-10 pb-14 md:pt-14 md:pb-20 bg-fv-navy border-t border-white/10">
+      <div className="fluid-container-services">
         {/* Header Block */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="text-left">
             <div className="flex items-center gap-2 mb-2">
               <span className="h-px w-8 bg-fv-orange"></span>
               <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">
-                OUR OFFERINGS
+                SERVICES &amp; TARGET PROGRAMS
               </span>
             </div>
-            <h2 className="font-sans font-black uppercase text-4xl md:text-5xl tracking-tighter leading-none">
-              WHAT WE <span className="text-fv-orange">DO BEST</span>
+            <h2 className="font-sans font-black uppercase fluid-heading">
+              WHO WE SERVE &amp; <span className="text-fv-orange">OUR OFFERINGS</span>
             </h2>
           </div>
-          <p className="text-white/60 text-sm max-w-sm text-left leading-relaxed">
-            Fitness tailored to your life, not the other way around. Select the custom path that matches your health goals.
+          <p className="text-white/60 fluid-body max-w-md text-left">
+            Whether you&apos;re 25 or 75 — personalized strength training, yoga therapy &amp; clinical rehab tailored to your age, goals, and medical history.
           </p>
         </div>
 
-        {/* 4-Column Card Grid styled like Fittians */}
-        <div ref={ref} className="reveal mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cards.map((c) => (
+        {/* Filter Pills Bar */}
+        <div className="mt-8 flex flex-wrap items-center gap-2 border-b border-white/10 pb-4">
+          {filterTabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => {
+                setFilter(t.id);
+                setShowMore(true);
+              }}
+              className={cn(
+                "rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-all cursor-pointer border",
+                filter === t.id
+                  ? "bg-fv-orange text-white border-fv-orange shadow-md"
+                  : "bg-white/5 text-white/70 border-white/10 hover:border-white/30 hover:text-white"
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* 5 Cards Per Row on PC View (Covers Full Width) / Mobile-Only Expandable View */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+          {filteredServices.map((c, idx) => (
             <div
               key={c.num}
-              className="group relative overflow-hidden rounded-2xl aspect-[3/4] border border-white/10 cursor-pointer bg-fv-navy"
+              onClick={() => {
+                trackEvent("service_card_clicked", { title: c.title });
+                scrollTo("contact");
+              }}
+              className={cn(
+                "group relative overflow-hidden rounded-2xl aspect-[4/3] border border-white/10 cursor-pointer bg-fv-navy transition-all duration-300 hover:-translate-y-1 hover:border-fv-orange/40",
+                !showMore && idx >= 4 ? "hidden sm:block" : "block"
+              )}
             >
-              {/* Card BG Image with Grayscale default */}
+              {/* Card BG Image */}
               <img
                 src={c.img}
-                alt={c.title}
+                alt={`${c.title} in Bangalore — Fitved`}
                 loading="lazy"
                 className="w-full h-full object-cover transition-all duration-700 sm:group-hover:scale-110 grayscale-0 sm:grayscale sm:group-hover:grayscale-0 sm:group-hover:contrast-100 contrast-125 opacity-55 sm:opacity-40 sm:group-hover:opacity-75"
               />
               
               {/* Bottom Dark Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy/95 via-fv-navy/60 to-transparent sm:from-fv-navy sm:via-fv-navy/60 sm:to-transparent transition-all duration-300 sm:group-hover:from-fv-navy/95"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy/95 via-fv-navy/60 to-transparent transition-all duration-300"></div>
               
               {/* Card Contents */}
-              <div className="absolute inset-0 p-6 flex flex-col justify-end text-left">
-                <span className="text-xs font-black text-fv-orange tracking-widest block mb-1">
-                  {c.num}
-                </span>
+              <div className="absolute inset-0 p-4 flex flex-col justify-between text-left">
+                {/* Top Badge Row */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-fv-orange tracking-widest">
+                    {c.num}
+                  </span>
+                  <span className="bg-white/15 backdrop-blur text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/20 truncate max-w-[130px]">
+                    {c.audience}
+                  </span>
+                </div>
                 
-                <h3 className="font-sans font-black uppercase text-xl leading-tight text-white mb-2 sm:group-hover:text-fv-orange transition-colors">
-                  {c.title}
-                </h3>
-                
-                {/* Hover Reveal Details - Always visible on mobile, reveal on hover on desktop */}
-                <div className="max-h-48 opacity-100 overflow-hidden sm:max-h-0 sm:opacity-0 sm:group-hover:max-h-48 sm:group-hover:opacity-100 transition-all duration-500 ease-in-out">
-                  <p className="text-xs text-white/80 leading-relaxed mb-4">
-                    {c.desc}
-                  </p>
-                  <Button
-                    onClick={() => scrollTo("contact")}
-                    className="w-full bg-fv-orange text-white hover:bg-fv-orange/90 text-[10px] font-black uppercase tracking-wider h-9"
-                  >
-                    Enquire Now
-                  </Button>
+                <div>
+                  <h3 className="font-sans font-black uppercase text-base leading-tight text-white mb-1 sm:group-hover:text-fv-orange transition-colors">
+                    {c.title}
+                  </h3>
+                  
+                  {/* Hover Details */}
+                  <div className="max-h-48 opacity-100 overflow-hidden sm:max-h-0 sm:opacity-0 sm:group-hover:max-h-48 sm:group-hover:opacity-100 transition-all duration-500 ease-in-out">
+                    <p className="text-[11px] text-white/80 leading-relaxed mb-2">
+                      {c.desc}
+                    </p>
+                    <span className="inline-flex items-center gap-1 text-fv-orange text-[10px] font-black uppercase tracking-wider">
+                      Book Free Trial <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Mobile-Only View More Button (Hidden on PC view) */}
+        {filteredServices.length > 4 && (
+          <div className="mt-8 text-center sm:hidden">
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowMore((prev) => !prev);
+              }}
+              variant="outline"
+              className="border-fv-orange/40 bg-fv-orange/10 text-white hover:bg-fv-orange hover:border-fv-orange font-bold uppercase tracking-wider text-xs h-12 px-8 rounded-full transition-all gap-2 shadow-md hover:scale-105"
+            >
+              {showMore ? (
+                <>Show Fewer Services <ChevronUp className="h-4 w-4" /></>
+              ) : (
+                <>View More Services <ChevronDown className="h-4 w-4 text-fv-orange group-hover:text-white" /></>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+/* ---------- LOCATIONS SECTION ---------- */
+function LocationsSection() {
+  const ref = useReveal();
+  const locations = [
+    { name: "HSR Layout", slug: "hsr-layout", societies: "Salarpuria Senorita, Brigade Orchards" },
+    { name: "Whitefield", slug: "whitefield", societies: "Brigade Cosmopolis, Prestige Shantiniketan" },
+    { name: "Sarjapur Road", slug: "sarjapur-road", societies: "Sobha City, Mantri Energia" },
+    { name: "Bellandur", slug: "bellandur", societies: "Adarsh Palm Retreat, Mantri Espana" },
+    { name: "Electronic City", slug: "electronic-city", societies: "Purva Windermere, Prestige Falcon City" },
+    { name: "Koramangala", slug: "koramangala", societies: "Raheja Residency, DNR Atmosphere" },
+    { name: "Marathahalli", slug: "marathahalli", societies: "Gopalan Grandeur, Salarpuria Greenage" },
+    { name: "Varthur", slug: "varthur", societies: "Lakeside Habitat, Assetz Marq" },
+  ];
+
+  return (
+    <div id="locations" className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-7 md:p-8 text-left flex flex-col justify-between h-full shadow-card hover:border-fv-orange/30 transition-all duration-200">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="h-px w-6 bg-fv-orange"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Serving Bangalore</span>
+        </div>
+        <h2 className="font-sans font-black uppercase text-2xl md:text-3xl lg:text-4xl tracking-tighter leading-none mb-2">
+          WHERE WE <span className="text-fv-orange">TRAIN</span>
+        </h2>
+        <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+          Certified personal trainers and yoga coaches in your neighbourhood. We train inside apartment societies across Bangalore.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3.5">
+          {locations.map((loc) => (
+            <a
+              key={loc.slug}
+              href="/service-areas.html"
+              className="group bg-white/5 border border-white/10 rounded-xl p-3.5 sm:p-4 transition-all duration-300 hover:border-fv-orange/30 hover:bg-white/[0.07]"
+            >
+              <div className="flex items-center gap-2 mb-1.5 min-w-0">
+                <MapPin className="h-4.5 w-4.5 text-fv-orange shrink-0" />
+                <h3 className="font-sans font-black uppercase text-xs sm:text-sm text-white tracking-wider group-hover:text-fv-orange transition-colors leading-none truncate">
+                  {loc.name}
+                </h3>
+              </div>
+              <p className="text-[10px] sm:text-[11px] text-white/40 leading-normal line-clamp-1">
+                {loc.societies}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center mt-6 pt-3.5 border-t border-white/10">
+        <p className="text-xs sm:text-sm text-white/40">
+          Don&apos;t see your area?{" "}
+          <button onClick={() => scrollTo("contact")} className="text-fv-orange hover:underline font-bold">
+            Tell us your location →
+          </button>
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -847,108 +1600,181 @@ interface TrainerData {
   reviews: number;
   specialization: string;
   bio: string;
+  certifications: string[];
+  conditionsTreated: string[];
+  clientCount: string;
+  languages: string[];
+  verifiedBadge: string;
   photo?: string;
 }
 
 function Trainers() {
   const trainers: TrainerData[] = [
     {
-      name: "Suma",
+      name: "Suma Paniraj",
       experience: "10+ years",
       rating: 5.0,
       reviews: 128,
       specialization: "Senior Longevity & Therapeutic Yoga",
-      bio: "A senior specialist who helps older adults rebuild strength, balance, and confidence through gentle, medically-informed movement.",
+      certifications: ["AYUSH Certified Yoga Therapist", "Geriatric Rehab Specialist"],
+      conditionsTreated: ["Hypertension", "Diabetes", "Knee Osteoarthritis", "Spinal Stiffness"],
+      clientCount: "350+ Seniors Trained",
+      languages: ["English", "Kannada", "Hindi"],
+      verifiedBadge: "Police Verified • Background Checked",
+      bio: "Senior longevity expert specializing in gentle, medically-informed movement for older adults. Rebuilds balance, joint range of motion, and physical independence.",
     },
     {
       name: "Dhruvi Patel",
       experience: "6 years",
       rating: 4.9,
       reviews: 94,
-      specialization: "Yoga Therapist",
-      bio: "Blends functional yoga and breathwork to ease back pain, improve posture, and restore long-term joint mobility.",
+      specialization: "Yoga Therapist & Posture Specialist",
+      certifications: ["RYT-500 Master Yoga Teacher", "Spinal Decompression Specialist"],
+      conditionsTreated: ["Sciatica", "Tech Neck", "Lower Back Disc Strain", "PCOS"],
+      clientCount: "210+ Clients Trained",
+      languages: ["English", "Hindi", "Gujarati"],
+      verifiedBadge: "Police Verified • Certified Therapist",
+      bio: "Blends clinical yoga therapy with breathwork to relieve back pain, realign posture for desk workers, and restore joint mobility.",
     },
     {
       name: "Pramod Palve",
       experience: "7 years",
       rating: 4.9,
       reviews: 112,
-      specialization: "Yoga & Fitness Coach",
-      bio: "Fuses strength conditioning with yoga for busy professionals — lean muscle, better stamina, sustainable fat loss.",
+      specialization: "Strength Conditioning & Fat Loss Coach",
+      certifications: ["ACE Certified Personal Trainer", "Metabolic Nutrition Coach"],
+      conditionsTreated: ["Visceral Obesity", "Muscle Atrophy", "Insulin Resistance"],
+      clientCount: "280+ Transformations",
+      languages: ["English", "Hindi", "Marathi"],
+      verifiedBadge: "Police Verified • ACE Certified",
+      bio: "Fuses progressive strength conditioning with custom metabolic nutrition for corporate professionals in Bangalore.",
     },
     {
       name: "Shubham Sahane",
       experience: "5 years",
       rating: 4.8,
       reviews: 76,
-      specialization: "Yoga & Mobility Trainer",
-      bio: "Makes every session a group activity — high-energy mobility and strength work that neighbours actually look forward to.",
+      specialization: "Society Group Fitness & Mobility Specialist",
+      certifications: ["NSCA Functional Trainer", "Joint Mobility Coach"],
+      conditionsTreated: ["Joint Stiffness", "Cardiovascular Fatigue", "Post-Work Stress"],
+      clientCount: "190+ Members Trained",
+      languages: ["English", "Hindi", "Kannada"],
+      verifiedBadge: "Police Verified • NSCA Trainer",
+      bio: "Leads high-energy society group mobility and strength sessions that neighbours across Bangalore look forward to.",
     },
     {
       name: "Saurabh",
       experience: "5 years",
       rating: 4.8,
       reviews: 68,
-      specialization: "Yoga & Functional Training",
-      bio: "Guides beginners from their very first stretch to confident, pain-free movement with patient, step-by-step coaching.",
+      specialization: "Beginner Movement & Functional Rehab",
+      certifications: ["AYUSH RYT-200", "Functional Movement Screen (FMS)"],
+      conditionsTreated: ["Beginner Stiffness", "Ankle Instability", "Core Weakness"],
+      clientCount: "150+ Beginners Coached",
+      languages: ["English", "Hindi"],
+      verifiedBadge: "Police Verified • AYUSH Certified",
+      bio: "Guides beginners from their first stretch to confident, pain-free movement with patient, step-by-step coaching.",
     },
   ];
 
   const card = (t: TrainerData, delay = 0) => (
     <div
-      className="h-full rounded-2xl bg-white/5 border border-white/10 p-6 shadow-card hover:shadow-elevated hover:border-fv-orange/30 transition-all duration-300 hover:-translate-y-1 flex flex-col text-left"
+      className="h-full rounded-2xl bg-white/5 border border-white/10 p-3.5 sm:p-4 shadow-card hover:shadow-elevated hover:border-fv-orange/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between text-left"
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="flex items-center gap-4">
-        {t.photo ? (
-          <img
-            src={t.photo}
-            alt={`Trainer ${t.name}`}
-            loading="lazy"
-            className="h-16 w-16 shrink-0 rounded-full object-cover border border-white/10"
-          />
-        ) : (
-          <div className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-white/10 text-white text-xl font-bold border border-white/10">
-            {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
+      <div>
+        {/* Header: Avatar, Name & Rating */}
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-fv-orange/15 text-fv-orange text-sm font-black border border-fv-orange/30">
+              {t.name.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-sans font-black uppercase text-sm text-white tracking-tight leading-tight truncate">{t.name}</h3>
+              <div className="mt-0.5 flex items-center gap-1 flex-wrap">
+                <span className="flex text-fv-orange">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={cn("h-2.5 w-2.5", i < Math.round(t.rating) && "fill-fv-orange")} />
+                  ))}
+                </span>
+                <span className="text-[11px] font-bold text-white leading-none">{t.rating.toFixed(1)}</span>
+                <span className="text-[10px] text-white/40 leading-none">({t.reviews})</span>
+              </div>
+            </div>
           </div>
-        )}
-        <div className="min-w-0">
-          <h3 className="font-sans font-black uppercase text-lg text-white truncate leading-none">{t.name}</h3>
-          <div className="mt-2 flex items-center gap-1.5">
-            <span className="flex text-fv-orange">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={cn("h-3.5 w-3.5", i < Math.round(t.rating) && "fill-fv-orange")} />
-              ))}
-            </span>
-            <span className="text-xs font-semibold text-white/90">{t.rating.toFixed(1)}</span>
-            <span className="text-xs text-white/40">({t.reviews})</span>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-fv-orange bg-fv-orange/10 px-2 py-0.5 rounded-full border border-fv-orange/20 shrink-0">
+            {t.experience}
+          </span>
+        </div>
+
+        {/* Verification Badge */}
+        <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold text-white/60 uppercase tracking-wider">
+          <ShieldCheck className="h-3.5 w-3.5 text-fv-orange shrink-0" />
+          <span className="truncate">{t.verifiedBadge}</span>
+        </div>
+
+        <p className="mt-2 text-xs text-white/75 leading-relaxed line-clamp-3">{t.bio}</p>
+
+        {/* Certifications List */}
+        <div className="mt-2 pt-2 border-t border-white/10">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-fv-orange block mb-1">
+            Verified Certifications
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {t.certifications.map((c) => (
+              <span key={c} className="bg-white/10 text-white/90 text-[9px] font-semibold px-1.5 py-0.5 rounded border border-white/10">
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Conditions Treated */}
+        <div className="mt-2">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-white/50 block mb-1">
+            Conditions Treated
+          </span>
+          <div className="flex flex-wrap gap-1">
+            {t.conditionsTreated.map((cond) => (
+              <span key={cond} className="bg-fv-orange/10 text-fv-orange text-[9px] font-medium px-1.5 py-0.5 rounded">
+                {cond}
+              </span>
+            ))}
           </div>
         </div>
       </div>
-      <span className="mt-4 inline-flex w-fit items-center rounded-full bg-fv-orange/10 px-3 py-0.5 text-xs font-semibold text-fv-orange">
-        {t.specialization} · {t.experience}
-      </span>
-      <p className="mt-3 text-sm text-white/70 leading-relaxed">{t.bio}</p>
+
+      <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-semibold text-white/50 truncate">
+          🗣️ {t.languages.join(", ")}
+        </span>
+        <Button
+          onClick={() => scrollTo("contact")}
+          className="bg-fv-orange text-white hover:bg-fv-orange/90 text-[10px] font-black uppercase tracking-wider h-7 px-3 rounded-full shrink-0"
+        >
+          Book Session
+        </Button>
+      </div>
     </div>
   );
 
   const ref = useReveal(0.1);
 
   return (
-    <section id="trainers" className="py-8 md:py-12 bg-fv-navy border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-4">
+    <section id="trainers" className="py-12 md:py-20 bg-fv-navy border-t border-white/10">
+      <div className="fluid-container-trainers">
         <div className="text-center max-w-2xl mx-auto">
           <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">THE TEAM</span>
-          <h2 className="mt-3 font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none">
+          <h2 className="mt-2 font-sans font-black uppercase fluid-heading">
             MEET YOUR <span className="text-fv-orange">TRAINERS</span>
           </h2>
-          <p className="mt-4 text-white/60 text-sm leading-relaxed">
+          <p className="mt-2.5 text-white/60 fluid-body">
             Certified yoga and fitness specialists who train you inside your own society.
           </p>
         </div>
 
         {/* Desktop: horizontal infinite marquee */}
-        <div ref={ref} className="reveal hidden sm:block mt-6 relative overflow-hidden">
+        <div ref={ref} className="reveal hidden sm:block mt-4 relative overflow-hidden">
           {/* Fade edges */}
           <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-fv-navy to-transparent z-10" />
           <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-fv-navy to-transparent z-10" />
@@ -961,16 +1787,20 @@ function Trainers() {
           </div>
         </div>
 
-        {/* Mobile: carousel */}
-        <div className="sm:hidden mt-8 relative px-12">
-          <Carousel opts={{ align: "start", loop: true }}>
-            <CarouselContent>
+        {/* Mobile: clean full-width carousel without overlapping arrows */}
+        <div className="sm:hidden mt-6 relative">
+          <Carousel opts={{ align: "start", loop: true }} className="w-full">
+            <CarouselContent className="-ml-2">
               {trainers.map((t) => (
-                <CarouselItem key={t.name} className="basis-[85%]">{card(t)}</CarouselItem>
+                <CarouselItem key={t.name} className="pl-2 basis-[90%]">
+                  {card(t)}
+                </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="-left-2" />
-            <CarouselNext className="-right-2" />
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <CarouselPrevious className="static translate-y-0 h-9 w-9 bg-white/10 border-white/20 text-white hover:bg-fv-orange hover:border-fv-orange" />
+              <CarouselNext className="static translate-y-0 h-9 w-9 bg-white/10 border-white/20 text-white hover:bg-fv-orange hover:border-fv-orange" />
+            </div>
           </Carousel>
         </div>
       </div>
@@ -978,105 +1808,168 @@ function Trainers() {
   );
 }
 
+interface CaseStudyData {
+  name: string;
+  location: string;
+  trainer: string;
+  duration: string;
+  problem: string;
+  solution: string;
+  beforeAfter: string;
+  medicalWin: string;
+  lifestyleWin: string;
+  quote: string;
+}
 
-
-/* ---------- TESTIMONIALS (Marquee) ---------- */
 function Testimonials() {
-  const items = [
+  const caseStudies: CaseStudyData[] = [
     {
       name: "Amit Sharma",
-      sub: "39, Corporate Executive · Lakeside Habitat, Varthur",
-      quote:
-        "Lost 8kg visceral fat in 12 weeks without feeling like I was on a diet. The trainer came to my society gym 3×/week, zero commute hassle.",
+      location: "Sobha City, Sarjapur",
+      trainer: "Pramod Palve",
+      duration: "12 Weeks",
+      problem: "Visceral fat buildup, desk-job posture fatigue, 0 time for commercial gym commute.",
+      solution: "1-on-1 society strength training 3×/week + metabolic Indian nutrition plan.",
+      beforeAfter: "Body Fat: 28% ➔ 19% | Visceral Fat: -4 Level",
+      medicalWin: "Reduced blood lipid risk profile under annual health review",
+      lifestyleWin: "Zero commute stress — trained 45 mins before work in society clubhouse",
+      quote: "FitVed is the first program where I actually stuck to the plan. 12 weeks in my building, zero travel.",
     },
     {
       name: "Meena Iyer",
-      sub: "62, Homemaker · Sobha City, Sarjapur",
-      quote:
-        "I was managing cholesterol, BP, and thyroid with medications. After 16 weeks with Fitved, my doctor reduced my BP medication. I feel 10 years younger.",
-    },
-    {
-      name: "Karthik R.",
-      sub: "44, Founder · Adarsh Palm Retreat, Bellandur",
-      quote:
-        "I tried every trainer in Bangalore. Fitved is the first one that actually fixed my back instead of just making me sweat.",
+      location: "Lakeside Habitat, Varthur",
+      trainer: "Suma Paniraj",
+      duration: "16 Weeks",
+      problem: "Hypertension, chronic knee stiffness, and thyroid-related weight gain at age 62.",
+      solution: "Therapeutic senior yoga + low-impact isometric strengthening 3×/week.",
+      beforeAfter: "Joint Range: +40% | Mobility Score: 85/100",
+      medicalWin: "Treating physician reduced daily BP medication dosage",
+      lifestyleWin: "Climbs 3 flights of society stairs effortlessly without knee pain",
+      quote: "My doctor was amazed by my annual checkup. Suma's patience and medical knowledge are unmatched.",
     },
     {
       name: "Sunita V.",
-      sub: "57, Diabetic · Salarpuria Senorita, HSR",
-      quote:
-        "My HbA1c dropped from 7.8 to 6.1 in 5 months. Strength training plus their nutrition plan changed everything.",
+      location: "Salarpuria Senorita, HSR Layout",
+      trainer: "Dhruvi Patel",
+      duration: "20 Weeks",
+      problem: "Type-2 diabetes (HbA1c 7.8), severe lower back sciatica pain from desk work.",
+      solution: "Spinal decompression yoga + progressive resistance training 3×/week.",
+      beforeAfter: "HbA1c: 7.8 ➔ 6.1 | Sciatica Pain: 8/10 ➔ 0/10",
+      medicalWin: "Reversed pre-diabetic glucose spikes without extreme dieting",
+      lifestyleWin: "Sit pain-free for 8-hour workdays; double energy levels in evenings",
+      quote: "My HbA1c dropped from 7.8 to 6.1 in 5 months. Combining strength and yoga changed everything.",
     },
     {
-      name: "Vikram J.",
-      sub: "36, Product Lead · Brigade Cosmopolis, Whitefield",
-      quote:
-        "45 minutes, three times a week, in my own building. No more excuses. I'm in the best shape of my life.",
+      name: "Karthik R.",
+      location: "Adarsh Palm Retreat, Bellandur",
+      trainer: "Pramod Palve",
+      duration: "12 Weeks",
+      problem: "Failed 3 gym memberships; needed weight loss without sacrificing corporate travel schedule.",
+      solution: "Hybrid 1-on-1 society workouts + mobile app travel workout carryover.",
+      beforeAfter: "Weight: -11 kg | Waist Circumference: -4.5 inches",
+      medicalWin: "Restored normal resting heart rate (78 bpm ➔ 64 bpm)",
+      lifestyleWin: "Maintained workout streak across 4 business trips with online check-ins",
+      quote: "FitVed is the only personal training program built for busy tech founders in Bangalore.",
     },
     {
       name: "Anjali P.",
-      sub: "51, Post-knee surgery · Mantri Espana, Bellandur",
-      quote:
-        "They built me back up safely. I'm hiking again at 51 — something I thought was over for me.",
+      location: "Mantri Espana, Bellandur",
+      trainer: "Suma Paniraj",
+      duration: "16 Weeks",
+      problem: "Post-knee surgery rehab (ACL/Meniscus); fear of re-injury during physical activity.",
+      solution: "Doctor-aligned clinical rehab exercise + progressive knee stabilizer drills.",
+      beforeAfter: "Knee Extension: 100% Restored | Quad Strength: +65%",
+      medicalWin: "Full medical clearance achieved 4 weeks ahead of surgeon timeline",
+      lifestyleWin: "Resumed weekend trekking and active walking with zero swelling",
+      quote: "They rebuilt my confidence safely. I'm hiking again at 51 — something I thought was over for me.",
     },
   ];
 
-  const TestiCard = ({ t }: { t: typeof items[number] }) => (
-    <div className="w-[320px] shrink-0 rounded-2xl border border-white/10 p-6 bg-white/5 shadow-card hover:shadow-elevated hover:border-fv-orange/30 transition-all duration-300 mx-3 text-left">
-      <div className="flex items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-full bg-white/10 text-white font-bold shrink-0 border border-white/10">
-          {t.name[0]}
+  const CaseStudyCard = ({ cs }: { cs: CaseStudyData }) => (
+    <div className="w-full md:w-[360px] shrink-0 rounded-2xl border border-white/10 p-3.5 sm:p-4 bg-white/5 shadow-card hover:shadow-elevated hover:border-fv-orange/40 transition-all duration-300 md:mx-2 text-left flex flex-col justify-between">
+      <div>
+        <div className="flex items-start justify-between border-b border-white/10 pb-2 mb-2 gap-2">
+          <div className="min-w-0">
+            <h3 className="font-sans font-black uppercase text-sm md:text-base text-white tracking-tight leading-tight truncate">{cs.name}</h3>
+            <span className="text-[10px] font-semibold text-white/50 block truncate mt-0.5">{cs.location}</span>
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-wider text-fv-orange bg-fv-orange/10 px-2 py-0.5 rounded-full border border-fv-orange/20 shrink-0">
+            {cs.duration}
+          </span>
         </div>
-        <div>
-          <div className="font-sans font-black uppercase text-sm text-white tracking-wider leading-none">{t.name}</div>
-          <div className="text-[10px] text-white/50 mt-1 uppercase tracking-wider">{t.sub}</div>
+
+        {/* Hard Metric Pill */}
+        <div className="bg-fv-orange/15 border border-fv-orange/30 rounded-xl p-2 mb-2 text-left">
+          <span className="text-[9px] font-bold uppercase tracking-widest text-fv-orange block">Measured Metric Results</span>
+          <span className="text-xs font-black text-white mt-0.5 block leading-snug">{cs.beforeAfter}</span>
         </div>
+
+        <div className="space-y-1.5 text-xs">
+          <div>
+            <span className="text-[9px] font-bold uppercase text-white/40 block">Problem</span>
+            <span className="text-white/80 text-[11px] leading-relaxed block">{cs.problem}</span>
+          </div>
+          <div>
+            <span className="text-[9px] font-bold uppercase text-white/40 block">Clinical / Health Win</span>
+            <span className="text-fv-orange font-semibold text-[11px] block">✓ {cs.medicalWin}</span>
+          </div>
+        </div>
+
+        <p className="mt-2.5 text-[11px] text-white/70 italic leading-relaxed pt-2 border-t border-white/10 line-clamp-3">
+          &quot;{cs.quote}&quot;
+        </p>
       </div>
-      <div className="mt-4 flex gap-0.5 text-fv-orange">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} className="h-3.5 w-3.5 fill-fv-orange" />
-        ))}
+
+      <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between gap-1 text-[10px] font-semibold text-white/50">
+        <span className="truncate">Coach: <strong className="text-white">{cs.trainer}</strong></span>
+        <span className="text-fv-orange flex items-center gap-1 shrink-0">
+          <Star className="h-3 w-3 fill-fv-orange" /> Google 5.0 Verified
+        </span>
       </div>
-      <p className="mt-3 text-sm text-white/70 italic leading-relaxed">"{t.quote}"</p>
     </div>
   );
 
-  const doubled = [...items, ...items];
+  const doubled = [...caseStudies, ...caseStudies];
 
   return (
-    <section id="testimonials" className="py-8 md:py-12 bg-fv-navy border-t border-white/10 overflow-hidden">
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="text-center max-w-2xl mx-auto">
-          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">TESTIMONIALS</span>
-          <h2 className="mt-3 font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none">
-            WHAT OUR <span className="text-fv-orange">MEMBERS SAY</span>
-          </h2>
+    <section id="testimonials" className="pt-12 pb-16 md:pt-20 md:pb-28 bg-fv-navy border-t border-white/10 overflow-hidden">
+      <div className="fluid-container-testimonials text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <span className="h-px w-8 bg-fv-orange"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Measured Transformations</span>
+          <span className="h-px w-8 bg-fv-orange"></span>
         </div>
+        <h2 className="font-sans font-black uppercase fluid-heading">
+          MEMBER <span className="text-fv-orange">CASE STUDIES</span>
+        </h2>
+        <p className="mt-2.5 text-white/60 fluid-body max-w-xl mx-auto">
+          Real data, real medical progress, and verified transformations from residents in Bangalore apartment societies.
+        </p>
       </div>
 
-      {/* Desktop marquee */}
-      <div className="hidden md:block mt-6 relative">
+      {/* Desktop Marquee Carousel */}
+      <div className="hidden md:block mt-5 relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-fv-navy to-transparent z-10" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-fv-navy to-transparent z-10" />
-        <div className="marquee-track py-4">
-          {doubled.map((t, i) => (
-            <TestiCard key={`${t.name}-${i}`} t={t} />
+        <div className="marquee-track py-3">
+          {doubled.map((cs, i) => (
+            <CaseStudyCard key={`${cs.name}-${i}`} cs={cs} />
           ))}
         </div>
       </div>
 
-      {/* Mobile: swipeable carousel */}
-      <div className="md:hidden mt-8">
+      {/* Mobile Swipeable Carousel */}
+      <div className="md:hidden mt-5 px-4">
         <Carousel opts={{ align: "start", loop: true }}>
           <CarouselContent className="-ml-4">
-            {items.map((t) => (
-              <CarouselItem key={t.name} className="pl-4 basis-[85%]">
-                <TestiCard t={t} />
+            {caseStudies.map((cs) => (
+              <CarouselItem key={cs.name} className="pl-4 basis-[90%]">
+                <CaseStudyCard cs={cs} />
               </CarouselItem>
             ))}
           </CarouselContent>
         </Carousel>
-        <p className="mt-3 text-center text-xs text-white/40">← swipe to see more →</p>
+        <p className="mt-2 text-center text-xs text-white/40">← swipe to see more →</p>
       </div>
     </section>
   );
@@ -1086,37 +1979,109 @@ function Testimonials() {
 function EnquiryFormAndFAQ() {
   const ref = useReveal();
   const qa = [
+    // Getting Started
+    {
+      q: "How much does a personal trainer cost in Bangalore?",
+      a: "Personal training typically costs ₹8,000–₹18,000 per month depending on session frequency and format (1-on-1 vs. small group). Book a free trial first — you only commit once you've trained with your coach.",
+    },
     {
       q: "Do I need to buy equipment?",
       a: "No. We work with your society gym equipment. If your society doesn't have a gym, we bring portable equipment (resistance bands, dumbbells, mats).",
-    },
-    {
-      q: "What if I have health conditions (diabetes, BP, arthritis, past surgery)?",
-      a: "Perfect — Fitved specializes in medical-history-based training. We design programs around your conditions, not despite them. Many clients reduce medication under doctor supervision.",
-    },
-    {
-      q: "How is this different from a regular gym membership?",
-      a: "We come to your society (zero commute), provide 1-on-1 or small group attention, use clinical protocols (posture correction, breath-led movement), and include metabolic nutrition plans. You're training for healthspan, not just aesthetics.",
-    },
-    {
-      q: "What's the time commitment?",
-      a: "Minimum 2–3 sessions/week, 45–60 minutes each. Most clients train Mon/Wed/Fri or Tue/Thu/Sat.",
-    },
-    {
-      q: "Do you provide meal plans?",
-      a: "Yes — every client gets a personalized metabolic re-composition plan based on body composition analysis. We optimize protein, manage visceral fat, and address digestive issues.",
     },
     {
       q: "What if I'm a complete beginner?",
       a: "Most of our clients are exactly that. We start with mobility, breathing, and bodyweight movements. Progressive overload is gradual and safe.",
     },
     {
+      q: "How do I book a free trial session?",
+      a: "Fill out the enquiry form on this page or WhatsApp us. We'll call you within 24 hours to schedule a trial in your society — no payment required.",
+    },
+    // Health Conditions
+    {
+      q: "What if I have diabetes, BP, or arthritis?",
+      a: "Perfect — Fitved specializes in medical-history-based training. We design programs around your conditions, not despite them. Many clients reduce medication under doctor supervision.",
+    },
+    {
+      q: "Can seniors (55+) safely do yoga and strength training?",
+      a: "Absolutely. Our senior fitness program is designed for adults 55+, focusing on balance, joint health, bone density, and fall prevention. Every exercise is modified for safety.",
+    },
+    {
+      q: "Can I train after surgery (knee replacement, back surgery)?",
+      a: "Yes, once your doctor clears you. Our clinical trainers specialize in post-surgery rehabilitation — safe, supervised progression from recovery to full fitness.",
+    },
+    {
+      q: "Is yoga enough for weight loss?",
+      a: "Yoga improves flexibility and reduces stress, but for significant weight loss, we combine it with strength training and metabolic nutrition coaching for measurable results.",
+    },
+    {
+      q: "Do you offer prenatal and postnatal yoga?",
+      a: "Yes. Our certified prenatal yoga instructors guide expectant mothers through safe pregnancy exercises. Postnatal programs help rebuild core strength and pelvic floor after delivery.",
+    },
+    // Logistics
+    {
+      q: "How is this different from a regular gym membership?",
+      a: "We come to your society (zero commute), provide 1-on-1 or small group attention, use clinical protocols (posture correction, breath-led movement), and include metabolic nutrition plans. You're training for healthspan, not just aesthetics.",
+    },
+    {
+      q: "What's the time commitment?",
+      a: "Minimum 2–3 sessions/week, 45–60 minutes each. Most clients train Mon/Wed/Fri or Tue/Thu/Sat. Flexible scheduling is available.",
+    },
+    {
+      q: "Do you provide meal plans?",
+      a: "Yes — every client gets a personalized metabolic re-composition plan based on body composition analysis. We optimize protein, manage visceral fat, and address digestive issues.",
+    },
+    {
       q: "Can I train with my spouse or friend?",
       a: "Absolutely. Our small group training (4–6 people) is popular for couples and friend groups in the same society.",
     },
     {
+      q: "What if I travel frequently for work?",
+      a: "We offer flexible scheduling — carry forward missed classes so you never lose what you paid for. Online coaching is also available when you travel.",
+    },
+    {
+      q: "Should I train in the morning or evening?",
+      a: "Both are equally effective. We recommend whatever time you can consistently commit to. Most working professionals prefer 6–7 AM or 6–8 PM.",
+    },
+    {
+      q: "Can children or teenagers join?",
+      a: "Yes, we offer age-appropriate fitness programs for children (8+) and teens, focusing on motor skills, posture, and healthy habits.",
+    },
+    {
+      q: "Can couples train together?",
+      a: "Yes. Couples training is one of our most popular formats — shared accountability, shared progress, and it's fun.",
+    },
+    // Comparison
+    {
+      q: "How is Fitved different from Cult Fit?",
+      a: "Cult Fit is a gym chain with group classes at their centres. Fitved sends certified trainers to your society — zero commute, personalised attention, clinical protocols, and nutrition coaching included.",
+    },
+    {
+      q: "Why choose a personal trainer over a gym?",
+      a: "A personal trainer gives you customized programming, form correction, injury prevention, and accountability. At a gym, you're on your own. Our society model adds zero-commute convenience.",
+    },
+    {
+      q: "Yoga vs gym — which is better?",
+      a: "They complement each other. We blend both — yoga for mobility and stress, strength training for muscle and metabolism. The best program includes elements of both.",
+    },
+    {
       q: "How soon will I see results?",
       a: "Week 4: better sleep, less pain, more energy. Week 8: visible body composition changes. Week 12: sustainable habits, measurable improvements in BP, cholesterol, body age.",
+    },
+    {
+      q: "What areas in Bangalore do you serve?",
+      a: "We currently serve HSR Layout, Whitefield, Sarjapur Road, Bellandur, Electronic City, Koramangala, Marathahalli, and Varthur. We're expanding rapidly — contact us if you're in another area.",
+    },
+    {
+      q: "How many calories does a personal training session burn?",
+      a: "A typical 45-minute session burns 300–500 calories depending on intensity. But the real benefit is the metabolic boost — you continue burning calories for hours after training.",
+    },
+    {
+      q: "Do you offer online fitness coaching?",
+      a: "Yes. Our online coaching program includes video-guided workouts, personalized nutrition plans, and weekly check-ins with your trainer — perfect for when you travel or prefer training at home.",
+    },
+    {
+      q: "What certifications do your trainers have?",
+      a: "Our trainers hold certifications from NSCA, ACE, ACSM, Yoga Alliance (RYT-200/500), and AYUSH. Many have 5–15 years of experience with clinical and therapeutic specializations.",
     },
   ];
 
@@ -1295,20 +2260,20 @@ function EnquiryFormAndFAQ() {
 /* ---------- FOOTER ---------- */
 function Footer() {
   return (
-    <footer className="bg-fv-navy text-white/80 py-10 pb-28 md:pb-10 border-t border-white/10">
-      <div className="mx-auto max-w-6xl px-4 grid md:grid-cols-3 gap-8">
+    <footer className="bg-fv-navy text-white/80 pt-12 pb-24 md:pt-16 md:pb-10 border-t border-white/10">
+      <div className="fluid-container grid md:grid-cols-3 gap-6">
         <div className="text-left">
           <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2 w-fit border border-white/10">
-            <img src={fitvedLogo} alt="Fitved" className="h-8 w-auto" />
+            <img src={fitvedLogo} alt="Fitved" className="h-7 w-auto" />
           </div>
-          <p className="mt-4 text-xs text-white/50 uppercase tracking-wider leading-relaxed">
+          <p className="mt-3 text-xs text-white/50 uppercase tracking-wider leading-relaxed">
             Calm strength, every day. <br />
             Society-based clinical fitness in Bangalore.
           </p>
         </div>
         <div className="text-left">
-          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-3">Contact</h4>
-          <ul className="space-y-2 text-xs uppercase tracking-wider font-semibold">
+          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-2">Contact</h4>
+          <ul className="space-y-1.5 text-xs uppercase tracking-wider font-semibold">
             <li>
               <a href={`tel:${PHONE}`} className="hover:text-fv-orange transition-colors">{PHONE_DISPLAY}</a>
             </li>
@@ -1333,21 +2298,21 @@ function Footer() {
           </ul>
         </div>
         <div className="text-left">
-          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-3">Explore</h4>
-          <ul className="space-y-2 text-xs uppercase tracking-wider font-semibold">
+          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-2">Explore</h4>
+          <ul className="space-y-1.5 text-xs uppercase tracking-wider font-semibold">
             <li><Link to="/login" className="hover:text-fv-orange transition-colors">Client / Trainer Login</Link></li>
             <li><a href="/online-training.html" className="hover:text-fv-orange transition-colors">Online Training</a></li>
             <li><a href="/blog/is-a-personal-trainer-worth-it-in-india.html" className="hover:text-fv-orange transition-colors">Is a Personal Trainer Worth It?</a></li>
           </ul>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 mt-10 flex flex-col items-center gap-3">
+      <div className="fluid-container mt-6 flex flex-col items-center gap-2">
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Backed by</p>
-        <img src={razorpayRizeLogo} alt="Razorpay Rize" className="h-8 md:h-10 w-auto opacity-90" />
+        <img src={razorpayRizeLogo} alt="Razorpay Rize" className="h-7 md:h-8 w-auto opacity-90" />
       </div>
-      <div className="mx-auto max-w-6xl px-4 mt-8 pt-6 border-t border-white/10">
-        <h4 className="text-white/70 font-black uppercase tracking-widest text-[10px] mb-3">Personal trainers across Bangalore</h4>
-        <nav className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] uppercase tracking-wider font-semibold text-white/45">
+      <div className="fluid-container mt-5 pt-4 border-t border-white/10">
+        <h4 className="text-white/70 font-black uppercase tracking-widest text-[10px] mb-2">Personal trainers across Bangalore</h4>
+        <nav className="flex flex-wrap gap-x-3.5 gap-y-1.5 text-[11px] uppercase tracking-wider font-semibold text-white/45">
           {[
             ["Bellandur", "bellandur"],
             ["Whitefield", "whitefield"],
@@ -1358,13 +2323,13 @@ function Footer() {
             ["Electronic City", "electronic-city"],
             ["Koramangala", "koramangala"],
           ].map(([label, slug]) => (
-            <a key={slug} href={`/personal-trainer-in-${slug}.html`} className="hover:text-fv-orange transition-colors">
+            <a key={slug} href="/service-areas.html" className="hover:text-fv-orange transition-colors">
               {label}
             </a>
           ))}
         </nav>
       </div>
-      <div className="mx-auto max-w-6xl px-4 mt-6 pt-6 border-t border-white/10 text-xs text-white/40 text-left">
+      <div className="fluid-container mt-4 pt-4 border-t border-white/10 text-xs text-white/40 text-left">
         © {new Date().getFullYear()} Fitved. All rights reserved.
       </div>
     </footer>
@@ -1427,92 +2392,392 @@ function DesktopFloatingCta() {
   );
 }
 
-/* ---------- POPUP ---------- */
-function PopupModal({
+function LeadModal({
   open,
   onOpenChange,
-  title,
-  body,
   source,
-  nameOptional = false,
 }: {
   open: boolean;
-  onOpenChange: (v: boolean) => void;
-  title: string;
-  body: string;
+  onOpenChange: (o: boolean) => void;
+  title?: string;
+  body?: string;
   source: string;
   nameOptional?: boolean;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [interest, setInterest] = useState("");
   const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [isDuplicate, setIsDuplicate] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^[6-9]\d{9}$/.test(phone)) {
-      toast.error("Enter a valid 10-digit mobile number");
+    const parsed = leadSchema.safeParse({ name, phone, interest: interest || "Personal Training" });
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0].message);
       return;
     }
     setBusy(true);
 
+    // ── Client-side duplicate check (localStorage) ─────────────────────────
+    const submittedPhones: string[] = JSON.parse(localStorage.getItem("fitved_submitted_phones") || "[]");
+    if (submittedPhones.includes(parsed.data.phone)) {
+      setBusy(false);
+      setIsDuplicate(true);
+      setDone(true);
+      trackEvent("enquiry_duplicate", { source: source || "consult_now_popup" });
+      return;
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     const { error } = await supabase.from("leads").insert({
-      name: name.trim() || "Anonymous",
-      phone,
-      interest: "Popup enquiry",
-      source,
+      name: parsed.data.name,
+      phone: parsed.data.phone,
+      interest: parsed.data.interest,
+      source: source || "consult_now_popup",
     });
 
     setBusy(false);
 
     if (error) {
+      // 23505 = unique_violation — phone already exists in leads table
+      if (error.code === "23505") {
+        submittedPhones.push(parsed.data.phone);
+        localStorage.setItem("fitved_submitted_phones", JSON.stringify(submittedPhones));
+        setIsDuplicate(true);
+        setDone(true);
+        trackEvent("enquiry_duplicate", { source: source || "consult_now_popup" });
+        return;
+      }
       console.error("Popup lead insert error:", JSON.stringify(error));
       toast.error(`Could not submit: ${error.message}`);
       return;
     }
 
-    trackEvent("enquiry_submitted", { source });
+    // Save phone to localStorage to prevent duplicate submissions
+    submittedPhones.push(parsed.data.phone);
+    localStorage.setItem("fitved_submitted_phones", JSON.stringify(submittedPhones));
+
+    trackEvent("enquiry_submitted", { source: source || "consult_now_popup" });
     localStorage.setItem("fitved_form_submitted", "true");
-    window.dispatchEvent(new Event("fitved_form_done"));
-    toast.success("Thanks! We'll be in touch shortly.");
-    onOpenChange(false);
+    // NOTE: fitved_form_done is dispatched in handleClose (when user clicks Done)
+    // so the success screen stays visible until they explicitly dismiss it.
+    setDone(true);
+  };
+
+  const handleClose = (isOpen: boolean) => {
+    onOpenChange(isOpen);
+    if (!isOpen) {
+      // Fire the done event when user actually closes after seeing success
+      if (done) window.dispatchEvent(new Event("fitved_form_done"));
+      setTimeout(() => { setDone(false); setIsDuplicate(false); }, 300);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-fv-navy text-white border border-white/10">
-        <DialogHeader>
-          <DialogTitle className="font-sans font-black uppercase text-2xl text-fv-orange tracking-tight">{title}</DialogTitle>
-          <DialogDescription className="text-white/70">{body}</DialogDescription>
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg bg-white text-fv-navy border-none p-6 md:p-8 rounded-3xl shadow-2xl overflow-hidden">
+        <DialogHeader className="text-center space-y-2">
+          <span className="text-[11px] font-extrabold uppercase tracking-widest text-fv-orange block">
+            Start Risk-Free
+          </span>
+          <DialogTitle className="font-sans font-black uppercase text-2xl md:text-3xl text-fv-navy tracking-tight leading-tight">
+            BOOK YOUR <span className="text-fv-orange">FREE HOME TRIAL</span>
+          </DialogTitle>
+          <DialogDescription className="text-fv-text/70 text-xs md:text-sm leading-relaxed max-w-md mx-auto">
+            Experience a 1-on-1 personal training or yoga session in your Bangalore society — no payment, no card, zero commitment.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="space-y-3">
-          {!nameOptional && (
-            <Input
-              required
-              maxLength={100}
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30"
-            />
-          )}
-          <Input
-            required
-            inputMode="numeric"
-            maxLength={10}
-            placeholder="10-digit mobile"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-            className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30"
-          />
-          <Button
-            type="submit"
-            disabled={busy}
-            className="w-full h-11 bg-fv-orange text-white hover:bg-fv-orange/90 font-black uppercase tracking-wider text-xs transition-colors"
-          >
-            {busy ? "Sending…" : "Send Me Details"}
-          </Button>
-        </form>
+
+        {done ? (
+          <div className="text-center py-6">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-fv-success/15 text-fv-success">
+              <Check className="h-7 w-7" />
+            </div>
+            {isDuplicate ? (
+              <>
+                <h3 className="mt-4 text-2xl font-sans font-black uppercase text-fv-navy tracking-tight">
+                  Already Registered!
+                </h3>
+                <p className="mt-2 text-fv-text/70 text-sm">
+                  Our records show you've already submitted this form. Our team will contact you shortly — no need to submit again.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="mt-4 text-2xl font-sans font-black uppercase text-fv-navy tracking-tight">
+                  Trial Booking Confirmed!
+                </h3>
+                <p className="mt-2 text-fv-text/70 text-sm">
+                  Our team will call you within 24 hours to match your trainer and confirm session timing.
+                </p>
+              </>
+            )}
+            <Button
+              onClick={() => handleClose(false)}
+              className="mt-6 bg-fv-navy text-white hover:bg-fv-navy/90 rounded-full px-6 font-bold uppercase text-xs h-10"
+            >
+              Done
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-4 mt-2">
+            <div>
+              <Label htmlFor="popup-lead-name" className="text-fv-navy text-xs font-bold uppercase tracking-wider">
+                Full Name
+              </Label>
+              <Input
+                id="popup-lead-name"
+                required
+                maxLength={100}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your full name"
+                className="h-11 mt-1 border-fv-navy/20 text-fv-navy text-sm placeholder:text-fv-navy/40 focus:border-fv-orange"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="popup-lead-phone" className="text-fv-navy text-xs font-bold uppercase tracking-wider">
+                Phone Number
+              </Label>
+              <Input
+                id="popup-lead-phone"
+                required
+                inputMode="numeric"
+                maxLength={10}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                placeholder="10-digit mobile number"
+                className="h-11 mt-1 border-fv-navy/20 text-fv-navy text-sm placeholder:text-fv-navy/40 focus:border-fv-orange"
+              />
+            </div>
+
+            <div>
+              <Label className="text-fv-navy text-xs font-bold uppercase tracking-wider">
+                I&apos;m interested in…
+              </Label>
+              <Select value={interest} onValueChange={setInterest}>
+                <SelectTrigger className="h-11 mt-1 border-fv-navy/20 text-fv-navy text-sm focus:border-fv-orange">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Personal Training">Personal Training (1-on-1)</SelectItem>
+                  <SelectItem value="Yoga Classes">Yoga Classes (Home / Society)</SelectItem>
+                  <SelectItem value="Weight Loss Program">Weight Loss Program (12-Week)</SelectItem>
+                  <SelectItem value="Senior Fitness">Senior Fitness (55+)</SelectItem>
+                  <SelectItem value="Prenatal Yoga">Prenatal / Postnatal Yoga</SelectItem>
+                  <SelectItem value="Clinical Rehab">Clinical Rehab / Post-Surgery</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={busy}
+              className="w-full h-12 bg-fv-orange text-white hover:bg-fv-orange/90 font-black uppercase tracking-wider text-xs md:text-sm rounded-xl transition-all shadow-md hover:scale-[1.01]"
+            >
+              {busy ? "Submitting…" : "Confirm Free Trial Session"}
+            </Button>
+
+            <p className="text-[10px] text-center text-fv-navy/50 font-semibold flex items-center justify-center gap-1">
+              <span>🔒 100% Free</span> • <span>No Payment Required</span> • <span>Police Verified Trainers</span>
+            </p>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
+/* ---------- STAGE 7: HOW IT WORKS ---------- */
+function HowItWorksSection() {
+  const steps = [
+    {
+      step: "01",
+      title: "Book a Free Trial",
+      desc: "Tell us your fitness goal & society in Bangalore. We match you with a certified coach in your area.",
+    },
+    {
+      step: "02",
+      title: "Meet Your Trainer",
+      desc: "Trainer arrives at your society gym or home with a custom assessment plan. Zero payment, zero commitment.",
+    },
+    {
+      step: "03",
+      title: "Track & Transform",
+      desc: "Workouts, custom nutrition, & body stats tracked weekly so you see measurable results by week 4.",
+    },
+  ];
+
+  return (
+    <div id="how-it-works" className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-7 md:p-8 text-left flex flex-col justify-between h-full shadow-card hover:border-fv-orange/30 transition-all duration-200">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="h-px w-6 bg-fv-orange"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Frictionless Process</span>
+        </div>
+        <h2 className="font-sans font-black uppercase text-2xl md:text-3xl lg:text-4xl tracking-tighter leading-none mb-2">
+          HOW <span className="text-fv-orange">FITVED</span> WORKS
+        </h2>
+        <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+          Three simple steps from booking your trial to training inside your own apartment society.
+        </p>
+
+        <div className="space-y-4 divide-y divide-white/10">
+          {steps.map((s, idx) => (
+            <div key={s.step} className={cn("flex items-start gap-3.5", idx > 0 && "pt-3.5")}>
+              <div className="h-9 w-9 shrink-0 rounded-lg bg-fv-orange text-fv-navy font-black text-sm flex items-center justify-center shadow-md">
+                {s.step}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-sans font-black uppercase text-sm sm:text-base text-white leading-tight mb-1">
+                  {s.title}
+                </h3>
+                <p className="text-xs sm:text-[13px] text-white/70 leading-relaxed">
+                  {s.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- STAGE 9: SPECIALIZED PROGRAMS ---------- */
+function SpecializedProgramsSection() {
+  const programs = [
+    {
+      title: "12-Week Fat Loss Transformation",
+      tag: "Most Popular",
+      desc: "Structured strength training, metabolic nutrition plans, and bi-weekly InBody tracking to lose 5–15kg sustainably.",
+      href: "/weight-loss-program-bangalore.html",
+    },
+    {
+      title: "Senior Longevity & Balance (55+)",
+      tag: "Doctor Approved",
+      desc: "Gentle, medically-informed personal training and chair yoga for blood pressure, diabetes, and joint care.",
+      href: "/senior-fitness-bangalore.html",
+    },
+    {
+      title: "Clinical Back Pain & Post-Op Rehab",
+      tag: "Therapeutic Protocol",
+      desc: "Post-op rehab, discectomy recovery, and spinal decompression exercises designed around doctor clearance.",
+      href: "/clinical-fitness-bangalore.html",
+    },
+  ];
+
+  return (
+    <div id="programs" className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-7 md:p-8 text-left flex flex-col justify-between h-full shadow-card hover:border-fv-orange/30 transition-all duration-200">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="h-px w-6 bg-fv-orange"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">Structured Solutions</span>
+        </div>
+        <h2 className="font-sans font-black uppercase text-2xl md:text-3xl lg:text-4xl tracking-tighter leading-none mb-2">
+          FLAGSHIP <span className="text-fv-orange">PROGRAMS</span>
+        </h2>
+        <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+          Complete outcome-oriented program packages designed for measurable physical health improvements.
+        </p>
+
+        <div className="space-y-3.5">
+          {programs.map((p) => (
+            <a
+              key={p.title}
+              href={p.href}
+              className="group bg-white/5 border border-white/10 hover:border-fv-orange/40 rounded-xl p-4 transition-all duration-300 hover:-translate-y-0.5 block text-left"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="bg-fv-orange/15 text-fv-orange text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-fv-orange/20">
+                  {p.tag}
+                </span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-fv-orange">
+                  Details <ArrowRight className="h-3 w-3" />
+                </span>
+              </div>
+              <h3 className="font-sans font-black uppercase text-sm sm:text-base text-white group-hover:text-fv-orange transition-colors mb-1 leading-snug">
+                {p.title}
+              </h3>
+              <p className="text-xs sm:text-[13px] text-white/70 leading-normal">
+                {p.desc}
+              </p>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- STAGE 10: FAQ SECTION ONLY ---------- */
+function FAQSectionOnly() {
+  const qa = [
+    {
+      q: "How much does a personal trainer cost in Bangalore?",
+      a: "Personal training ranges from ₹8,000 to ₹18,000/month depending on frequency. Free trial included before any commitment.",
+    },
+    {
+      q: "Do I need to buy gym equipment for home training?",
+      a: "No gym needed! Trainers bring portable equipment (dumbbells, resistance bands, mats) directly to your home.",
+    },
+    {
+      q: "What if I have health conditions (diabetes, BP, back pain)?",
+      a: "We specialize in medical-history-informed training, coordinating with your doctor's notes for safe, low-impact exercise.",
+    },
+    {
+      q: "Can seniors (55+) safely do yoga and strength training?",
+      a: "Yes. Our senior longevity program uses chair yoga, balance drills, and low-impact joint mobility designed for active aging.",
+    },
+    {
+      q: "How is FitVed different from Cult Fit or commercial gyms?",
+      a: "No commuting, zero crowded gyms. Certified personal trainers come directly to your society with 1-on-1 attention.",
+    },
+  ];
+
+  return (
+    <div id="faqs" className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-7 md:p-8 text-left flex flex-col justify-between h-full shadow-card hover:border-fv-orange/30 transition-all duration-200">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="h-px w-6 bg-fv-orange"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">FAQ Hub</span>
+        </div>
+        <h2 className="font-sans font-black uppercase text-2xl md:text-3xl lg:text-4xl tracking-tighter leading-none mb-2">
+          FREQUENTLY ASKED <span className="text-fv-orange">QUESTIONS</span>
+        </h2>
+        <p className="text-white/60 text-xs sm:text-sm leading-relaxed mb-6">
+          Everything you need to know about society personal training, yoga therapy, and pricing in Bangalore.
+        </p>
+
+        <Accordion type="single" collapsible className="space-y-2.5">
+          {qa.map((item, i) => (
+            <AccordionItem key={i} value={`faq-${i}`} className="bg-white/5 border border-white/10 rounded-lg px-4 transition-colors hover:border-fv-orange/30">
+              <AccordionTrigger className="text-left text-white hover:text-fv-orange font-semibold hover:no-underline transition-colors uppercase tracking-wider text-xs sm:text-sm py-3.5">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-white/75 leading-relaxed text-xs sm:text-[13px] pb-3.5">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+
+      <div className="mt-6 pt-3.5 border-t border-white/10 text-center">
+        <Link
+          to="/faqs"
+          className="inline-flex items-center gap-2 border border-fv-orange/40 bg-fv-orange/10 text-white hover:bg-fv-orange font-bold uppercase tracking-wider text-xs h-10 px-6 rounded-full transition-all shadow-md"
+        >
+          View More FAQs <ArrowRight className="h-3.5 w-3.5 text-fv-orange hover:text-white" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- STAGE 11: BOOK TRIAL INTAKE SECTION ---------- */
+
+

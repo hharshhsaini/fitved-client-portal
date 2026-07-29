@@ -17,8 +17,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/dates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell, BadgeCheck, Mail, Phone } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell, BadgeCheck, Mail, Phone, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
+import TrainerReviewDialog from "@/components/admin/TrainerReviewDialog";
 
 interface Trainer {
   id: string;
@@ -121,6 +122,7 @@ export default function Trainers() {
 
   // Self-signed-up trainers awaiting admin approval (active === false).
   const pendingTrainers = useMemo(() => trainers.filter((t) => !t.active), [trainers]);
+  const [reviewTrainer, setReviewTrainer] = useState<Trainer | null>(null);
 
   // Trainers still holding a stored password = not yet moved to Firebase.
   const trainersNotInFirebase = useMemo(
@@ -790,7 +792,10 @@ export default function Trainers() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <Button size="sm" className="gap-1.5" disabled={approve.isPending} onClick={() => approve.mutate(t.id)}>
+                  <Button size="sm" className="gap-1.5" onClick={() => setReviewTrainer(t)}>
+                    <ClipboardList className="h-4 w-4" /> Review
+                  </Button>
+                  <Button size="sm" variant="outline" className="gap-1.5" disabled={approve.isPending} onClick={() => approve.mutate(t.id)}>
                     <BadgeCheck className="h-4 w-4" /> Approve
                   </Button>
                   <Button size="sm" variant="ghost" className="text-destructive" title="Reject & delete"
@@ -803,6 +808,14 @@ export default function Trainers() {
           </div>
         </Card>
       )}
+
+      <TrainerReviewDialog
+        trainer={reviewTrainer}
+        onOpenChange={(o) => { if (!o) setReviewTrainer(null); }}
+        approving={approve.isPending}
+        onApprove={(id) => { approve.mutate(id); setReviewTrainer(null); }}
+        onReject={(id) => { remove.mutate(id); setReviewTrainer(null); }}
+      />
 
       <Card className="rounded-2xl shadow-card overflow-hidden">
         <Table>

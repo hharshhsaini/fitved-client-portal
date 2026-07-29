@@ -171,3 +171,86 @@
     animation: none;
   }
 }
+
+/* ── Fluid Design Utilities (Vercel/Linear spacing paradigm) ── */
+@layer components {
+  /* Fluid Containers with context-dependent responsive widths */
+  .fluid-container,
+  .fluid-container-hero,
+  .fluid-container-services,
+  .fluid-container-trainers,
+  .fluid-container-testimonials {
+    width: 100%;
+    max-width: 100%;
+    padding-inline: 1.25rem;
+    margin-inline: auto;
+  }
+
+  @media (min-width: 640px) { /* Tablets: 90% width */
+    .fluid-container,
+    .fluid-container-hero,
+    .fluid-container-services,
+    .fluid-container-trainers,
+    .fluid-container-testimonials {
+      width: 90%;
+      padding-inline: 0;
+    }
+  }
+
+  @media (min-width: 1024px) { /* Laptops: 82% width */
+    .fluid-container,
+    .fluid-container-hero,
+    .fluid-container-services,
+    .fluid-container-trainers,
+    .fluid-container-testimonials {
+      width: 82%;
+      max-width: 82rem;
+    }
+  }
+
+  @media (min-width: 1440px) { /* Large Desktops: ~15% left/right margins (72% width) */
+    .fluid-container,
+    .fluid-container-hero,
+    .fluid-container-services,
+    .fluid-container-trainers,
+    .fluid-container-testimonials {
+      width: 72%;
+      max-width: 95rem;
+    }
+  }
+
+  /* Fluid Contextual Section Paddings */
+  .fluid-section-m {
+    padding-block: clamp(3rem, 6vw, 4.5rem);
+  }
+  .fluid-section-l {
+    padding-block: clamp(4rem, 8vw, 6.5rem);
+  }
+  .fluid-section-xl {
+    padding-block: clamp(5rem, 10vw, 8.5rem);
+  }
+
+  /* Fluid Typography */
+  .fluid-hero-title {
+    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .fluid-heading {
+    font-size: clamp(1.75rem, 3.5vw, 3rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .fluid-subheading {
+    font-size: clamp(0.875rem, 1.1vw, 1rem);
+    line-height: 1.5;
+  }
+  .fluid-body {
+    font-size: clamp(0.85rem, 1vw, 0.95rem);
+    line-height: 1.6;
+  }
+  .fluid-small {
+    font-size: clamp(0.75rem, 0.85vw, 0.85rem);
+  }
+}
+

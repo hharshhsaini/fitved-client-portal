@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "dev": "node scripts/generate-booking-config.js && vite",
+    "build": "node scripts/generate-booking-config.js && vite build",
+    "build:dev": "node scripts/generate-booking-config.js && vite build --mode development",
+    "generate:config": "node scripts/generate-booking-config.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
