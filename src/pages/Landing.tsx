@@ -65,15 +65,15 @@ const NAV_DROPDOWNS = [
     label: "Programs",
     items: [
       { heading: "Personal Training" },
-      { label: "Weight Loss Program", href: "/weight-loss-program-bangalore.html" },
-      { label: "Senior Fitness (55+)", href: "/senior-fitness-bangalore.html" },
-      { label: "Women's Fitness", href: "/womens-fitness-bangalore.html" },
-      { label: "Clinical / Post-Surgery", href: "/clinical-fitness-bangalore.html" },
+      { label: "Weight Loss Program", href: "/weight-loss-program-bangalore" },
+      { label: "Senior Fitness (55+)", href: "/senior-fitness-bangalore" },
+      { label: "Women's Fitness", href: "/womens-fitness-bangalore" },
+      { label: "Clinical / Post-Surgery", href: "/clinical-fitness-bangalore" },
       { heading: "Strength Training" },
-      { label: "Strength Training", href: "/strength-training-bangalore.html" },
+      { label: "Strength Training", href: "/strength-training-bangalore" },
       { heading: "Yoga" },
-      { label: "Yoga Classes", href: "/yoga-classes-bangalore.html" },
-      { label: "Prenatal & Postnatal Yoga", href: "/prenatal-postnatal-yoga-bangalore.html" },
+      { label: "Yoga Classes", href: "/yoga-classes-bangalore" },
+      { label: "Prenatal & Postnatal Yoga", href: "/prenatal-postnatal-yoga" },
     ],
   },
 ];
@@ -330,16 +330,16 @@ function Nav({
                           Personal Training
                         </p>
                         <div className="flex flex-col gap-2">
-                          <a href="/weight-loss-program-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/weight-loss-program-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Weight Loss Program
                           </a>
-                          <a href="/womens-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/womens-fitness-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Women's Fitness
                           </a>
-                          <a href="/senior-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/senior-fitness-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Senior Fitness (55+)
                           </a>
-                          <a href="/clinical-fitness-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/clinical-fitness-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Clinical / Post-Surgery
                           </a>
                         </div>
@@ -351,7 +351,7 @@ function Nav({
                           Strength Training
                         </p>
                         <div className="flex flex-col gap-2">
-                          <a href="/strength-training-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/strength-training-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Strength Training
                           </a>
                         </div>
@@ -363,10 +363,10 @@ function Nav({
                           Yoga
                         </p>
                         <div className="flex flex-col gap-2">
-                          <a href="/yoga-classes-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/yoga-classes-bangalore" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Yoga Classes
                           </a>
-                          <a href="/prenatal-postnatal-yoga-bangalore.html" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
+                          <a href="/prenatal-postnatal-yoga" className="block text-xs font-semibold uppercase tracking-wider text-white/70 hover:text-fv-orange transition-colors">
                             Prenatal &amp; Postnatal Yoga
                           </a>
                         </div>
@@ -402,7 +402,7 @@ function Nav({
             ))}
             {/* Online Classes — highlighted */}
             <a
-              href="/online-training.html"
+              href="/online-training"
               className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-fv-orange hover:text-white hover:bg-fv-orange/90 transition-colors"
             >
               <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
@@ -514,7 +514,7 @@ function Nav({
                 Corporate Wellness
               </Link>
               <a
-                href="/online-training.html"
+                href="/online-training"
                 className="py-3 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/5 inline-flex items-center gap-2"
                 onClick={() => setMenuOpen(false)}
               >
@@ -559,14 +559,14 @@ const HERO_IMAGES = [
 ];
 
 const HERO_LOCATIONS = [
-  { name: "HSR Layout", href: "/service-areas.html" },
-  { name: "Whitefield", href: "/service-areas.html" },
-  { name: "Sarjapur", href: "/service-areas.html" },
-  { name: "Bellandur", href: "/service-areas.html" },
-  { name: "Electronic City", href: "/service-areas.html" },
-  { name: "Koramangala", href: "/service-areas.html" },
-  { name: "Marathahalli", href: "/service-areas.html" },
-  { name: "Varthur", href: "/service-areas.html" },
+  { name: "HSR Layout", href: "/service-areas" },
+  { name: "Whitefield", href: "/service-areas" },
+  { name: "Sarjapur", href: "/service-areas" },
+  { name: "Bellandur", href: "/service-areas" },
+  { name: "Electronic City", href: "/service-areas" },
+  { name: "Koramangala", href: "/service-areas" },
+  { name: "Marathahalli", href: "/service-areas" },
+  { name: "Varthur", href: "/service-areas" },
 ];
 
 const HERO_WORDS = [
@@ -762,37 +762,37 @@ function WhoIsItFor() {
       icon: Briefcase,
       title: "Working Professionals",
       desc: "Desk-job posture fix, stress relief, and sustainable fitness — train before or after work in your society.",
-      href: "/personal-training.html",
+      href: "/personal-training",
     },
     {
       icon: HeartPulse,
       title: "Senior Citizens (55+)",
       desc: "Doctor-approved movement for BP, diabetes, arthritis. Rebuild strength, balance, and independence.",
-      href: "/senior-fitness-bangalore.html",
+      href: "/senior-fitness-bangalore",
     },
     {
       icon: Heart,
       title: "Women's Fitness",
       desc: "Safe, private training designed for women — strength, flexibility, hormonal health, and confidence.",
-      href: "/womens-fitness-bangalore.html",
+      href: "/womens-fitness-bangalore",
     },
     {
       icon: Baby,
       title: "Pregnancy Yoga",
       desc: "Gentle, certified pregnancy yoga and postnatal recovery — at your home with expert guidance.",
-      href: "/prenatal-postnatal-yoga-bangalore.html",
+      href: "/prenatal-postnatal-yoga",
     },
     {
       icon: Dumbbell,
       title: "Weight Loss",
       desc: "Structured 12-week programs combining strength training, nutrition coaching, and accountability.",
-      href: "/weight-loss-program-bangalore.html",
+      href: "/weight-loss-program-bangalore",
     },
     {
       icon: Stethoscope,
       title: "Diabetes / BP / Arthritis",
       desc: "Clinical fitness protocols for chronic conditions. Many clients reduce medication within months.",
-      href: "/clinical-fitness-bangalore.html",
+      href: "/clinical-fitness-bangalore",
     },
     {
       icon: Building2,
@@ -810,7 +810,7 @@ function WhoIsItFor() {
       icon: Activity,
       title: "Post-Surgery Recovery",
       desc: "Medically-informed rehab training — safe progression from your doctor's clearance to full fitness.",
-      href: "/clinical-fitness-bangalore.html",
+      href: "/clinical-fitness-bangalore",
     },
   ];
 
@@ -1180,7 +1180,7 @@ function Services() {
       audience: "For Working Professionals",
       category: "professionals",
       desc: "1-on-1 customized programs in your society gym. Medical history analysis, body composition tracking, weekly progress reviews.",
-      href: "/personal-training.html",
+      href: "/personal-training",
       img: "/gallery/class-4.jpg",
     },
     {
@@ -1189,7 +1189,7 @@ function Services() {
       audience: "For Flexibility & Posture",
       category: "yoga",
       desc: "Society-based yoga blending strength, breathwork, posture correction, and full-body mobility. All levels welcome.",
-      href: "/yoga-classes-bangalore.html",
+      href: "/yoga-classes-bangalore",
       img: "/gallery/class-1.jpg",
     },
     {
@@ -1198,7 +1198,7 @@ function Services() {
       audience: "For Expectant Mothers",
       category: "women",
       desc: "Safe, gentle pregnancy yoga with certified instructors. Breath-led movement, pelvic strength, and stress relief.",
-      href: "/prenatal-postnatal-yoga-bangalore.html",
+      href: "/prenatal-postnatal-yoga",
       img: "/gallery/class-3.jpg",
     },
     {
@@ -1207,7 +1207,7 @@ function Services() {
       audience: "For Postpartum Moms",
       category: "women",
       desc: "Rebuild core strength, pelvic floor, and energy after delivery — at your own pace with expert support.",
-      href: "/prenatal-postnatal-yoga-bangalore.html",
+      href: "/prenatal-postnatal-yoga",
       img: "/gallery/class-2.jpg",
     },
     {
@@ -1216,7 +1216,7 @@ function Services() {
       audience: "For Sustainable Fat Loss",
       category: "professionals",
       desc: "12-week structured fat loss with strength training, metabolic nutrition plans, and weekly accountability.",
-      href: "/weight-loss-program-bangalore.html",
+      href: "/weight-loss-program-bangalore",
       img: "/gallery/class-5.jpg",
     },
     {
@@ -1225,7 +1225,7 @@ function Services() {
       audience: "For Seniors & Active Aging",
       category: "seniors",
       desc: "Safe, supervised exercise for older adults — BP, diabetes, arthritis management with medically-informed training.",
-      href: "/senior-fitness-bangalore.html",
+      href: "/senior-fitness-bangalore",
       img: "/gallery/class-4.jpg",
     },
     {
@@ -1243,7 +1243,7 @@ function Services() {
       audience: "For Back Pain & Rehab",
       category: "rehab",
       desc: "Medically-informed rehab for post-knee surgery, back pain, discectomy recovery, and cardiac protocols.",
-      href: "/clinical-fitness-bangalore.html",
+      href: "/clinical-fitness-bangalore",
       img: "/gallery/class-5.jpg",
     },
     {
@@ -1252,7 +1252,7 @@ function Services() {
       audience: "For Metabolic Nutrition",
       category: "professionals",
       desc: "Custom metabolic nutrition programs. Weekly dietary updates, optimal macro breakdown, and gut health support.",
-      href: "/diet-coaching-bangalore.html",
+      href: "/diet-coaching-bangalore",
       img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
     },
     {
@@ -1261,7 +1261,7 @@ function Services() {
       audience: "For Remote & Global Clients",
       category: "professionals",
       desc: "Train from anywhere with video-guided sessions, personalized programs, and real-time trainer feedback.",
-      href: "/online-training.html",
+      href: "/online-training",
       img: "/gallery/class-3.jpg",
     },
   ];
@@ -1434,7 +1434,7 @@ function LocationsSection() {
           {locations.map((loc) => (
             <a
               key={loc.slug}
-              href="/service-areas.html"
+              href="/service-areas"
               className="group bg-white/5 border border-white/10 rounded-xl p-3.5 sm:p-4 transition-all duration-300 hover:border-fv-orange/30 hover:bg-white/[0.07]"
             >
               <div className="flex items-center gap-2 mb-1.5 min-w-0">
@@ -2224,8 +2224,8 @@ function Footer() {
           <h4 className="text-white font-black uppercase tracking-widest text-xs mb-2">Explore</h4>
           <ul className="space-y-1.5 text-xs uppercase tracking-wider font-semibold">
             <li><Link to="/login" className="hover:text-fv-orange transition-colors">Client / Trainer Login</Link></li>
-            <li><a href="/online-training.html" className="hover:text-fv-orange transition-colors">Online Training</a></li>
-            <li><a href="/blog/is-a-personal-trainer-worth-it-in-india.html" className="hover:text-fv-orange transition-colors">Is a Personal Trainer Worth It?</a></li>
+            <li><a href="/online-training" className="hover:text-fv-orange transition-colors">Online Training</a></li>
+            <li><a href="/blog/is-a-personal-trainer-worth-it-in-india" className="hover:text-fv-orange transition-colors">Is a Personal Trainer Worth It?</a></li>
           </ul>
         </div>
       </div>
@@ -2246,7 +2246,7 @@ function Footer() {
             ["Electronic City", "electronic-city"],
             ["Koramangala", "koramangala"],
           ].map(([label, slug]) => (
-            <a key={slug} href="/service-areas.html" className="hover:text-fv-orange transition-colors">
+            <a key={slug} href="/service-areas" className="hover:text-fv-orange transition-colors">
               {label}
             </a>
           ))}
@@ -2577,19 +2577,19 @@ function SpecializedProgramsSection() {
       title: "12-Week Fat Loss Transformation",
       tag: "Most Popular",
       desc: "Structured strength training, metabolic nutrition plans, and bi-weekly InBody tracking to lose 5–15kg sustainably.",
-      href: "/weight-loss-program-bangalore.html",
+      href: "/weight-loss-program-bangalore",
     },
     {
       title: "Senior Longevity & Balance (55+)",
       tag: "Doctor Approved",
       desc: "Gentle, medically-informed personal training and chair yoga for blood pressure, diabetes, and joint care.",
-      href: "/senior-fitness-bangalore.html",
+      href: "/senior-fitness-bangalore",
     },
     {
       title: "Clinical Back Pain & Post-Op Rehab",
       tag: "Therapeutic Protocol",
       desc: "Post-op rehab, discectomy recovery, and spinal decompression exercises designed around doctor clearance.",
-      href: "/clinical-fitness-bangalore.html",
+      href: "/clinical-fitness-bangalore",
     },
   ];
 

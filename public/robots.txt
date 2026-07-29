@@ -2,9 +2,9 @@
 
 User-agent: *
 Allow: /$
-Allow: /*.html
 Allow: /corporate
 Allow: /blog/
+Allow: /societies/
 Disallow: /dashboard
 Disallow: /admin
 Disallow: /trainer
@@ -15,6 +15,8 @@ Disallow: /pause
 Disallow: /plan
 Disallow: /health
 Disallow: /profile
+Disallow: /societies/admin
+Disallow: /societies/404
 
 # GEO (Generative Engine Optimization) — explicitly allow AI search crawlers
 User-agent: GPTBot
