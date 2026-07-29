@@ -587,7 +587,7 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden text-white bg-fv-navy pt-12 pb-8 md:pt-20 md:pb-12 flex items-center border-b border-white/10"
+      className="relative overflow-hidden text-white bg-fv-navy min-h-[85vh] py-16 md:py-24 lg:py-28 flex items-center border-b border-white/10"
     >
       {/* Background Subtle Overlay */}
       <img
@@ -597,20 +597,20 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-fv-navy via-fv-navy/90 to-fv-navy/60" />
 
-      <div className="relative fluid-container-hero py-0.5 grid md:grid-cols-12 gap-6 md:gap-8 items-center w-full z-10">
+      <div className="relative fluid-container-hero grid md:grid-cols-12 gap-8 lg:gap-12 items-center w-full z-10">
         {/* Left Column: Clean, High-Impact Hero Copy */}
-        <div className="md:col-span-7 animate-fade-in text-left">
+        <div className="md:col-span-7 lg:col-span-6 animate-fade-in text-left">
           {/* Badge Pill */}
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-3 md:mb-4">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-6">
             <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> YOUR SOCIETY, YOUR TIME, OUR TRAINER
           </span>
-          
+
           {/* Headline with Animated Rotating Terms */}
-          <h1 className="font-sans font-black uppercase fluid-hero-title">
+          <h1 className="font-sans font-black uppercase fluid-hero-title leading-none">
             JOIN US TO <br />
             <span
               className={cn(
-                "text-fv-orange inline-block transition-all duration-300 transform",
+                "text-fv-orange inline-block transition-all duration-300 transform mt-1",
                 fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
               )}
             >
@@ -619,43 +619,45 @@ function Hero() {
           </h1>
 
           {/* Subheadline */}
-          <p className="mt-3 fluid-subheading text-white/80 max-w-lg leading-relaxed font-normal">
+          <p className="mt-4 fluid-subheading text-white/70 max-w-lg leading-relaxed font-normal">
             Certified yoga teachers &amp; personal trainers near you in Bangalore — fitness at your society's doorstep.
           </p>
 
           {/* Clean Proportional Dual Pill CTAs */}
-          <div className="mt-5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 max-w-sm sm:max-w-none">
+          <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-sm sm:max-w-none mb-8">
             <Button
               onClick={() => {
                 trackEvent("hero_cta_clicked");
                 scrollTo("contact");
               }}
-              className="bg-fv-orange text-white hover:bg-fv-orange/90 h-11 sm:h-12 px-6 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fv-orange"
+              className="bg-fv-orange text-white hover:bg-fv-orange/90 h-11 sm:h-12 px-7 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fv-orange"
             >
-              CONSULT NOW
+              START TODAY
             </Button>
             <Button
               variant="outline"
               onClick={() => scrollTo("services")}
-              className="border-white/30 bg-transparent text-white hover:bg-white/10 h-11 sm:h-12 px-6 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+              className="border-white/30 bg-transparent text-white hover:bg-white/10 h-11 sm:h-12 px-7 text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
             >
               EXPLORE PROGRAMS
             </Button>
           </div>
 
-          {/* Key Stats Row (matches uploaded image design) */}
-          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
+          {/* Key Stats Row with Divider Line */}
+          <div className="pt-5 border-t border-white/10 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/50">
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 110+ TRAINED</span>
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> 10+ SOCIETIES</span>
             <span className="flex items-center gap-2"><span className="text-fv-orange font-bold">•</span> EXPERT CLINICAL PROTOCOLS</span>
           </div>
         </div>
 
-        {/* Right Column: Clean Visual Image Card */}
-        <div className="md:col-span-5 animate-fade-in md:block hidden" style={{ animationDelay: "0.15s" }}>
-          <div className="relative p-2">
-            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-tr from-fv-orange to-amber-500 opacity-20 blur-xl"></div>
-            <div className="relative rounded-3xl border border-white/15 overflow-hidden aspect-[4/4.5] bg-fv-navy shadow-elevated">
+        {/* Right Column: Glowing Visual Image Card */}
+        <div className="md:col-span-5 lg:col-span-6 animate-fade-in md:flex justify-end items-center hidden" style={{ animationDelay: "0.15s" }}>
+          <div className="relative p-1 w-full max-w-[440px] lg:max-w-[480px]">
+            {/* Ambient Orange Glow Effect */}
+            <div className="absolute -inset-2 rounded-3xl bg-fv-orange/20 blur-2xl opacity-60"></div>
+            
+            <div className="relative rounded-3xl border border-white/20 overflow-hidden aspect-[4/4.8] bg-fv-navy shadow-[0_0_50px_rgba(249,115,22,0.25)]">
               {HERO_IMAGES.map((imgUrl, idx) => (
                 <img
                   key={imgUrl}
@@ -667,10 +669,10 @@ function Hero() {
                   )}
                 />
               ))}
-              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/30 to-transparent z-10"></div>
-              
+              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/20 to-transparent z-10"></div>
+
               {/* Overlay Stat badge: Body Age Reversal */}
-              <div className="absolute bottom-5 left-5 right-5 p-5 rounded-2xl bg-fv-navy/90 backdrop-blur border border-white/20 z-20 text-left">
+              <div className="absolute bottom-5 left-5 right-5 p-4 sm:p-5 rounded-2xl bg-fv-navy/90 backdrop-blur border border-white/20 z-20 text-left">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-fv-orange block">BODY AGE REVERSAL</span>
                 <div className="mt-1 flex items-baseline gap-2">
                   <span className="font-sans font-black text-3xl text-white">42</span>
@@ -687,10 +689,10 @@ function Hero() {
       {/* Scroll Indicator */}
       <div
         onClick={() => scrollTo("services")}
-        className="absolute bottom-5 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-40 hover:opacity-85 transition-opacity cursor-pointer hidden md:flex"
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 opacity-50 hover:opacity-100 transition-opacity cursor-pointer hidden md:flex"
       >
         <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-white">Scroll</span>
-        <div className="h-8 w-px bg-white/50"></div>
+        <div className="h-8 w-px bg-white/40"></div>
       </div>
     </section>
   );
@@ -699,31 +701,31 @@ function Hero() {
 /* ---------- ONLINE PROMOTION SECTION ---------- */
 function OnlinePromotion() {
   const ref = useReveal();
-  
+
   return (
     <section className="py-20 md:py-28 bg-fv-navy/40 border-t border-b border-white/5 relative overflow-hidden">
       {/* Background gradients */}
       <div className="absolute inset-0 bg-gradient-to-tr from-fv-orange/5 via-transparent to-transparent pointer-events-none"></div>
-      
+
       <div className="fluid-container" ref={ref}>
         <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-16 items-center">
-          
+
           {/* Left Column: Text Content */}
           <div className="text-left">
             <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-fv-orange/30 bg-fv-orange/10 text-fv-orange text-[10px] font-bold uppercase tracking-widest mb-6">
               <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse"></span>
               Online Classes
             </span>
-            
+
             <h2 className="font-sans font-black uppercase text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-none mb-6">
-              Train live.<br/>
+              Train live.<br />
               <span className="text-fv-orange">From anywhere.</span>
             </h2>
-            
+
             <p className="text-white/70 text-sm sm:text-base leading-relaxed mb-8 max-w-xl">
               Join live yoga, strength, and mobility sessions with certified FitVed trainers from anywhere in the world. Coach-led sessions available worldwide.
             </p>
-            
+
             {/* Key benefits list */}
             <ul className="space-y-3.5 mb-10 text-xs sm:text-sm font-semibold tracking-wide text-white/80">
               <li className="flex items-center gap-3">
@@ -745,7 +747,7 @@ function OnlinePromotion() {
                 <span>Private &amp; small-group options tailored to your goals</span>
               </li>
             </ul>
-            
+
             <div className="flex flex-wrap items-center gap-4">
               <button
                 onClick={() => scrollTo("contact")}
@@ -761,7 +763,7 @@ function OnlinePromotion() {
               </a>
             </div>
           </div>
-          
+
           {/* Right Column: Sized Symmetrical Image & Overlay Badge */}
           <div className="relative flex justify-center items-center">
             <div className="relative rounded-3xl border border-white/10 overflow-hidden w-full max-w-[340px] aspect-[4/5] shadow-card bg-fv-navy">
@@ -771,7 +773,7 @@ function OnlinePromotion() {
                 className="w-full h-full object-cover grayscale opacity-90 contrast-125"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/20 to-transparent"></div>
-              
+
               {/* Floating session status card - clean & editorial */}
               <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-fv-navy/90 border border-white/20 backdrop-blur text-left">
                 <span className="text-[9px] font-bold uppercase tracking-widest text-fv-orange block mb-1.5">LIVE SESSION</span>
@@ -788,7 +790,7 @@ function OnlinePromotion() {
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </section>
@@ -1014,7 +1016,7 @@ function ZeroExcuse() {
               </span>
             </div>
           </div>
-          
+
           <h2 className="mt-6 font-sans font-black uppercase text-3xl md:text-4xl tracking-tighter leading-none text-white">
             Fitved is your <br />
             <span className="text-fv-orange">zero-excuse</span> fit partner.
@@ -1119,7 +1121,7 @@ function ProblemSolution() {
           <h2 className="font-sans font-black uppercase text-4xl md:text-5xl leading-none tracking-tighter">
             TRANSFORM <span className="text-fv-orange">YOUR LIFE</span>
           </h2>
-          
+
           <p className="mt-4 text-white/70 leading-relaxed text-sm md:text-base">
             At Fitved, we're dedicated to helping you embrace a healthier lifestyle — making physical fitness and a balanced diet your priority. We bring the clinical support you need to enhance your quality of life, wherever you are.
           </p>
@@ -1131,7 +1133,7 @@ function ProblemSolution() {
           {/* Grid of stats */}
           <div className="mt-5 grid grid-cols-2 gap-3">
             {stats.map((s, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="bg-white/5 border border-white/10 rounded-xl p-3 transition-all duration-300 hover:border-fv-orange/30 hover:bg-white/[0.07]"
               >
@@ -1417,10 +1419,10 @@ function Services() {
                 loading="lazy"
                 className="w-full h-full object-cover transition-all duration-700 sm:group-hover:scale-110 grayscale-0 sm:grayscale sm:group-hover:grayscale-0 sm:group-hover:contrast-100 contrast-125 opacity-55 sm:opacity-40 sm:group-hover:opacity-75"
               />
-              
+
               {/* Bottom Dark Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-fv-navy/95 via-fv-navy/60 to-transparent transition-all duration-300"></div>
-              
+
               {/* Card Contents */}
               <div className="absolute inset-0 p-4 flex flex-col justify-between text-left">
                 {/* Top Badge Row */}
@@ -1432,12 +1434,12 @@ function Services() {
                     {c.audience}
                   </span>
                 </div>
-                
+
                 <div>
                   <h3 className="font-sans font-black uppercase text-base leading-tight text-white mb-1 sm:group-hover:text-fv-orange transition-colors">
                     {c.title}
                   </h3>
-                  
+
                   {/* Hover Details */}
                   <div className="max-h-48 opacity-100 overflow-hidden sm:max-h-0 sm:opacity-0 sm:group-hover:max-h-48 sm:group-hover:opacity-100 transition-all duration-500 ease-in-out">
                     <p className="text-[11px] text-white/80 leading-relaxed mb-2">
@@ -1564,7 +1566,7 @@ function Gallery() {
             Small groups, expert trainers, and a room full of neighbours showing up for themselves.
           </p>
         </div>
-        
+
         <div ref={ref} className="reveal mt-8 grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-5xl mx-auto">
           {GALLERY.map((g, i) => (
             <div
@@ -2137,7 +2139,7 @@ function EnquiryFormAndFAQ() {
             <h2 className="font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none">
               COMMON <span className="text-fv-orange">QUESTIONS</span>
             </h2>
-            
+
             <Accordion type="single" collapsible className="mt-6">
               {qa.map((item, i) => (
                 <AccordionItem key={i} value={`q${i}`} className="border-white/10">
@@ -2161,7 +2163,7 @@ function EnquiryFormAndFAQ() {
             <h2 className="font-sans font-black uppercase text-3xl md:text-5xl tracking-tighter leading-none mb-4">
               START YOUR <span className="text-fv-orange">JOURNEY</span>
             </h2>
-            
+
             <div className="rounded-2xl bg-white text-fv-text p-4 md:p-6 shadow-elevated">
               {done ? (
                 <div className="text-center py-6">
@@ -2222,7 +2224,7 @@ function EnquiryFormAndFAQ() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <Button
                     type="submit"
                     disabled={busy}
@@ -2230,11 +2232,11 @@ function EnquiryFormAndFAQ() {
                   >
                     {busy ? "Sending…" : "Speak to a Coach"}
                   </Button>
-                  
+
                   <p className="text-center text-[10px] text-fv-text/50 flex items-center justify-center gap-1">
                     <ShieldCheck className="h-3.5 w-3.5" /> Your data is safe with us.
                   </p>
-                  
+
                   <div className="pt-3 border-t border-fv-navy/10">
                     <p className="text-[10px] font-bold text-fv-navy/60 uppercase tracking-widest mb-2">What happens next?</p>
                     {[
@@ -2290,7 +2292,7 @@ function Footer() {
                 className="hover:text-fv-orange inline-flex items-center gap-1.5 transition-colors"
               >
                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.333 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.333-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.333-2.633 1.308-3.608.975-.975 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038C23.986 15.668 24 15.259 24 12s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.333 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.333-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.333-2.633 1.308-3.608.975-.975 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038C23.986 15.668 24 15.259 24 12s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
                 </svg>
                 Instagram
               </a>
