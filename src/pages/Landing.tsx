@@ -222,9 +222,6 @@ export default function Landing() {
         {/* Question 1: What is FitVed? */}
         <Hero />
 
-        {/* Dedicated Flagship Online Classes Promotion */}
-        <OnlinePromotion />
-
         {/* Question 3 & 4: What services & Who is it for? (Merged) */}
         <Services />
 
@@ -719,104 +716,7 @@ function Hero() {
   );
 }
 
-/* ---------- ONLINE PROMOTION SECTION ---------- */
-function OnlinePromotion() {
-  const ref = useReveal();
 
-  return (
-    <section className="py-10 md:py-24 lg:py-28 bg-fv-navy/40 border-t border-b border-white/5 relative overflow-hidden">
-      {/* Background gradients */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-fv-orange/5 via-transparent to-transparent pointer-events-none"></div>
-
-      <div className="fluid-container" ref={ref}>
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-12 lg:gap-16 items-center">
-
-          {/* Left Column: Text Content */}
-          <div className="text-left">
-            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-fv-orange/30 bg-fv-orange/10 text-fv-orange text-[10px] font-bold uppercase tracking-widest mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse"></span>
-              Online Classes
-            </span>
-
-            <h2 className="font-sans font-black uppercase text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-none mb-6">
-              Train live.<br />
-              <span className="text-fv-orange">From anywhere.</span>
-            </h2>
-
-            <p className="text-white/70 text-sm sm:text-base leading-relaxed mb-8 max-w-xl">
-              Join live yoga, strength, and mobility sessions with certified FitVed trainers from anywhere in the world. Coach-led sessions available worldwide.
-            </p>
-
-            {/* Key benefits list */}
-            <ul className="space-y-3.5 mb-10 text-xs sm:text-sm font-semibold tracking-wide text-white/80">
-              <li className="flex items-center gap-3">
-                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
-                  <Check className="h-3.5 w-3.5" />
-                </div>
-                <span>Live interactive coach feedback</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
-                  <Check className="h-3.5 w-3.5" />
-                </div>
-                <span>Flexible schedules adjusted to any timezone</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <div className="p-1 rounded bg-fv-orange/20 text-fv-orange shrink-0">
-                  <Check className="h-3.5 w-3.5" />
-                </div>
-                <span>Private &amp; small-group options tailored to your goals</span>
-              </li>
-            </ul>
-
-            <div className="flex flex-wrap items-center gap-4">
-              <button
-                onClick={() => scrollTo("contact")}
-                className="rounded-full bg-fv-orange text-white px-7 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider hover:bg-fv-orange/90 transition-colors shadow-elevated"
-              >
-                Book Free Trial
-              </button>
-              <a
-                href="/online-training.html"
-                className="rounded-full border border-white/20 text-white hover:border-white hover:bg-white/5 px-7 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider transition-all"
-              >
-                Explore Online Programs
-              </a>
-            </div>
-          </div>
-
-          {/* Right Column: Sized Symmetrical Image & Overlay Badge */}
-          <div className="relative flex justify-center items-center">
-            <div className="relative rounded-3xl border border-white/10 overflow-hidden w-full max-w-[340px] aspect-[4/5] shadow-card bg-fv-navy">
-              <img
-                src="/gallery/class-4.jpg"
-                alt="Client doing home workout session guided online"
-                className="w-full h-full object-cover grayscale opacity-90 contrast-125"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-fv-navy via-fv-navy/20 to-transparent"></div>
-
-              {/* Floating session status card - clean & editorial */}
-              <div className="absolute bottom-5 left-5 right-5 p-4 rounded-xl bg-fv-navy/90 border border-white/20 backdrop-blur text-left">
-                <span className="text-[9px] font-bold uppercase tracking-widest text-fv-orange block mb-1.5">LIVE SESSION</span>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h5 className="font-sans font-black uppercase text-xs text-white leading-none mb-1">Anjali Sharma</h5>
-                    <p className="text-[10px] text-white/50">Yoga &amp; Mobility Coach</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] font-bold text-white block">Private 1-on-1</span>
-                    <span className="text-[9px] text-white/50 block">6:00 AM (IST)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ---------- STAGE 2: TRUST & CREDIBILITY BAR ---------- */
 function TrustBar() {
