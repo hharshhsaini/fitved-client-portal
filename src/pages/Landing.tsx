@@ -283,6 +283,17 @@ function Nav({
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/10 bg-fv-navy/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
@@ -439,84 +450,93 @@ function Nav({
         </button>
       </div>
       {menuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-fv-navy max-h-[80vh] overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col">
-            {/* Mobile dropdown sections */}
-            {NAV_DROPDOWNS.map((dd) => (
-              <div key={dd.label} className="border-b border-white/5">
+        <div className="lg:hidden fixed inset-0 top-16 z-50 bg-fv-navy/85 backdrop-blur-xl animate-in fade-in duration-200 flex flex-col justify-start">
+          {/* Backdrop Click Listener */}
+          <div
+            className="absolute inset-0 z-0 bg-black/40"
+            onClick={() => setMenuOpen(false)}
+          />
+
+          {/* Menu Drawer Content */}
+          <div className="relative z-10 w-full border-b border-white/10 bg-fv-navy/95 backdrop-blur-2xl max-h-[85vh] overflow-y-auto shadow-2xl">
+            <div className="mx-auto max-w-6xl px-4 py-3 flex flex-col">
+              {/* Mobile dropdown sections */}
+              {NAV_DROPDOWNS.map((dd) => (
+                <div key={dd.label} className="border-b border-white/5">
+                  <button
+                    onClick={() => setMobileExpanded(mobileExpanded === dd.label ? null : dd.label)}
+                    className="w-full py-3 text-left text-base font-semibold uppercase tracking-wider text-white flex items-center justify-between"
+                  >
+                    {dd.label}
+                    <ChevronDown className={cn("h-4 w-4 transition-transform text-white/50", mobileExpanded === dd.label && "rotate-180")} />
+                  </button>
+                  {mobileExpanded === dd.label && (
+                    <div className="pb-3 pl-4 flex flex-col gap-1">
+                      {dd.items.map((item) =>
+                        item.heading ? (
+                          <p key={`h-${item.heading}`} className="pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80">
+                            {item.heading}
+                          </p>
+                        ) : (
+                          <a
+                            key={item.href}
+                            href={item.href}
+                            className="py-2 text-sm font-medium text-white/60 hover:text-fv-orange transition-colors"
+                            onClick={() => setMenuOpen(false)}
+                          >
+                            {item.label}
+                          </a>
+                        )
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {/* Scroll links */}
+              {NAV_SCROLL.map((n) => (
                 <button
-                  onClick={() => setMobileExpanded(mobileExpanded === dd.label ? null : dd.label)}
-                  className="w-full py-3 text-left text-base font-semibold uppercase tracking-wider text-white flex items-center justify-between"
+                  key={n.id}
+                  onClick={() => {
+                    scrollTo(n.id);
+                    setMenuOpen(false);
+                  }}
+                  className={cn(
+                    "py-3 text-left text-base font-semibold uppercase tracking-wider border-b border-white/5",
+                    active === n.id ? "text-fv-orange" : "text-white"
+                  )}
                 >
-                  {dd.label}
-                  <ChevronDown className={cn("h-4 w-4 transition-transform text-white/50", mobileExpanded === dd.label && "rotate-180")} />
+                  {n.label}
                 </button>
-                {mobileExpanded === dd.label && (
-                  <div className="pb-3 pl-4 flex flex-col gap-1">
-                    {dd.items.map((item) =>
-                      item.heading ? (
-                        <p key={`h-${item.heading}`} className="pt-2 pb-0.5 text-[10px] font-bold uppercase tracking-widest text-fv-orange/80">
-                          {item.heading}
-                        </p>
-                      ) : (
-                        <a
-                          key={item.href}
-                          href={item.href}
-                          className="py-2 text-sm font-medium text-white/60 hover:text-fv-orange transition-colors"
-                          onClick={() => setMenuOpen(false)}
-                        >
-                          {item.label}
-                        </a>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {/* Scroll links */}
-            {NAV_SCROLL.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => {
-                  scrollTo(n.id);
-                  setMenuOpen(false);
-                }}
-                className={cn(
-                  "py-3 text-left text-base font-semibold uppercase tracking-wider border-b border-white/5",
-                  active === n.id ? "text-fv-orange" : "text-white"
-                )}
+              ))}
+              <Link
+                to="/corporate"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+                onClick={() => setMenuOpen(false)}
               >
-                {n.label}
-              </button>
-            ))}
-            <Link
-              to="/corporate"
-              className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Corporate Wellness
-            </Link>
-            <a
-              href="/online-training.html"
-              className="py-3 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/5 inline-flex items-center gap-2"
-              onClick={() => setMenuOpen(false)}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
-            </a>
-            <a
-              href="/societies/"
-              className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
-              onClick={() => setMenuOpen(false)}
-            >
-              Societies
-            </a>
-            <Link
-              to="/login"
-              className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white/70"
-              onClick={() => setMenuOpen(false)}
-            >
-              Log in
-            </Link>
+                Corporate Wellness
+              </Link>
+              <a
+                href="/online-training.html"
+                className="py-3 text-left text-base font-bold uppercase tracking-wider text-fv-orange border-b border-white/5 inline-flex items-center gap-2"
+                onClick={() => setMenuOpen(false)}
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
+              </a>
+              <a
+                href="/societies/"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+                onClick={() => setMenuOpen(false)}
+              >
+                Societies
+              </a>
+              <Link
+                to="/login"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white/70"
+                onClick={() => setMenuOpen(false)}
+              >
+                Log in
+              </Link>
+            </div>
           </div>
         </div>
       )}
