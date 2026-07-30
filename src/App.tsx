@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppLayout } from "@/components/AppLayout";
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
+import TrainerPublicProfile from "./pages/TrainerPublicProfile";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Pause from "./pages/Pause";
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/index" element={<Navigate to="/dashboard" replace />} />
               <Route path="/corporate" element={<Corporate />} />
               <Route path="/faqs" element={<FaqsPage />} />
+              <Route path="/trainers/:slug" element={<TrainerPublicProfile />} />
               <Route path="/faqs.html" element={<FaqsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
