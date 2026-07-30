@@ -407,21 +407,12 @@ function Nav({
             >
               <span className="h-1.5 w-1.5 rounded-full bg-fv-orange animate-pulse" /> Online Classes
             </a>
-            {/* Scroll links */}
-            {NAV_SCROLL.map((n) => (
-              <button
-                key={n.id}
-                onClick={() => scrollTo(n.id)}
-                className={cn(
-                  "rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors",
-                  active === n.id
-                    ? "text-fv-orange"
-                    : "text-white/70 hover:text-white"
-                )}
-              >
-                {n.label}
-              </button>
-            ))}
+            <Link
+              to="/trainers"
+              className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
+            >
+              Trainers
+            </Link>
             <Link
               to="/corporate"
               className="rounded-md px-2.5 py-2 text-xs font-bold uppercase tracking-wider text-white/70 hover:text-white transition-colors"
@@ -490,22 +481,13 @@ function Nav({
                   )}
                 </div>
               ))}
-              {/* Scroll links */}
-              {NAV_SCROLL.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => {
-                    scrollTo(n.id);
-                    setMenuOpen(false);
-                  }}
-                  className={cn(
-                    "py-3 text-left text-base font-semibold uppercase tracking-wider border-b border-white/5",
-                    active === n.id ? "text-fv-orange" : "text-white"
-                  )}
-                >
-                  {n.label}
-                </button>
-              ))}
+              <Link
+                to="/trainers"
+                className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
+                onClick={() => setMenuOpen(false)}
+              >
+                Trainers
+              </Link>
               <Link
                 to="/corporate"
                 className="py-3 text-left text-base font-semibold uppercase tracking-wider text-white border-b border-white/5"
@@ -605,7 +587,7 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden text-white bg-fv-navy md:min-h-[85vh] py-8 md:py-24 lg:py-28 flex items-center border-b border-white/10"
+      className="relative overflow-hidden text-white bg-fv-navy min-h-[calc(100svh-4rem)] md:min-h-[85vh] pt-8 pb-24 md:py-24 lg:py-28 flex items-stretch md:items-center border-b border-white/10"
     >
       {/* Background Subtle Overlay */}
       <img
@@ -615,34 +597,36 @@ function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-fv-navy via-fv-navy/90 to-fv-navy/60" />
 
-      <div className="relative fluid-container-hero grid md:grid-cols-12 gap-8 lg:gap-12 items-center w-full z-10">
+      <div className="relative fluid-container-hero grid md:grid-cols-12 gap-8 lg:gap-12 items-stretch md:items-center w-full z-10">
         {/* Left Column: Clean, High-Impact Hero Copy */}
-        <div className="md:col-span-7 lg:col-span-6 animate-fade-in text-left">
-          {/* Badge Pill */}
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-4 sm:mb-6">
-            <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> YOUR SOCIETY, YOUR TIME, OUR TRAINER
-          </span>
-
-          {/* Headline with Animated Rotating Terms */}
-          <h1 className="font-sans font-black uppercase fluid-hero-title leading-none">
-            JOIN US TO <br />
-            <span
-              className={cn(
-                "text-fv-orange inline-block transition-all duration-300 transform mt-1",
-                fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-              )}
-            >
-              {HERO_WORDS[wordIndex]}
+        <div className="md:col-span-7 lg:col-span-7 animate-fade-in text-left flex flex-col justify-between md:block">
+          {/* Group 1: badge + headline + subheadline — sits in the upper area on mobile */}
+          <div>
+            {/* Badge Pill */}
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[11px] md:text-xs font-bold uppercase tracking-widest border border-white/20 text-white mb-4 sm:mb-6">
+              <ShieldCheck className="h-3.5 w-3.5 text-fv-orange" /> YOUR SOCIETY, YOUR TIME, OUR TRAINER
             </span>
-          </h1>
 
-          {/* Subheadline */}
-          <p className="mt-3 sm:mt-4 fluid-subheading text-white/70 max-w-lg leading-relaxed font-normal">
-            Certified yoga teachers &amp; personal trainers near you in Bangalore — fitness at your society's doorstep.
-          </p>
+            {/* Headline with Animated Rotating Terms */}
+            <h1 className="font-sans font-black uppercase fluid-hero-title leading-none">
+              JOIN US TO <br />
+              <span
+                className={cn(
+                  "text-fv-orange inline-block transition-all duration-300 transform mt-1",
+                  fade ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                )}
+              >
+                {HERO_WORDS[wordIndex]}
+              </span>
+            </h1>
 
-          {/* Clean Proportional Dual Pill CTAs */}
-          <div className="mt-5 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4 max-w-sm sm:max-w-none mb-6 sm:mb-8">
+            {/* Subheadline */}
+            <p className="mt-4 sm:mt-4 fluid-subheading text-white/70 max-w-lg leading-relaxed font-normal">
+              Certified personal fitness trainers bringing expert 1-on-1 coaching straight to your doorstep.
+            </p>
+
+            {/* Clean Proportional Dual Pill CTAs */}
+            <div className="mt-6 sm:mt-7 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4 max-w-sm sm:max-w-none">
             <Button
               onClick={() => {
                 trackEvent("hero_cta_clicked");
@@ -659,6 +643,7 @@ function Hero() {
             >
               EXPLORE PROGRAMS
             </Button>
+            </div>
           </div>
 
           {/* Key Stats Row with Divider Line */}
@@ -670,8 +655,8 @@ function Hero() {
         </div>
 
         {/* Right Column: Glowing Visual Image Card */}
-        <div className="md:col-span-5 lg:col-span-6 animate-fade-in md:flex justify-end items-center hidden" style={{ animationDelay: "0.15s" }}>
-          <div className="relative p-1 w-full max-w-[440px] lg:max-w-[480px]">
+        <div className="md:col-span-5 lg:col-span-5 animate-fade-in md:flex justify-end items-center hidden" style={{ animationDelay: "0.15s" }}>
+          <div className="relative p-1 w-full max-w-[380px] lg:max-w-[420px]">
             {/* Ambient Orange Glow Effect */}
             <div className="absolute -inset-2 rounded-3xl bg-fv-orange/20 blur-2xl opacity-60"></div>
             
@@ -1194,24 +1179,15 @@ function Services() {
     },
     {
       num: "03",
-      title: "Prenatal Yoga",
-      audience: "For Expectant Mothers",
+      title: "Prenatal & Postnatal Yoga",
+      audience: "For Expectant & New Mothers",
       category: "women",
-      desc: "Safe, gentle pregnancy yoga with certified instructors. Breath-led movement, pelvic strength, and stress relief.",
+      desc: "Safe pregnancy yoga plus postpartum recovery — breath-led movement, pelvic strength, and core rebuilding with certified instructors.",
       href: "/prenatal-postnatal-yoga",
       img: "/gallery/class-3.jpg",
     },
     {
       num: "04",
-      title: "Postnatal Recovery",
-      audience: "For Postpartum Moms",
-      category: "women",
-      desc: "Rebuild core strength, pelvic floor, and energy after delivery — at your own pace with expert support.",
-      href: "/prenatal-postnatal-yoga",
-      img: "/gallery/class-2.jpg",
-    },
-    {
-      num: "05",
       title: "Weight Loss Program",
       audience: "For Sustainable Fat Loss",
       category: "professionals",
@@ -1220,7 +1196,7 @@ function Services() {
       img: "/gallery/class-5.jpg",
     },
     {
-      num: "06",
+      num: "05",
       title: "Senior Fitness (55+)",
       audience: "For Seniors & Active Aging",
       category: "seniors",
@@ -1229,16 +1205,7 @@ function Services() {
       img: "/gallery/class-4.jpg",
     },
     {
-      num: "07",
-      title: "Corporate Wellness",
-      audience: "For Office Teams",
-      category: "professionals",
-      desc: "Office yoga, team fitness sessions, and wellness workshops. Boost employee productivity and reduce sick days.",
-      href: "/corporate",
-      img: "/gallery/class-2.jpg",
-    },
-    {
-      num: "08",
+      num: "06",
       title: "Clinical Rehab & Exercise",
       audience: "For Back Pain & Rehab",
       category: "rehab",
@@ -1247,7 +1214,7 @@ function Services() {
       img: "/gallery/class-5.jpg",
     },
     {
-      num: "09",
+      num: "07",
       title: "Diet & Nutrition",
       audience: "For Metabolic Nutrition",
       category: "professionals",
@@ -1256,7 +1223,7 @@ function Services() {
       img: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80",
     },
     {
-      num: "10",
+      num: "08",
       title: "Online Coaching",
       audience: "For Remote & Global Clients",
       category: "professionals",
@@ -1275,27 +1242,21 @@ function Services() {
   ];
 
   const filteredServices = filter === "all" ? services : services.filter((s) => s.category === filter);
-  const displayedServices = showMore ? filteredServices : filteredServices.slice(0, 4);
 
   return (
     <section id="services" className="pt-10 pb-14 md:pt-14 md:pb-20 bg-fv-navy border-t border-white/10">
       <div className="fluid-container-services">
         {/* Header Block */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="text-left">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="h-px w-8 bg-fv-orange"></span>
-              <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">
-                SERVICES &amp; TARGET PROGRAMS
-              </span>
-            </div>
-            <h2 className="font-sans font-black uppercase fluid-heading">
-              WHO WE SERVE &amp; <span className="text-fv-orange">OUR OFFERINGS</span>
-            </h2>
+        <div className="text-left">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="h-px w-8 bg-fv-orange"></span>
+            <span className="text-xs font-bold uppercase tracking-widest text-fv-orange">
+              SERVICES &amp; TARGET PROGRAMS
+            </span>
           </div>
-          <p className="text-white/60 fluid-body max-w-md text-left">
-            Whether you&apos;re 25 or 75 — personalized strength training, yoga therapy &amp; clinical rehab tailored to your age, goals, and medical history.
-          </p>
+          <h2 className="font-sans font-black uppercase fluid-heading">
+            WHO WE SERVE &amp; <span className="text-fv-orange">OUR OFFERINGS</span>
+          </h2>
         </div>
 
         {/* Filter Pills Bar */}
@@ -1320,7 +1281,7 @@ function Services() {
         </div>
 
         {/* 5 Cards Per Row on PC View (Covers Full Width) / Mobile-Only Expandable View */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
           {filteredServices.map((c, idx) => (
             <div
               key={c.num}
@@ -1329,8 +1290,8 @@ function Services() {
                 scrollTo("contact");
               }}
               className={cn(
-                "group relative overflow-hidden rounded-2xl aspect-[4/3] border border-white/10 cursor-pointer bg-fv-navy transition-all duration-300 hover:-translate-y-1 hover:border-fv-orange/40",
-                !showMore && idx >= 4 ? "hidden sm:block" : "block"
+                "group relative overflow-hidden rounded-2xl aspect-[4/4] border border-white/10 cursor-pointer bg-fv-navy transition-all duration-300 hover:-translate-y-1 hover:border-fv-orange/40",
+                !showMore && idx >= 4 ? "hidden" : "block"
               )}
             >
               {/* Card BG Image */}
@@ -1344,41 +1305,27 @@ function Services() {
               {/* Bottom Dark Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-fv-navy/95 via-fv-navy/60 to-transparent transition-all duration-300"></div>
 
-              {/* Card Contents */}
+              {/* Card Contents — heading + CTA only (no badge / description) */}
               <div className="absolute inset-0 p-4 flex flex-col justify-between text-left">
-                {/* Top Badge Row */}
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-fv-orange tracking-widest">
-                    {c.num}
-                  </span>
-                  <span className="bg-white/15 backdrop-blur text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border border-white/20 truncate max-w-[130px]">
-                    {c.audience}
-                  </span>
-                </div>
-
+                <span className="text-sm font-black text-fv-orange tracking-widest">
+                  {c.num}
+                </span>
                 <div>
-                  <h3 className="font-sans font-black uppercase text-base leading-tight text-white mb-1 sm:group-hover:text-fv-orange transition-colors">
+                  <h3 className="font-sans font-black uppercase text-lg leading-tight text-white mb-1.5 sm:group-hover:text-fv-orange transition-colors">
                     {c.title}
                   </h3>
-
-                  {/* Hover Details */}
-                  <div className="max-h-48 opacity-100 overflow-hidden sm:max-h-0 sm:opacity-0 sm:group-hover:max-h-48 sm:group-hover:opacity-100 transition-all duration-500 ease-in-out">
-                    <p className="text-[11px] text-white/80 leading-relaxed mb-2">
-                      {c.desc}
-                    </p>
-                    <span className="inline-flex items-center gap-1 text-fv-orange text-[10px] font-black uppercase tracking-wider">
-                      Book Free Trial <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </div>
+                  <span className="inline-flex items-center gap-1 text-fv-orange text-[10px] font-black uppercase tracking-wider opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+                    Book Free Trial <ArrowRight className="h-3 w-3" />
+                  </span>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Mobile-Only View More Button (Hidden on PC view) */}
+        {/* View More toggle (mobile + desktop) */}
         {filteredServices.length > 4 && (
-          <div className="mt-8 text-center sm:hidden">
+          <div className="mt-8 text-center">
             <Button
               type="button"
               onClick={(e) => {
