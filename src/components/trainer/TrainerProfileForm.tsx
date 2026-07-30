@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import {
   User, Image as ImageIcon, GraduationCap, Clock, Users, Link2, MapPin,
   FileText, Award, Building2, Phone, X, Plus, Loader2, ExternalLink,
-  Trash2, LogOut, Save, Dumbbell, Globe, Instagram, Linkedin, Youtube,
-  Facebook, Languages as LangIcon, Wifi, Home, Images, MessageSquareQuote,
+  Trash2, LogOut, Save, Dumbbell, Globe, Instagram, Facebook,
+  Languages as LangIcon, Wifi, Home,
 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -19,8 +19,6 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { SPECIALIZATIONS } from "@/lib/specializations";
 import { CITIES, areasForCity } from "@/lib/cities";
-import TrainerMediaSection from "./TrainerMediaSection";
-import TrainerTestimonialsSection from "./TrainerTestimonialsSection";
 
 const LANGUAGES = [
   "English", "Hindi", "Kannada", "Tamil", "Telugu", "Malayalam", "Marathi",
@@ -319,7 +317,7 @@ export default function TrainerProfileForm({
         social_link: primarySocial,
         service_areas: serviceAreas,
         specializations,
-        bio: bio.trim() || null,
+        bio: about.trim() || null,
         gender: gender || null,
         about: about.trim() || null,
         headline: headline.trim() || null,
@@ -508,15 +506,11 @@ export default function TrainerProfileForm({
             )}
           </div>
 
-          {/* Bio + About */}
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="Short bio">
-              <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3}
-                placeholder="One-liner shown on your card. (optional)" />
-            </Field>
-            <Field label="About you">
-              <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={3}
-                placeholder="Your full story — shown on your public profile. (optional)" />
+          {/* Bio */}
+          <div className="mt-4">
+            <Field label="Bio">
+              <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4}
+                placeholder="Tell clients about your training style, experience and what makes you different. (optional)" />
             </Field>
           </div>
         </section>
@@ -607,8 +601,6 @@ export default function TrainerProfileForm({
           <div className="grid gap-4 md:grid-cols-2">
             {[
               { icon: Instagram, label: "Instagram", value: instagram, set: setInstagram, ph: "instagram.com/…" },
-              { icon: Linkedin, label: "LinkedIn", value: linkedin, set: setLinkedin, ph: "linkedin.com/in/…" },
-              { icon: Youtube, label: "YouTube", value: youtube, set: setYoutube, ph: "youtube.com/@…" },
               { icon: Facebook, label: "Facebook", value: facebook, set: setFacebook, ph: "facebook.com/…" },
               { icon: Globe, label: "Website", value: website, set: setWebsite, ph: "yourwebsite.com" },
             ].map((s) => (
@@ -622,17 +614,6 @@ export default function TrainerProfileForm({
           </div>
         </section>
 
-        {/* Media */}
-        <section>
-          <SectionHeader icon={Images} title="Media" note="· transformations, workout photos & videos" />
-          <TrainerMediaSection trainerId={trainerId} />
-        </section>
-
-        {/* Testimonials */}
-        <section>
-          <SectionHeader icon={MessageSquareQuote} title="Testimonials" note="· optional" />
-          <TrainerTestimonialsSection trainerId={trainerId} />
-        </section>
 
         {/* Documents */}
         <section>

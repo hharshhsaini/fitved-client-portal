@@ -24,6 +24,12 @@ const EXPERIENCE = [
 
 const publicUrl = (p: string | null | undefined) => (p ? supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl : null);
 
+/** "Harsh Saini" → "H Saini" (first name shortened to its initial for cards). */
+const cardName = (name: string) => {
+  const w = (name || "").trim().split(/\s+/);
+  return w.length >= 2 ? `${w[0][0].toUpperCase()} ${w.slice(1).join(" ")}` : name;
+};
+
 type T = any;
 
 const isComplete = (t: T) =>
@@ -259,7 +265,7 @@ export default function TrainerListing() {
                         )}
                       </div>
                       <div className="p-4">
-                        <h3 className="font-display text-lg text-fv-navy leading-tight group-hover:text-fv-orange transition-colors">{t.name}</h3>
+                        <h3 className="font-display text-lg text-fv-navy leading-tight group-hover:text-fv-orange transition-colors">{cardName(t.name)}</h3>
                         {t.headline && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{t.headline}</p>}
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-fv-text">
                           <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-fv-orange" /> {t.years_experience ?? 0}+ yrs</span>
