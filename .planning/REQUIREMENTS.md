@@ -101,17 +101,69 @@ Deferred; tracked but not in the current roadmap.
 
 ## Traceability
 
-Populated during roadmap creation.
+Mapped during roadmap creation (2026-07-30). Every v1 requirement maps to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DATA-01 … UX-04 | (to be mapped by roadmapper) | Pending |
+| DATA-01 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| DATA-02 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| DATA-03 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| DATA-04 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| DATA-05 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| DATA-06 | Phase 1 — Data Foundation & Safe Migration | Pending |
+| BUILD-01 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-02 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-03 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-04 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-05 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-06 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-07 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-08 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-09 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-10 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-11 | Phase 2 — Trainer Profile Builder | Pending |
+| BUILD-12 | Phase 2 — Trainer Profile Builder | Pending |
+| PROF-01 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-02 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-03 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-04 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-05 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-06 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-07 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-08 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-09 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-10 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-11 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-12 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-13 | Phase 3 — Public Trainer Profile | Pending |
+| PROF-14 | Phase 3 — Public Trainer Profile | Pending |
+| LIST-01 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-02 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-03 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-04 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-05 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-06 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-07 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-08 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-09 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-10 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-11 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-12 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-13 | Phase 4 — Discovery / Listing Page | Pending |
+| LIST-14 | Phase 4 — Discovery / Listing Page | Pending |
+| NAV-02 | Phase 4 — Discovery / Listing Page | Pending |
+| NAV-01 | Phase 5 — Navbar Wiring & Cross-cutting Polish | Pending |
+| UX-01 | Phase 5 — Navbar Wiring & Cross-cutting Polish | Pending |
+| UX-02 | Phase 5 — Navbar Wiring & Cross-cutting Polish | Pending |
+| UX-03 | Phase 5 — Navbar Wiring & Cross-cutting Polish | Pending |
+| UX-04 | Phase 5 — Navbar Wiring & Cross-cutting Polish | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 48 ⚠️ (roadmapper will map all)
+- v1 requirement IDs: 52 total (DATA×6, BUILD×12, LIST×14, PROF×14, NAV×2, UX×4)
+- Mapped to phases: 52 (100%)
+- Unmapped: 0 ✓
+- Note: the original header estimate of "48" omitted the four UX-* cross-cutting requirements; all 52 enumerated requirements are mapped to exactly one phase.
 
 ---
 *Requirements defined: 2026-07-30*
-*Last updated: 2026-07-30 after initial definition*
+*Last updated: 2026-07-30 after roadmap creation (traceability populated)*
