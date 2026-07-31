@@ -20,9 +20,6 @@ type Row = {
 // Optional image slots for the add form
 const IMG_SLOTS = [
   { key: "client_image", label: "Client photo" },
-  { key: "transformation_image", label: "Transformation" },
-  { key: "before_image", label: "Before" },
-  { key: "after_image", label: "After" },
 ] as const;
 
 export default function TrainerTestimonialsSection({ trainerId }: { trainerId: string }) {

@@ -280,8 +280,6 @@ export default function TrainerProfileForm({
       if (!education.trim()) errs.education = "Education is required";
       if (!Number.isFinite(years) || years < 0) errs.years = "Enter your years of experience";
       if (!Number.isFinite(clients) || clients < 0) errs.clients = "Enter the number of clients trained";
-      if (!(cvFile || cvPath)) errs.cv = "CV is required";
-      if (existingCerts.length + newCerts.length === 0) errs.certs = "At least one certificate is required";
       setErrors(errs);
       if (Object.keys(errs).length) throw new Error("Please fix the highlighted fields");
       const primarySocial = [instagram, linkedin, youtube, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
@@ -620,7 +618,7 @@ export default function TrainerProfileForm({
 
         {/* Documents */}
         <section>
-          <SectionHeader icon={FileText} title="Documents" note="· required" />
+          <SectionHeader icon={FileText} title="Documents" note="· optional" />
           <div className="grid gap-5 md:grid-cols-2">
             {/* CV */}
             <div className="space-y-2">
@@ -639,9 +637,8 @@ export default function TrainerProfileForm({
               <Button type="button" variant="outline" size="sm"
                 className={errors.cv ? "border-destructive text-destructive hover:text-destructive" : ""}
                 onClick={() => cvInput.current?.click()}>
-                <FileText className="mr-2 h-4 w-4" /> {cvFile || cvPath ? "Change CV" : "Upload CV"} <span className="text-destructive ml-1">*</span>
+                <FileText className="mr-2 h-4 w-4" /> {cvFile || cvPath ? "Change CV" : "Upload CV"}
               </Button>
-              {errors.cv && <p className="text-xs font-medium text-destructive">{errors.cv}</p>}
             </div>
 
             {/* Certificates */}
@@ -679,9 +676,8 @@ export default function TrainerProfileForm({
               <Button type="button" variant="outline" size="sm"
                 className={errors.certs ? "border-destructive text-destructive hover:text-destructive" : ""}
                 onClick={() => certInput.current?.click()}>
-                <Plus className="mr-2 h-4 w-4" /> Add certificate <span className="text-destructive ml-1">*</span>
+                <Plus className="mr-2 h-4 w-4" /> Add certificate
               </Button>
-              {errors.certs && <p className="text-xs font-medium text-destructive">{errors.certs}</p>}
             </div>
           </div>
         </section>
