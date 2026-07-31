@@ -37,9 +37,13 @@ export default function TrainerPublicProfile() {
     queryKey: ["public-trainer", slug],
     enabled: !!slug,
     queryFn: async () => {
-      const { data: t } = await sb.from("trainers")
-        .select("id, name, about, bio, education, years_experience, clients_trained, photo_path, city, service_areas, specializations, languages, availability_online, availability_offline, instagram, website, facebook, active")
-        .eq("slug", slug).maybeSingle();
+      const cols = "id, name, about, bio, education, years_experience, clients_trained, photo_path, city, service_areas, specializations, languages, availability_online, availability_offline, instagram, website, facebook, active";
+      let { data: t } = await sb.from("trainers").select(cols).eq("slug", slug).maybeSingle();
+      // Fallback: some trainers (e.g. admin-created) have no slug yet, so their
+      // card links by id — look that up too.
+      if (!t && /^[0-9a-f-]{36}$/i.test(slug ?? "")) {
+        ({ data: t } = await sb.from("trainers").select(cols).eq("id", slug).maybeSingle());
+      }
       if (!t || t.active === false) return null;
       const [media, tst, certs] = await Promise.all([
         sb.from("trainer_media").select("id, kind, file_path").eq("trainer_id", t.id).order("sort_order", { ascending: true }),

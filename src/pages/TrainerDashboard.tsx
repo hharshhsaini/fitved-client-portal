@@ -355,6 +355,12 @@ export default function TrainerDashboard() {
   // Day the trainer tapped — shows who was present / absent / off that day.
   // Hoisted here (not inside ActivityCalendar) so it survives re-renders.
   const [selectedActivityDay, setSelectedActivityDay] = useState<string | null>(null);
+  // Which society's calendar to show — null = all societies combined.
+  const [calSociety, setCalSociety] = useState<string | null>(null);
+  const activityClients = useMemo(
+    () => (calSociety ? allClients.filter((c) => c.society_id === calSociety) : allClients),
+    [allClients, calSociety],
+  );
   const { data: activityRaw } = useQuery({
     queryKey: ["trainer-activity-data", trainer?.id, clientIdsKey],
     enabled: !!trainer && !clientsLoading,
@@ -389,13 +395,13 @@ export default function TrainerDashboard() {
     return trainerMonthActivity(
       calMonth,
       today,
-      allClients.map((c) => ({ id: c.id, society_id: c.society_id, time_slot: c.time_slot })),
+      activityClients.map((c) => ({ id: c.id, society_id: c.society_id, time_slot: c.time_slot })),
       plansByUser,
       activityRaw.pauses,
       activityRaw.offs,
       activityRaw.comps,
     );
-  }, [activityRaw, calMonth, allClients, today]);
+  }, [activityRaw, calMonth, activityClients, today]);
 
   const addMakeup = useMutation({
     mutationFn: async () => {
@@ -630,6 +636,29 @@ export default function TrainerDashboard() {
             </button>
           </div>
         </div>
+
+        {/* Per-society filter — tap a society to see only its members' classes. */}
+        {societies.length > 1 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {[{ id: null as string | null, name: "All societies" }, ...societies].map((s) => {
+              const on = calSociety === s.id;
+              return (
+                <button key={s.id ?? "all"} type="button"
+                  onClick={() => { setCalSociety(s.id); setSelectedActivityDay(null); }}
+                  className="rounded-full border cursor-pointer transition-colors"
+                  style={{
+                    fontSize: 11.5, fontWeight: 600, padding: "4px 11px",
+                    background: on ? NAVY : "#fff",
+                    color: on ? "#fff" : NAVY,
+                    borderColor: on ? NAVY : "rgba(30,58,95,0.15)",
+                  }}>
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <div className="grid grid-cols-7 gap-1 mb-1">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i} className="text-center" style={{ fontSize: 10, fontWeight: 700, color: MUTED }}>{d}</div>

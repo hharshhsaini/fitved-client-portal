@@ -270,7 +270,7 @@ export default function TrainerListing() {
                   const langs: string[] = t.languages ?? [];
                   const specList: string[] = t.specializations ?? [];
                   return (
-                    <Link key={t.id} to={`/trainers/${t.slug}`}
+                    <Link key={t.id} to={`/trainers/${t.slug || t.id}`}
                       className="group flex flex-col overflow-hidden rounded-2xl border border-fv-navy/10 bg-white shadow-card transition-all duration-200 hover:-translate-y-1 hover:border-fv-orange/40 hover:shadow-lg">
                       <div className="relative h-56 overflow-hidden bg-fv-navy">
                         {photo
