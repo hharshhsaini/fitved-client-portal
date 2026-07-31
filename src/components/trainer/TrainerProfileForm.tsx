@@ -61,13 +61,14 @@ function SectionHeader({ icon: Icon, title, note }: { icon: any; title: string; 
 }
 
 /** Labelled field wrapper. */
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm font-medium text-foreground">
+      <Label className={`text-sm font-medium ${error ? "text-destructive" : "text-foreground"}`}>
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   );
 }
@@ -166,6 +167,7 @@ export default function TrainerProfileForm({
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [newCerts, setNewCerts] = useState<File[]>([]);
   const [removedCertIds, setRemovedCertIds] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const seedRef = useRef<Seed | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
@@ -210,7 +212,7 @@ export default function TrainerProfileForm({
     setCvPath(d.cv_path ?? null);
     setPhotoFile(null); setPhotoDeleted(false); setCvFile(null);
     setNewCerts([]); setRemovedCertIds([]); setAddSpec("");
-    setAddArea2(""); setAddLang("");
+    setAddArea2(""); setAddLang(""); setErrors({});
   };
 
   useEffect(() => {
@@ -270,12 +272,18 @@ export default function TrainerProfileForm({
   // ── Save ───────────────────────────────────────────────────────────────
   const save = useMutation({
     mutationFn: async () => {
-      if (!name.trim()) throw new Error("Name is required");
-      if (!education.trim()) throw new Error("Education is required");
       const years = parseInt(yearsExp, 10);
-      if (!Number.isFinite(years) || years < 0) throw new Error("Enter your years of experience");
       const clients = parseInt(clientsTrained, 10);
-      if (!Number.isFinite(clients) || clients < 0) throw new Error("Enter the number of clients trained");
+      const errs: Record<string, string> = {};
+      if (!name.trim()) errs.name = "Name is required";
+      if (!hasPhoto) errs.photo = "Profile picture is required";
+      if (!education.trim()) errs.education = "Education is required";
+      if (!Number.isFinite(years) || years < 0) errs.years = "Enter your years of experience";
+      if (!Number.isFinite(clients) || clients < 0) errs.clients = "Enter the number of clients trained";
+      if (!(cvFile || cvPath)) errs.cv = "CV is required";
+      if (existingCerts.length + newCerts.length === 0) errs.certs = "At least one certificate is required";
+      setErrors(errs);
+      if (Object.keys(errs).length) throw new Error("Please fix the highlighted fields");
       const primarySocial = [instagram, linkedin, youtube, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
 
       // Photo
@@ -350,6 +358,7 @@ export default function TrainerProfileForm({
     },
     onSuccess: () => {
       toast.success("Profile saved");
+      setErrors({});
       qc.invalidateQueries({ queryKey: ["trainer-profile-details", trainerId] });
       qc.invalidateQueries({ queryKey: ["trainer-certificates", trainerId] });
       qc.invalidateQueries({ queryKey: ["my-trainer-profile"] });
@@ -403,9 +412,9 @@ export default function TrainerProfileForm({
       <div className="p-5 md:p-6 space-y-9">
         {/* Profile picture */}
         <section>
-          <SectionHeader icon={ImageIcon} title="Profile picture" note="· optional" />
+          <SectionHeader icon={ImageIcon} title="Profile picture" note="· required" />
           <div className="flex items-center gap-5">
-            <div className="h-20 w-20 rounded-full overflow-hidden grid place-items-center shrink-0 text-white text-xl font-bold"
+            <div className={`h-20 w-20 rounded-full overflow-hidden grid place-items-center shrink-0 text-white text-xl font-bold ${errors.photo ? "ring-2 ring-destructive" : ""}`}
               style={{ background: showPhoto ? "transparent" : NAVY }}>
               {showPhoto ? <img src={showPhoto} alt="Trainer" className="h-full w-full object-cover" /> : initials}
             </div>
@@ -424,13 +433,14 @@ export default function TrainerProfileForm({
               )}
             </div>
           </div>
+          {errors.photo && <p className="mt-2 text-xs font-medium text-destructive">{errors.photo}</p>}
         </section>
 
         {/* Personal information */}
         <section>
           <SectionHeader icon={User} title="Personal information" />
           <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-            <Field label="Name" required>
+            <Field label="Name" required error={errors.name}>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
             </Field>
             <Field label="Contact">
@@ -439,7 +449,7 @@ export default function TrainerProfileForm({
                 <Input value={contact ?? "—"} readOnly disabled className="pl-9" />
               </div>
             </Field>
-            <Field label="Education" required>
+            <Field label="Education" required error={errors.education}>
               <Input value={education} onChange={(e) => setEducation(e.target.value)}
                 placeholder="e.g. B.Sc Sports Science, ACE Certified" />
             </Field>
@@ -452,27 +462,19 @@ export default function TrainerProfileForm({
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="Years of experience" required>
+            <Field label="Years of experience" required error={errors.years}>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input type="number" min={0} inputMode="numeric" value={yearsExp}
                   onChange={(e) => setYearsExp(e.target.value)} placeholder="e.g. 5" className="pl-9" />
               </div>
             </Field>
-            <Field label="Clients trained" required>
+            <Field label="Clients trained" required error={errors.clients}>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input type="number" min={0} inputMode="numeric" value={clientsTrained}
                   onChange={(e) => setClientsTrained(e.target.value)} placeholder="e.g. 120" className="pl-9" />
               </div>
-            </Field>
-          </div>
-
-          {/* Headline */}
-          <div className="mt-4">
-            <Field label="Headline">
-              <Input value={headline} onChange={(e) => setHeadline(e.target.value)}
-                placeholder="e.g. Helping busy people lose fat & build strength" />
             </Field>
           </div>
 
@@ -511,7 +513,7 @@ export default function TrainerProfileForm({
           <div className="mt-4">
             <Field label="Bio">
               <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4}
-                placeholder="Tell clients about your training style, experience and what makes you different. (optional)" />
+                placeholder="Write something here — clients will read this on your profile." />
             </Field>
           </div>
         </section>
@@ -520,11 +522,11 @@ export default function TrainerProfileForm({
         <section>
           <SectionHeader icon={Wifi} title="Availability" />
           <div className="flex flex-col sm:flex-row gap-3">
-            <label className="flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer">
+            <label className={`flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer transition-colors ${availOnline ? "border-fv-orange bg-fv-orange/5" : "hover:bg-muted/40"}`}>
               <Checkbox checked={availOnline} onCheckedChange={(c) => setAvailOnline(!!c)} />
               <span className="inline-flex items-center gap-2 text-sm font-medium"><Wifi className="h-4 w-4 text-muted-foreground" /> Online</span>
             </label>
-            <label className="flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer">
+            <label className={`flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer transition-colors ${availOffline ? "border-fv-orange bg-fv-orange/5" : "hover:bg-muted/40"}`}>
               <Checkbox checked={availOffline} onCheckedChange={(c) => setAvailOffline(!!c)} />
               <span className="inline-flex items-center gap-2 text-sm font-medium"><Home className="h-4 w-4 text-muted-foreground" /> Offline / Home Visit</span>
             </label>
@@ -549,7 +551,7 @@ export default function TrainerProfileForm({
                 <Select value={addArea2} onValueChange={addAreaFromCity}>
                   <SelectTrigger><SelectValue placeholder="Add an area…" /></SelectTrigger>
                   <SelectContent>
-                    {areasForCity(city).filter((a) => !serviceAreas.includes(a)).map((a) => (
+                    {[...areasForCity(city)].sort((a, b) => a.localeCompare(b)).filter((a) => !serviceAreas.includes(a)).map((a) => (
                       <SelectItem key={a} value={a}>{a}</SelectItem>
                     ))}
                   </SelectContent>
@@ -618,13 +620,10 @@ export default function TrainerProfileForm({
 
         {/* Documents */}
         <section>
-          <SectionHeader icon={FileText} title="Documents" note="· optional" />
+          <SectionHeader icon={FileText} title="Documents" note="· required" />
           <div className="grid gap-5 md:grid-cols-2">
             {/* CV */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <FileText className="h-4 w-4 text-muted-foreground" /> CV
-              </Label>
               {(cvFile || cvPath) && (
                 <p className="text-sm inline-flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -637,16 +636,16 @@ export default function TrainerProfileForm({
               )}
               <input ref={cvInput} type="file" accept={CV_ACCEPT} className="hidden"
                 onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} />
-              <Button type="button" variant="outline" size="sm" onClick={() => cvInput.current?.click()}>
-                <FileText className="mr-2 h-4 w-4" /> {cvFile || cvPath ? "Change CV" : "Upload CV"}
+              <Button type="button" variant="outline" size="sm"
+                className={errors.cv ? "border-destructive text-destructive hover:text-destructive" : ""}
+                onClick={() => cvInput.current?.click()}>
+                <FileText className="mr-2 h-4 w-4" /> {cvFile || cvPath ? "Change CV" : "Upload CV"} <span className="text-destructive ml-1">*</span>
               </Button>
+              {errors.cv && <p className="text-xs font-medium text-destructive">{errors.cv}</p>}
             </div>
 
             {/* Certificates */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <Award className="h-4 w-4 text-muted-foreground" /> Certificates
-              </Label>
               {(existingCerts.length > 0 || newCerts.length > 0) && (
                 <ul className="space-y-1.5">
                   {existingCerts.map((c) => (
@@ -677,9 +676,12 @@ export default function TrainerProfileForm({
               )}
               <input ref={certInput} type="file" accept={CERT_ACCEPT} multiple className="hidden"
                 onChange={(e) => { onPickCerts(e.target.files); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" onClick={() => certInput.current?.click()}>
-                <Plus className="mr-2 h-4 w-4" /> Add certificate
+              <Button type="button" variant="outline" size="sm"
+                className={errors.certs ? "border-destructive text-destructive hover:text-destructive" : ""}
+                onClick={() => certInput.current?.click()}>
+                <Plus className="mr-2 h-4 w-4" /> Add certificate <span className="text-destructive ml-1">*</span>
               </Button>
+              {errors.certs && <p className="text-xs font-medium text-destructive">{errors.certs}</p>}
             </div>
           </div>
         </section>
