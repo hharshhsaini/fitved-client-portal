@@ -379,6 +379,7 @@ export default function TrainerProfileForm({
   const initials = (name || "T").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
   return (
+    <>
     <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
       {/* Header with Save / Discard */}
       <div className="flex items-start justify-between gap-4 p-5 md:p-6 border-b">
@@ -388,7 +389,7 @@ export default function TrainerProfileForm({
             {updatedAt ? `Last edited on ${format(new Date(updatedAt), "d MMMM yyyy")}` : "Complete your trainer profile."}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="hidden md:flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={discard} disabled={!dirty || save.isPending}>
             Discard
           </Button>
@@ -731,11 +732,30 @@ export default function TrainerProfileForm({
         <Button variant="outline" size="sm" onClick={onSignOut} className="text-destructive hover:text-destructive">
           <LogOut className="mr-2 h-4 w-4" /> Sign out
         </Button>
-        <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+        <Button size="sm" className="hidden md:inline-flex" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
           {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save profile
         </Button>
       </div>
     </div>
+
+    {/* Mobile: clearance so nothing hides behind the sticky save bar */}
+    <div className="h-16 md:hidden" />
+
+    {/* Mobile: sticky save bar, fixed above the bottom nav */}
+    <div
+      className="md:hidden fixed inset-x-0 z-40 border-t bg-white px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(30,58,95,0.08)]"
+      style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+    >
+      <Button variant="outline" onClick={discard} disabled={!dirty || save.isPending} className="flex-1">
+        Discard
+      </Button>
+      <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}
+        className="flex-[2] bg-fv-orange text-white hover:bg-fv-orange/90 font-bold">
+        {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Save
+      </Button>
+    </div>
+    </>
   );
 }
