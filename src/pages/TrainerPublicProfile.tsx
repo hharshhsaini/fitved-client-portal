@@ -38,7 +38,7 @@ export default function TrainerPublicProfile() {
     enabled: !!slug,
     queryFn: async () => {
       const { data: t } = await sb.from("trainers")
-        .select("id, name, headline, about, bio, education, years_experience, clients_trained, photo_path, city, service_areas, specializations, languages, availability_online, availability_offline, instagram, linkedin, youtube, website, facebook, active")
+        .select("id, name, about, bio, education, years_experience, clients_trained, photo_path, city, service_areas, specializations, languages, availability_online, availability_offline, instagram, website, facebook, active")
         .eq("slug", slug).maybeSingle();
       if (!t || t.active === false) return null;
       const [media, tst, certs] = await Promise.all([
@@ -55,7 +55,7 @@ export default function TrainerPublicProfile() {
   // SEO meta
   useEffect(() => {
     if (!t) return;
-    document.title = `${t.name}${t.headline ? " — " + t.headline : " — Certified Trainer"} | FitVed`;
+    document.title = `${t.name} — Certified Trainer | FitVed`;
     const setMeta = (n: string, c: string) => {
       let el = document.querySelector(`meta[name="${n}"]`);
       if (!el) { el = document.createElement("meta"); el.setAttribute("name", n); document.head.appendChild(el); }
@@ -96,8 +96,8 @@ export default function TrainerPublicProfile() {
   const langs: string[] = Array.isArray(t.languages) ? t.languages : [];
   const specs: string[] = Array.isArray(t.specializations) ? t.specializations : [];
   const socials = [
-    { icon: Instagram, url: t.instagram }, { icon: Linkedin, url: t.linkedin },
-    { icon: Youtube, url: t.youtube }, { icon: Facebook, url: t.facebook }, { icon: Globe, url: t.website },
+    { icon: Instagram, url: t.instagram },
+    { icon: Facebook, url: t.facebook }, { icon: Globe, url: t.website },
   ].filter((s) => s.url);
 
   return (
@@ -113,7 +113,6 @@ export default function TrainerPublicProfile() {
               <BadgeCheck className="h-3.5 w-3.5" /> Verified FitVed Trainer
             </div>
             <h1 className="mt-3 font-display text-3xl md:text-5xl leading-tight">{t.name}</h1>
-            {t.headline && <p className="mt-2 text-white/70 text-base md:text-lg max-w-2xl">{t.headline}</p>}
             <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
               <Stat label="Experience" value={`${t.years_experience ?? 0}+ yrs`} />
               <Stat label="Clients trained" value={`${t.clients_trained ?? 0}+`} />
@@ -250,13 +249,6 @@ export default function TrainerPublicProfile() {
                     </div>
                   </div>
                   {r.review && <p className="mt-3 text-sm text-fv-text leading-relaxed">{r.review}</p>}
-                  {(publicUrl(r.before_image) || publicUrl(r.after_image) || publicUrl(r.transformation_image)) && (
-                    <div className="mt-3 flex gap-2">
-                      {[r.before_image, r.after_image, r.transformation_image].filter(Boolean).map((p: string, i: number) => (
-                        <img key={i} src={publicUrl(p)!} alt="" className="h-16 w-16 rounded-lg object-cover" />
-                      ))}
-                    </div>
-                  )}
                   {r.video_url && <a href={r.video_url} target="_blank" rel="noopener" className="mt-3 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-fv-orange">Watch video <ExternalLink className="h-3 w-3" /></a>}
                 </div>
               ))}

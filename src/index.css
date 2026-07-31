@@ -219,6 +219,20 @@
     }
   }
 
+  /* Hero container: FIXED pixel width + padding (not viewport %) so the copy
+     and visual stay tight together and align with the navbar (max-w-6xl),
+     instead of spreading far apart on wide screens. Appended last so it wins
+     over the percentage rules above at every breakpoint. */
+  .fluid-container-hero {
+    width: 100%;
+    max-width: 1152px;   /* = navbar max-w-6xl */
+    padding-inline: 20px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) {
+    .fluid-container-hero { padding-inline: 32px; }
+  }
+
   /* Fluid Contextual Section Paddings */
   .fluid-section-m {
     padding-block: clamp(3rem, 6vw, 4.5rem);

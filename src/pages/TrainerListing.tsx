@@ -72,7 +72,7 @@ export default function TrainerListing() {
     queryKey: ["public-trainers"],
     queryFn: async () => {
       const { data, error } = await sb.from("trainers")
-        .select("id, slug, name, headline, bio, photo_path, years_experience, clients_trained, city, service_areas, specializations, languages, availability_online, availability_offline, gender, active, created_at");
+        .select("id, slug, name, bio, photo_path, years_experience, clients_trained, city, service_areas, specializations, languages, availability_online, availability_offline, gender, active, created_at");
       if (error) return { __notReady: true } as const;
       return ((data ?? []) as T[]).filter(isComplete);
     },
@@ -85,7 +85,7 @@ export default function TrainerListing() {
     const s = search.trim().toLowerCase();
     let list = all.filter((t) => {
       if (s) {
-        const hay = [t.name, t.city, t.headline, ...(t.service_areas ?? []), ...(t.specializations ?? [])].join(" ").toLowerCase();
+        const hay = [t.name, t.city, ...(t.service_areas ?? []), ...(t.specializations ?? [])].join(" ").toLowerCase();
         if (!hay.includes(s)) return false;
       }
       if (city && t.city !== city) return false;
@@ -266,7 +266,7 @@ export default function TrainerListing() {
                       </div>
                       <div className="p-4">
                         <h3 className="font-display text-lg text-fv-navy leading-tight group-hover:text-fv-orange transition-colors">{cardName(t.name)}</h3>
-                        {t.headline && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{t.headline}</p>}
+                        {t.bio && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{t.bio}</p>}
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-fv-text">
                           <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3 text-fv-orange" /> {t.years_experience ?? 0}+ yrs</span>
                           <span className="inline-flex items-center gap-1"><Users className="h-3 w-3 text-fv-orange" /> {t.clients_trained ?? 0}+ clients</span>

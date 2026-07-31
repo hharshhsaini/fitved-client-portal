@@ -42,9 +42,9 @@ type CertRow = { id: string; file_path: string; file_name: string | null };
 type Seed = {
   name: string; education: string; yearsExp: string; clientsTrained: string;
   socialLink: string; serviceAreas: string[]; specializations: string[]; bio: string;
-  gender: string; about: string; headline: string; city: string; languages: string[];
+  gender: string; about: string; city: string; languages: string[];
   availOnline: boolean; availOffline: boolean;
-  instagram: string; linkedin: string; youtube: string; website: string; facebook: string;
+  instagram: string; website: string; facebook: string;
 };
 
 /** Small labelled section header (icon chip + title). */
@@ -90,7 +90,7 @@ export default function TrainerProfileForm({
     queryFn: async () => {
       const { data, error } = await sb
         .from("trainers")
-        .select("name, education, years_experience, clients_trained, social_link, service_areas, specializations, bio, cv_path, photo_path, gender, about, headline, city, languages, availability_online, availability_offline, instagram, linkedin, youtube, website, facebook, updated_at")
+        .select("name, education, years_experience, clients_trained, social_link, service_areas, specializations, bio, cv_path, photo_path, gender, about, city, languages, availability_online, availability_offline, instagram, website, facebook, updated_at")
         .eq("id", trainerId)
         .maybeSingle();
       if (error) return { __notReady: true } as const;
@@ -148,7 +148,6 @@ export default function TrainerProfileForm({
   const [bio, setBio] = useState("");
   const [gender, setGender] = useState("");
   const [about, setAbout] = useState("");
-  const [headline, setHeadline] = useState("");
   const [city, setCity] = useState("");
   const [addArea2, setAddArea2] = useState("");
   const [languages, setLanguages] = useState<string[]>([]);
@@ -156,8 +155,6 @@ export default function TrainerProfileForm({
   const [availOnline, setAvailOnline] = useState(false);
   const [availOffline, setAvailOffline] = useState(false);
   const [instagram, setInstagram] = useState("");
-  const [linkedin, setLinkedin] = useState("");
-  const [youtube, setYoutube] = useState("");
   const [website, setWebsite] = useState("");
   const [facebook, setFacebook] = useState("");
   const [photoPath, setPhotoPath] = useState<string | null>(null);
@@ -186,12 +183,11 @@ export default function TrainerProfileForm({
       bio: d.bio ?? "",
       gender: d.gender ?? "",
       about: d.about ?? "",
-      headline: d.headline ?? "",
       city: d.city ?? "",
       languages: Array.isArray(d.languages) ? d.languages : [],
       availOnline: !!d.availability_online,
       availOffline: !!d.availability_offline,
-      instagram: d.instagram ?? "", linkedin: d.linkedin ?? "", youtube: d.youtube ?? "",
+      instagram: d.instagram ?? "",
       website: d.website ?? "", facebook: d.facebook ?? "",
     };
     seedRef.current = seed;
@@ -203,10 +199,10 @@ export default function TrainerProfileForm({
     setServiceAreas(seed.serviceAreas);
     setSpecializations(seed.specializations);
     setBio(seed.bio);
-    setGender(seed.gender); setAbout(seed.about); setHeadline(seed.headline);
+    setGender(seed.gender); setAbout(seed.about);
     setCity(seed.city); setLanguages(seed.languages);
     setAvailOnline(seed.availOnline); setAvailOffline(seed.availOffline);
-    setInstagram(seed.instagram); setLinkedin(seed.linkedin); setYoutube(seed.youtube);
+    setInstagram(seed.instagram);
     setWebsite(seed.website); setFacebook(seed.facebook);
     setPhotoPath(d.photo_path ?? null);
     setCvPath(d.cv_path ?? null);
@@ -234,14 +230,14 @@ export default function TrainerProfileForm({
       clientsTrained !== s.clientsTrained || socialLink !== s.socialLink ||
       JSON.stringify(serviceAreas) !== JSON.stringify(s.serviceAreas) ||
       JSON.stringify(specializations) !== JSON.stringify(s.specializations) || bio !== s.bio ||
-      gender !== s.gender || about !== s.about || headline !== s.headline || city !== s.city ||
+      gender !== s.gender || about !== s.about || city !== s.city ||
       JSON.stringify(languages) !== JSON.stringify(s.languages) ||
       availOnline !== s.availOnline || availOffline !== s.availOffline ||
-      instagram !== s.instagram || linkedin !== s.linkedin || youtube !== s.youtube ||
+      instagram !== s.instagram ||
       website !== s.website || facebook !== s.facebook ||
       !!photoFile || photoDeleted || !!cvFile || newCerts.length > 0 || removedCertIds.length > 0
     );
-  }, [name, education, yearsExp, clientsTrained, socialLink, serviceAreas, specializations, bio, gender, about, headline, city, languages, availOnline, availOffline, instagram, linkedin, youtube, website, facebook, photoFile, photoDeleted, cvFile, newCerts, removedCertIds]);
+  }, [name, education, yearsExp, clientsTrained, socialLink, serviceAreas, specializations, bio, gender, about, city, languages, availOnline, availOffline, instagram, website, facebook, photoFile, photoDeleted, cvFile, newCerts, removedCertIds]);
 
   const addAreaFromCity = (v: string) => {
     if (v && !serviceAreas.includes(v)) setServiceAreas((s) => [...s, v]);
@@ -282,7 +278,7 @@ export default function TrainerProfileForm({
       if (!Number.isFinite(clients) || clients < 0) errs.clients = "Enter the number of clients trained";
       setErrors(errs);
       if (Object.keys(errs).length) throw new Error("Please fix the highlighted fields");
-      const primarySocial = [instagram, linkedin, youtube, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
+      const primarySocial = [instagram, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
 
       // Photo
       let nextPhoto = photoPath;
@@ -326,14 +322,11 @@ export default function TrainerProfileForm({
         bio: about.trim() || null,
         gender: gender || null,
         about: about.trim() || null,
-        headline: headline.trim() || null,
         city: city || null,
         languages,
         availability_online: availOnline,
         availability_offline: availOffline,
         instagram: instagram.trim() || null,
-        linkedin: linkedin.trim() || null,
-        youtube: youtube.trim() || null,
         website: website.trim() || null,
         facebook: facebook.trim() || null,
         photo_path: nextPhoto,

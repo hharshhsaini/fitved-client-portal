@@ -13,8 +13,8 @@ const sanitize = (n: string) => n.replace(/[^a-zA-Z0-9.-]/g, "_");
 const publicUrl = (p: string | null) => (p ? supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl : null);
 
 type Row = {
-  id: string; client_name: string; client_image: string | null; transformation_image: string | null;
-  before_image: string | null; after_image: string | null; rating: number | null; review: string | null; video_url: string | null;
+  id: string; client_name: string; client_image: string | null;
+  rating: number | null; review: string | null; video_url: string | null;
 };
 
 // Optional image slots for the add form
@@ -38,7 +38,7 @@ export default function TrainerTestimonialsSection({ trainerId }: { trainerId: s
     enabled: !!trainerId,
     queryFn: async () => {
       const { data, error } = await sb.from("trainer_testimonials")
-        .select("id, client_name, client_image, transformation_image, before_image, after_image, rating, review, video_url")
+        .select("id, client_name, client_image, rating, review, video_url")
         .eq("trainer_id", trainerId).order("sort_order", { ascending: true }).order("created_at", { ascending: true });
       if (error) return { __notReady: true } as const;
       return (data ?? []) as Row[];
@@ -72,7 +72,7 @@ export default function TrainerTestimonialsSection({ trainerId }: { trainerId: s
 
   const remove = useMutation({
     mutationFn: async (r: Row) => {
-      const paths = [r.client_image, r.transformation_image, r.before_image, r.after_image].filter(Boolean) as string[];
+      const paths = [r.client_image].filter(Boolean) as string[];
       if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
       const { error } = await sb.from("trainer_testimonials").delete().eq("id", r.id);
       if (error) throw error;
@@ -109,13 +109,6 @@ export default function TrainerTestimonialsSection({ trainerId }: { trainerId: s
                 </div>
               </div>
               {r.review && <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{r.review}</p>}
-              {(publicUrl(r.before_image) || publicUrl(r.after_image) || publicUrl(r.transformation_image)) && (
-                <div className="mt-2 flex gap-1.5">
-                  {[r.before_image, r.after_image, r.transformation_image].filter(Boolean).map((p, i) => (
-                    <img key={i} src={publicUrl(p)!} alt="" className="h-12 w-12 rounded object-cover" />
-                  ))}
-                </div>
-              )}
               {r.video_url && <a href={r.video_url} target="_blank" rel="noopener" className="mt-2 inline-block text-xs font-semibold text-fv-orange hover:underline">Video testimonial →</a>}
             </div>
           ))}
