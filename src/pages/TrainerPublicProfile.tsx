@@ -13,6 +13,13 @@ import {
 const BUCKET = "trainer-assets";
 const publicUrl = (p: string | null | undefined) => (p ? supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl : null);
 
+/** "Shashi Kumar" → "S Kumar" — customers only ever see the shortened name
+ *  (matches the listing cards); admins still see the full name. */
+const shortName = (name: string) => {
+  const w = (name || "").trim().split(/\s+/);
+  return w.length >= 2 ? `${w[0][0].toUpperCase()} ${w.slice(1).join(" ")}` : name;
+};
+
 type Trainer = any;
 
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
@@ -59,13 +66,13 @@ export default function TrainerPublicProfile() {
   // SEO meta
   useEffect(() => {
     if (!t) return;
-    document.title = `${t.name} — Certified Trainer | FitVed`;
+    document.title = `${shortName(t.name)} — Certified Trainer | FitVed`;
     const setMeta = (n: string, c: string) => {
       let el = document.querySelector(`meta[name="${n}"]`);
       if (!el) { el = document.createElement("meta"); el.setAttribute("name", n); document.head.appendChild(el); }
       el.setAttribute("content", c);
     };
-    setMeta("description", (t.bio || t.about || `${t.name} is a certified FitVed trainer.`).slice(0, 160));
+    setMeta("description", (t.bio || t.about || `${shortName(t.name)} is a certified FitVed trainer.`).slice(0, 160));
     let c = document.querySelector('link[rel="canonical"]');
     if (!c) { c = document.createElement("link"); c.setAttribute("rel", "canonical"); document.head.appendChild(c); }
     c.setAttribute("href", `${window.location.origin}/trainers/${slug}`);
@@ -90,7 +97,7 @@ export default function TrainerPublicProfile() {
     );
   }
 
-  const { media, testimonials, certs } = q.data!;
+  const { media, testimonials } = q.data!;
   const photo = publicUrl(t.photo_path);
   const initials = (t.name || "T").split(" ").map((p: string) => p[0]).slice(0, 2).join("").toUpperCase();
   const galleryImgs = media.filter((m: any) => m.kind === "workout_image");
@@ -110,13 +117,13 @@ export default function TrainerPublicProfile() {
       <section className="bg-fv-navy text-white">
         <div className="mx-auto max-w-6xl px-4 py-10 md:py-16 grid md:grid-cols-[280px_1fr] gap-8 items-center">
           <div className="mx-auto md:mx-0 h-56 w-56 rounded-3xl overflow-hidden grid place-items-center bg-white/10 shrink-0 text-5xl font-display shadow-[0_0_50px_rgba(255,107,53,0.25)]">
-            {photo ? <img src={photo} alt={t.name} className="h-full w-full object-cover" /> : initials}
+            {photo ? <img src={photo} alt={shortName(t.name)} className="h-full w-full object-cover" /> : initials}
           </div>
           <div className="text-center md:text-left">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-fv-orange/15 border border-fv-orange/30 px-3 py-1 text-xs font-bold uppercase tracking-widest text-fv-orange">
               <BadgeCheck className="h-3.5 w-3.5" /> Verified FitVed Trainer
             </div>
-            <h1 className="mt-3 font-display text-3xl md:text-5xl leading-tight">{t.name}</h1>
+            <h1 className="mt-3 font-display text-3xl md:text-5xl leading-tight">{shortName(t.name)}</h1>
             <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
               <Stat label="Experience" value={`${t.years_experience ?? 0}+ yrs`} />
               <Stat label="Clients trained" value={`${t.clients_trained ?? 0}+`} />
@@ -260,33 +267,22 @@ export default function TrainerPublicProfile() {
           </section>
         )}
 
-        {/* Certificates */}
-        {certs.length > 0 && (
-          <section><SectionTitle>Certifications</SectionTitle>
-            <div className="flex flex-wrap gap-2">
-              {certs.map((c: any) => (
-                <a key={c.id} href={publicUrl(c.file_path) ?? "#"} target="_blank" rel="noopener"
-                  className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-fv-navy hover:border-fv-orange/40">
-                  <Award className="h-4 w-4 text-fv-orange" /> {c.file_name || "Certificate"} <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                </a>
-              ))}
-            </div>
-          </section>
-        )}
+        {/* Certificates are intentionally NOT shown to customers — admins review
+            them in the approval dialog. */}
       </div>
 
       {/* Bottom CTA */}
       <section className="bg-fv-navy text-white">
         <div className="mx-auto max-w-4xl px-4 py-14 text-center">
           <h2 className="font-display text-3xl md:text-4xl">Ready to start training?</h2>
-          <p className="mt-3 text-white/70">Book your FREE trial with {t.name.split(" ")[0]} — no payment, no commitment.</p>
+          <p className="mt-3 text-white/70">Book your FREE trial with {shortName(t.name)} — no payment, no commitment.</p>
           <Button onClick={() => setTrialOpen(true)} className="mt-6 bg-fv-orange text-white hover:bg-fv-orange/90 h-12 px-8 font-bold uppercase tracking-wider rounded-full">
             Book Free Trial <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </section>
 
-      <BookTrialDialog open={trialOpen} onOpenChange={setTrialOpen} trainerName={t.name} />
+      <BookTrialDialog open={trialOpen} onOpenChange={setTrialOpen} trainerName={shortName(t.name)} trainerFullName={t.name} />
     </div>
   );
 }

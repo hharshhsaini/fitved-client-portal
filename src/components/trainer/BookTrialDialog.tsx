@@ -20,11 +20,14 @@ const INTERESTS = [
  * Writes to the `leads` table via the anon-writable insert policy.
  */
 export default function BookTrialDialog({
-  open, onOpenChange, trainerName,
+  open, onOpenChange, trainerName, trainerFullName,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  /** Name shown to the customer (shortened on public profiles). */
   trainerName?: string | null;
+  /** Full name stored on the lead so admin knows the real trainer. */
+  trainerFullName?: string | null;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -40,7 +43,7 @@ export default function BookTrialDialog({
         phone: phone.trim(),
         interest: interest || "Free trial",
         source: "trainer_profile",
-        preferred_trainer: trainerName || null,
+        preferred_trainer: trainerFullName || trainerName || null,
       });
       if (error) throw error;
     },
