@@ -29,7 +29,7 @@ import {
   type User as FirebaseUser,
 } from "firebase/auth";
 import { recalculatePlanDates } from "@/stores/pauseStore";
-import { trainerSessionsForMonth, trainerMonthActivity, monthLabel, type DayActivity } from "@/lib/trainerSessions";
+import { trainerSessionsForMonth, trainerMonthActivity, monthLabel, recentMonthKeys, type DayActivity } from "@/lib/trainerSessions";
 import { toast } from "sonner";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -312,8 +312,12 @@ export default function TrainerDashboard() {
   // correction included. Read-only here — only the admin can adjust it.
   const currentMonthKey = today.slice(0, 7);
   const clientIdsKey = allClients.map((c) => c.id).sort().join(",");
+  // Month the sessions count is shown for — defaults to the current month, but
+  // the trainer can look back at previous months via the dropdown.
+  const [sessionMonth, setSessionMonth] = useState(currentMonthKey);
+  const monthOptions = useMemo(() => recentMonthKeys(12), []);
   const { data: sessionsThisMonth } = useQuery({
-    queryKey: ["trainer-sessions-this-month", trainer?.id, currentMonthKey, clientIdsKey],
+    queryKey: ["trainer-sessions-month", trainer?.id, sessionMonth, clientIdsKey],
     enabled: !!trainer && !clientsLoading,
     queryFn: async () => {
       const ids = allClients.map((c) => c.id);
@@ -325,8 +329,10 @@ export default function TrainerDashboard() {
           ? (supabase.from("pauses") as any).select("client_id, from_date, to_date").in("client_id", ids)
           : Promise.resolve({ data: [] as any[] }),
         (supabase as any).from("trainer_off_times").select("from_date, to_date, time_slot").eq("trainer_id", trainer!.id),
-        (supabase as any).from("comp_classes").select("client_id, class_date").eq("trainer_id", trainer!.id).gte("class_date", `${currentMonthKey}-01`),
-        (supabase as any).from("trainer_session_adjustments").select("delta").eq("trainer_id", trainer!.id).eq("month", currentMonthKey),
+        // Comps for the selected month only — trainerSessionsForMonth still
+        // filters by month, so an inclusive lower bound is enough.
+        (supabase as any).from("comp_classes").select("client_id, class_date").eq("trainer_id", trainer!.id).gte("class_date", `${sessionMonth}-01`).lte("class_date", `${sessionMonth}-31`),
+        (supabase as any).from("trainer_session_adjustments").select("delta").eq("trainer_id", trainer!.id).eq("month", sessionMonth),
       ]);
       const plansByUser = new Map<string, { user_id: string; start_date: string; end_date: string; training_days: string[] | null }[]>();
       for (const p of (plansRes.data ?? []) as any[]) {
@@ -335,7 +341,7 @@ export default function TrainerDashboard() {
         plansByUser.set(p.user_id, list);
       }
       return trainerSessionsForMonth(
-        currentMonthKey,
+        sessionMonth,
         today,
         allClients.map((c) => ({ id: c.id, society_id: c.society_id, time_slot: c.time_slot })),
         plansByUser,
@@ -346,6 +352,7 @@ export default function TrainerDashboard() {
       ).total;
     },
   });
+  const isCurrentSessionMonth = sessionMonth === currentMonthKey;
 
   // ── Class activity calendar (taken / off / extra, any month) ─────────────
   const [calMonth, setCalMonth] = useState(() => {
@@ -1409,10 +1416,25 @@ export default function TrainerDashboard() {
             </div>
             <div className="rounded-2xl px-3 py-2 text-center flex-1"
               style={{ background: "rgba(255,255,255,0.10)" }}
-              title="Classes taken this month — off-days excluded, extra classes included">
+              title="Classes taken in the selected month — off-days excluded, extra classes included">
               <p style={{ fontSize: 20, fontWeight: 700, color: GOLD }}>{sessionsThisMonth ?? "—"}</p>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>Sessions this month</p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", marginTop: 1 }}>Sessions</p>
             </div>
+          </div>
+
+          {/* Month picker for the sessions count — lets trainers see past months */}
+          <div className="mt-3">
+            <Select value={sessionMonth} onValueChange={setSessionMonth}>
+              <SelectTrigger className="h-9 w-full rounded-xl border-none text-sm font-semibold text-white"
+                style={{ background: "rgba(255,255,255,0.12)" }}>
+                <span className="mr-1 text-white/55">Sessions in</span><SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map((mk) => (
+                  <SelectItem key={mk} value={mk}>{monthLabel(mk)}{mk === currentMonthKey ? " · this month" : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -1482,7 +1504,6 @@ export default function TrainerDashboard() {
             { label: "Total clients", value: societies.reduce((sum, s) => sum + (batchMap[s.id]?.reduce((a, b) => a + b.client_count, 0) ?? 0), 0) },
             { label: "Societies", value: societies.length },
             { label: "Upcoming off times", value: offTimes.length },
-            { label: "Sessions this month", value: sessionsThisMonth ?? "—" },
           ].map((stat) => (
             <div key={stat.label} className="rounded-2xl p-5 shadow-sm"
               style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
@@ -1490,6 +1511,24 @@ export default function TrainerDashboard() {
               <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
             </div>
           ))}
+          {/* Sessions — with a month picker so past months stay visible */}
+          <div className="rounded-2xl p-5 shadow-sm" style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+            <p className="text-3xl font-display font-bold" style={{ color: NAVY }}>{sessionsThisMonth ?? "—"}</p>
+            <div className="mt-1 flex items-center justify-between gap-1">
+              <p className="text-sm text-muted-foreground">Sessions</p>
+              <Select value={sessionMonth} onValueChange={setSessionMonth}>
+                <SelectTrigger className="h-7 w-auto gap-1 border-none bg-transparent px-1 text-xs font-semibold shadow-none focus:ring-0"
+                  style={{ color: NAVY }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {monthOptions.map((mk) => (
+                    <SelectItem key={mk} value={mk}>{monthLabel(mk)}{mk === currentMonthKey ? " · this month" : ""}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-6">
