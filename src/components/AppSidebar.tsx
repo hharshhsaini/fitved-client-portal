@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/sidebar";
 import { FitvedLogo } from "./FitvedLogo";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlansTabVisible } from "@/hooks/usePlansTabVisible";
 
 const clientItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
   const { role } = useAuth();
+  const { visible: plansTabVisible } = usePlansTabVisible();
 
   let items = role === "trainer" ? [...trainerItems] : [...clientItems];
   if (role === "admin") {
@@ -47,6 +49,9 @@ export function AppSidebar() {
       { title: "Referrals", url: "/admin/referrals", icon: Gift },
       { title: "Profile", url: "/profile", icon: UserCircle2 },
     ];
+  } else if (role === "client" && !plansTabVisible) {
+    // Admin can hide the Plan tab per customer (default hidden for new users).
+    items = items.filter((i) => i.url !== "/plan");
   }
 
   const isActive = (path: string) =>

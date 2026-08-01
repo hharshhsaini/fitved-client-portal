@@ -10,8 +10,20 @@ import { Label } from "@/components/ui/label";
 import {
   User, Image as ImageIcon, GraduationCap, Clock, Users, Link2, MapPin,
   FileText, Award, Building2, Phone, X, Plus, Loader2, ExternalLink,
-  Trash2, LogOut, Save,
+  Trash2, LogOut, Save, Dumbbell, Globe, Instagram, Facebook,
+  Languages as LangIcon, Wifi, Home,
 } from "lucide-react";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { SPECIALIZATIONS } from "@/lib/specializations";
+import { CITIES, areasForCity } from "@/lib/cities";
+
+const LANGUAGES = [
+  "English", "Hindi", "Kannada", "Tamil", "Telugu", "Malayalam", "Marathi",
+  "Bengali", "Gujarati", "Punjabi", "Urdu", "Odia", "Assamese", "Konkani",
+];
 
 const BUCKET = "trainer-assets";
 const NAVY = "#1E3A5F";
@@ -29,7 +41,10 @@ function sanitize(name: string) {
 type CertRow = { id: string; file_path: string; file_name: string | null };
 type Seed = {
   name: string; education: string; yearsExp: string; clientsTrained: string;
-  socialLink: string; serviceAreas: string[]; bio: string;
+  socialLink: string; serviceAreas: string[]; specializations: string[]; bio: string;
+  gender: string; about: string; city: string; languages: string[];
+  availOnline: boolean; availOffline: boolean;
+  instagram: string; website: string; facebook: string;
 };
 
 /** Small labelled section header (icon chip + title). */
@@ -46,13 +61,14 @@ function SectionHeader({ icon: Icon, title, note }: { icon: any; title: string; 
 }
 
 /** Labelled field wrapper. */
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+function Field({ label, required, error, children }: { label: string; required?: boolean; error?: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm font-medium text-foreground">
+      <Label className={`text-sm font-medium ${error ? "text-destructive" : "text-foreground"}`}>
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       {children}
+      {error && <p className="text-xs font-medium text-destructive">{error}</p>}
     </div>
   );
 }
@@ -74,7 +90,7 @@ export default function TrainerProfileForm({
     queryFn: async () => {
       const { data, error } = await sb
         .from("trainers")
-        .select("name, education, years_experience, clients_trained, social_link, service_areas, bio, cv_path, photo_path, updated_at")
+        .select("name, education, years_experience, clients_trained, social_link, service_areas, specializations, bio, cv_path, photo_path, gender, about, city, languages, availability_online, availability_offline, instagram, website, facebook, updated_at")
         .eq("id", trainerId)
         .maybeSingle();
       if (error) return { __notReady: true } as const;
@@ -127,8 +143,20 @@ export default function TrainerProfileForm({
   const [clientsTrained, setClientsTrained] = useState("");
   const [socialLink, setSocialLink] = useState("");
   const [serviceAreas, setServiceAreas] = useState<string[]>([]);
-  const [areaInput, setAreaInput] = useState("");
+  const [specializations, setSpecializations] = useState<string[]>([]);
+  const [addSpec, setAddSpec] = useState("");
   const [bio, setBio] = useState("");
+  const [gender, setGender] = useState("");
+  const [about, setAbout] = useState("");
+  const [city, setCity] = useState("");
+  const [addArea2, setAddArea2] = useState("");
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [addLang, setAddLang] = useState("");
+  const [availOnline, setAvailOnline] = useState(false);
+  const [availOffline, setAvailOffline] = useState(false);
+  const [instagram, setInstagram] = useState("");
+  const [website, setWebsite] = useState("");
+  const [facebook, setFacebook] = useState("");
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoDeleted, setPhotoDeleted] = useState(false);
@@ -136,6 +164,7 @@ export default function TrainerProfileForm({
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [newCerts, setNewCerts] = useState<File[]>([]);
   const [removedCertIds, setRemovedCertIds] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const seedRef = useRef<Seed | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
@@ -150,7 +179,16 @@ export default function TrainerProfileForm({
       clientsTrained: d.clients_trained != null ? String(d.clients_trained) : "",
       socialLink: d.social_link ?? "",
       serviceAreas: Array.isArray(d.service_areas) ? d.service_areas : [],
+      specializations: Array.isArray(d.specializations) ? d.specializations : [],
       bio: d.bio ?? "",
+      gender: d.gender ?? "",
+      about: d.about ?? "",
+      city: d.city ?? "",
+      languages: Array.isArray(d.languages) ? d.languages : [],
+      availOnline: !!d.availability_online,
+      availOffline: !!d.availability_offline,
+      instagram: d.instagram ?? "",
+      website: d.website ?? "", facebook: d.facebook ?? "",
     };
     seedRef.current = seed;
     setName(seed.name);
@@ -159,11 +197,18 @@ export default function TrainerProfileForm({
     setClientsTrained(seed.clientsTrained);
     setSocialLink(seed.socialLink);
     setServiceAreas(seed.serviceAreas);
+    setSpecializations(seed.specializations);
     setBio(seed.bio);
+    setGender(seed.gender); setAbout(seed.about);
+    setCity(seed.city); setLanguages(seed.languages);
+    setAvailOnline(seed.availOnline); setAvailOffline(seed.availOffline);
+    setInstagram(seed.instagram);
+    setWebsite(seed.website); setFacebook(seed.facebook);
     setPhotoPath(d.photo_path ?? null);
     setCvPath(d.cv_path ?? null);
     setPhotoFile(null); setPhotoDeleted(false); setCvFile(null);
-    setNewCerts([]); setRemovedCertIds([]); setAreaInput("");
+    setNewCerts([]); setRemovedCertIds([]); setAddSpec("");
+    setAddArea2(""); setAddLang(""); setErrors({});
   };
 
   useEffect(() => {
@@ -183,17 +228,30 @@ export default function TrainerProfileForm({
     return (
       name !== s.name || education !== s.education || yearsExp !== s.yearsExp ||
       clientsTrained !== s.clientsTrained || socialLink !== s.socialLink ||
-      JSON.stringify(serviceAreas) !== JSON.stringify(s.serviceAreas) || bio !== s.bio ||
+      JSON.stringify(serviceAreas) !== JSON.stringify(s.serviceAreas) ||
+      JSON.stringify(specializations) !== JSON.stringify(s.specializations) || bio !== s.bio ||
+      gender !== s.gender || about !== s.about || city !== s.city ||
+      JSON.stringify(languages) !== JSON.stringify(s.languages) ||
+      availOnline !== s.availOnline || availOffline !== s.availOffline ||
+      instagram !== s.instagram ||
+      website !== s.website || facebook !== s.facebook ||
       !!photoFile || photoDeleted || !!cvFile || newCerts.length > 0 || removedCertIds.length > 0
     );
-  }, [name, education, yearsExp, clientsTrained, socialLink, serviceAreas, bio, photoFile, photoDeleted, cvFile, newCerts, removedCertIds]);
+  }, [name, education, yearsExp, clientsTrained, socialLink, serviceAreas, specializations, bio, gender, about, city, languages, availOnline, availOffline, instagram, website, facebook, photoFile, photoDeleted, cvFile, newCerts, removedCertIds]);
 
-  const addArea = () => {
-    const v = areaInput.trim();
-    if (v && !serviceAreas.some((a) => a.toLowerCase() === v.toLowerCase())) setServiceAreas((s) => [...s, v]);
-    setAreaInput("");
+  const addAreaFromCity = (v: string) => {
+    if (v && !serviceAreas.includes(v)) setServiceAreas((s) => [...s, v]);
+    setAddArea2("");
   };
   const removeArea = (v: string) => setServiceAreas((s) => s.filter((x) => x !== v));
+  const addLanguage = (v: string) => { if (v && !languages.includes(v)) setLanguages((l) => [...l, v]); setAddLang(""); };
+  const removeLanguage = (v: string) => setLanguages((l) => l.filter((x) => x !== v));
+
+  const addSpecialization = (v: string) => {
+    if (v && !specializations.includes(v)) setSpecializations((s) => [...s, v]);
+    setAddSpec("");
+  };
+  const removeSpecialization = (v: string) => setSpecializations((s) => s.filter((x) => x !== v));
 
   const onPickCerts = (files: FileList | null) => {
     if (!files) return;
@@ -210,14 +268,17 @@ export default function TrainerProfileForm({
   // ── Save ───────────────────────────────────────────────────────────────
   const save = useMutation({
     mutationFn: async () => {
-      if (!name.trim()) throw new Error("Name is required");
-      if (!education.trim()) throw new Error("Education is required");
       const years = parseInt(yearsExp, 10);
-      if (!Number.isFinite(years) || years < 0) throw new Error("Enter your years of experience");
       const clients = parseInt(clientsTrained, 10);
-      if (!Number.isFinite(clients) || clients < 0) throw new Error("Enter the number of clients trained");
-      if (!socialLink.trim()) throw new Error("Add your LinkedIn or Instagram link");
-      if (serviceAreas.length === 0) throw new Error("Add at least one area you can serve");
+      const errs: Record<string, string> = {};
+      if (!name.trim()) errs.name = "Name is required";
+      if (!hasPhoto) errs.photo = "Profile picture is required";
+      if (!education.trim()) errs.education = "Education is required";
+      if (!Number.isFinite(years) || years < 0) errs.years = "Enter your years of experience";
+      if (!Number.isFinite(clients) || clients < 0) errs.clients = "Enter the number of clients trained";
+      setErrors(errs);
+      if (Object.keys(errs).length) throw new Error("Please fix the highlighted fields");
+      const primarySocial = [instagram, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
 
       // Photo
       let nextPhoto = photoPath;
@@ -255,9 +316,19 @@ export default function TrainerProfileForm({
         education: education.trim(),
         years_experience: years,
         clients_trained: clients,
-        social_link: socialLink.trim(),
+        social_link: primarySocial,
         service_areas: serviceAreas,
-        bio: bio.trim() || null,
+        specializations,
+        bio: about.trim() || null,
+        gender: gender || null,
+        about: about.trim() || null,
+        city: city || null,
+        languages,
+        availability_online: availOnline,
+        availability_offline: availOffline,
+        instagram: instagram.trim() || null,
+        website: website.trim() || null,
+        facebook: facebook.trim() || null,
         photo_path: nextPhoto,
         cv_path: nextCv,
         updated_at: new Date().toISOString(),
@@ -278,6 +349,7 @@ export default function TrainerProfileForm({
     },
     onSuccess: () => {
       toast.success("Profile saved");
+      setErrors({});
       qc.invalidateQueries({ queryKey: ["trainer-profile-details", trainerId] });
       qc.invalidateQueries({ queryKey: ["trainer-certificates", trainerId] });
       qc.invalidateQueries({ queryKey: ["my-trainer-profile"] });
@@ -298,7 +370,7 @@ export default function TrainerProfileForm({
       <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm text-amber-900">
         <p className="font-semibold">Profile isn't enabled yet.</p>
         <p className="mt-1">
-          Run the migration <code>20260728130000_trainer_profile_fields.sql</code> in Supabase, then reload.
+          Run the latest migration (<code>20260730120000_find_trainers_foundation.sql</code>) in Supabase, then reload.
         </p>
       </div>
     );
@@ -307,6 +379,7 @@ export default function TrainerProfileForm({
   const initials = (name || "T").split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
   return (
+    <>
     <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
       {/* Header with Save / Discard */}
       <div className="flex items-start justify-between gap-4 p-5 md:p-6 border-b">
@@ -316,7 +389,7 @@ export default function TrainerProfileForm({
             {updatedAt ? `Last edited on ${format(new Date(updatedAt), "d MMMM yyyy")}` : "Complete your trainer profile."}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="hidden md:flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={discard} disabled={!dirty || save.isPending}>
             Discard
           </Button>
@@ -330,9 +403,9 @@ export default function TrainerProfileForm({
       <div className="p-5 md:p-6 space-y-9">
         {/* Profile picture */}
         <section>
-          <SectionHeader icon={ImageIcon} title="Profile picture" note="· optional" />
+          <SectionHeader icon={ImageIcon} title="Profile picture" note="· required" />
           <div className="flex items-center gap-5">
-            <div className="h-20 w-20 rounded-full overflow-hidden grid place-items-center shrink-0 text-white text-xl font-bold"
+            <div className={`h-20 w-20 rounded-full overflow-hidden grid place-items-center shrink-0 text-white text-xl font-bold ${errors.photo ? "ring-2 ring-destructive" : ""}`}
               style={{ background: showPhoto ? "transparent" : NAVY }}>
               {showPhoto ? <img src={showPhoto} alt="Trainer" className="h-full w-full object-cover" /> : initials}
             </div>
@@ -351,13 +424,14 @@ export default function TrainerProfileForm({
               )}
             </div>
           </div>
+          {errors.photo && <p className="mt-2 text-xs font-medium text-destructive">{errors.photo}</p>}
         </section>
 
         {/* Personal information */}
         <section>
           <SectionHeader icon={User} title="Personal information" />
           <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-            <Field label="Name" required>
+            <Field label="Name" required error={errors.name}>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your full name" />
             </Field>
             <Field label="Contact">
@@ -366,25 +440,27 @@ export default function TrainerProfileForm({
                 <Input value={contact ?? "—"} readOnly disabled className="pl-9" />
               </div>
             </Field>
-            <Field label="Education" required>
+            <Field label="Education" required error={errors.education}>
               <Input value={education} onChange={(e) => setEducation(e.target.value)}
                 placeholder="e.g. B.Sc Sports Science, ACE Certified" />
             </Field>
-            <Field label="Social media link" required>
-              <div className="relative">
-                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input type="url" value={socialLink} onChange={(e) => setSocialLink(e.target.value)}
-                  placeholder="LinkedIn or Instagram URL" className="pl-9" />
-              </div>
+            <Field label="Gender">
+              <Select value={gender} onValueChange={setGender}>
+                <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
-            <Field label="Years of experience" required>
+            <Field label="Years of experience" required error={errors.years}>
               <div className="relative">
                 <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input type="number" min={0} inputMode="numeric" value={yearsExp}
                   onChange={(e) => setYearsExp(e.target.value)} placeholder="e.g. 5" className="pl-9" />
               </div>
             </Field>
-            <Field label="Clients trained" required>
+            <Field label="Clients trained" required error={errors.clients}>
               <div className="relative">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input type="number" min={0} inputMode="numeric" value={clientsTrained}
@@ -393,26 +469,29 @@ export default function TrainerProfileForm({
             </Field>
           </div>
 
-          {/* Areas */}
+          {/* Specializations — pick as many as you like */}
           <div className="mt-4 space-y-1.5">
             <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-muted-foreground" /> Areas you can serve <span className="text-destructive">*</span>
+              <Dumbbell className="h-4 w-4 text-muted-foreground" /> Specializations
             </Label>
-            <div className="flex items-center gap-2">
-              <Input value={areaInput} onChange={(e) => setAreaInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(); } }}
-                placeholder="Type an area, e.g. HSR Layout" className="max-w-sm" />
-              <Button type="button" variant="outline" size="sm" onClick={addArea}>
-                <Plus className="mr-1.5 h-4 w-4" /> Add
-              </Button>
-            </div>
-            {serviceAreas.length > 0 && (
+            <p className="text-xs text-muted-foreground -mt-1">Add all the areas you specialise in — you can pick as many as you like.</p>
+            <Select value={addSpec} onValueChange={addSpecialization}>
+              <SelectTrigger className="max-w-sm">
+                <SelectValue placeholder="Add a specialization…" />
+              </SelectTrigger>
+              <SelectContent>
+                {SPECIALIZATIONS.filter((s) => !specializations.includes(s)).map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {specializations.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1.5">
-                {serviceAreas.map((a) => (
-                  <span key={a} className="inline-flex items-center gap-1 rounded-full pl-2.5 pr-1.5 py-1 text-xs font-semibold"
-                    style={{ background: "rgba(30,58,95,0.08)", color: NAVY }}>
-                    <MapPin className="h-3 w-3" /> {a}
-                    <button type="button" onClick={() => removeArea(a)} className="rounded-full hover:bg-black/10 p-0.5" aria-label={`Remove ${a}`}>
+                {specializations.map((s) => (
+                  <span key={s} className="inline-flex items-center gap-1 rounded-full pl-2.5 pr-1.5 py-1 text-xs font-semibold"
+                    style={{ background: "rgba(240,167,32,0.14)", color: "#a07010" }}>
+                    {s}
+                    <button type="button" onClick={() => removeSpecialization(s)} className="rounded-full hover:bg-black/10 p-0.5" aria-label={`Remove ${s}`}>
                       <X className="h-3 w-3" />
                     </button>
                   </span>
@@ -423,12 +502,112 @@ export default function TrainerProfileForm({
 
           {/* Bio */}
           <div className="mt-4">
-            <Field label="Short bio">
-              <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3}
-                placeholder="A few lines about your training style and experience. (optional)" />
+            <Field label="Bio">
+              <Textarea value={about} onChange={(e) => setAbout(e.target.value)} rows={4}
+                placeholder="Write something here — clients will read this on your profile." />
             </Field>
           </div>
         </section>
+
+        {/* Availability */}
+        <section>
+          <SectionHeader icon={Wifi} title="Availability" />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <label className={`flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer transition-colors ${availOnline ? "border-fv-orange bg-fv-orange/5" : "hover:bg-muted/40"}`}>
+              <Checkbox checked={availOnline} onCheckedChange={(c) => setAvailOnline(!!c)} />
+              <span className="inline-flex items-center gap-2 text-sm font-medium"><Wifi className="h-4 w-4 text-muted-foreground" /> Online</span>
+            </label>
+            <label className={`flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer transition-colors ${availOffline ? "border-fv-orange bg-fv-orange/5" : "hover:bg-muted/40"}`}>
+              <Checkbox checked={availOffline} onCheckedChange={(c) => setAvailOffline(!!c)} />
+              <span className="inline-flex items-center gap-2 text-sm font-medium"><Home className="h-4 w-4 text-muted-foreground" /> Offline / Home Visit</span>
+            </label>
+          </div>
+        </section>
+
+        {/* Location */}
+        <section>
+          <SectionHeader icon={MapPin} title="City & areas served" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field label="Primary city">
+              <Select value={city} onValueChange={(v) => { setCity(v); }}>
+                <SelectTrigger><SelectValue placeholder="Select your city…" /></SelectTrigger>
+                <SelectContent>
+                  {CITIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+            {city && (
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Areas you serve in {city}</Label>
+                <Select value={addArea2} onValueChange={addAreaFromCity}>
+                  <SelectTrigger><SelectValue placeholder="Add an area…" /></SelectTrigger>
+                  <SelectContent>
+                    {[...areasForCity(city)].sort((a, b) => a.localeCompare(b)).filter((a) => !serviceAreas.includes(a)).map((a) => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          {serviceAreas.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-3">
+              {serviceAreas.map((a) => (
+                <span key={a} className="inline-flex items-center gap-1 rounded-full pl-2.5 pr-1.5 py-1 text-xs font-semibold"
+                  style={{ background: "rgba(30,58,95,0.08)", color: NAVY }}>
+                  <MapPin className="h-3 w-3" /> {a}
+                  <button type="button" onClick={() => removeArea(a)} className="rounded-full hover:bg-black/10 p-0.5" aria-label={`Remove ${a}`}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Languages */}
+        <section>
+          <SectionHeader icon={LangIcon} title="Languages" />
+          <Select value={addLang} onValueChange={addLanguage}>
+            <SelectTrigger className="max-w-sm"><SelectValue placeholder="Add a language…" /></SelectTrigger>
+            <SelectContent>
+              {LANGUAGES.filter((l) => !languages.includes(l)).map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {languages.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-3">
+              {languages.map((l) => (
+                <span key={l} className="inline-flex items-center gap-1 rounded-full pl-2.5 pr-1.5 py-1 text-xs font-semibold"
+                  style={{ background: "rgba(240,167,32,0.14)", color: "#a07010" }}>
+                  {l}
+                  <button type="button" onClick={() => removeLanguage(l)} className="rounded-full hover:bg-black/10 p-0.5" aria-label={`Remove ${l}`}>
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Social links */}
+        <section>
+          <SectionHeader icon={Link2} title="Social links" note="· optional" />
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              { icon: Instagram, label: "Instagram", value: instagram, set: setInstagram, ph: "instagram.com/…" },
+              { icon: Facebook, label: "Facebook", value: facebook, set: setFacebook, ph: "facebook.com/…" },
+              { icon: Globe, label: "Website", value: website, set: setWebsite, ph: "yourwebsite.com" },
+            ].map((s) => (
+              <Field key={s.label} label={s.label}>
+                <div className="relative">
+                  <s.icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input type="url" value={s.value} onChange={(e) => s.set(e.target.value)} placeholder={s.ph} className="pl-9" />
+                </div>
+              </Field>
+            ))}
+          </div>
+        </section>
+
 
         {/* Documents */}
         <section>
@@ -436,9 +615,6 @@ export default function TrainerProfileForm({
           <div className="grid gap-5 md:grid-cols-2">
             {/* CV */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <FileText className="h-4 w-4 text-muted-foreground" /> CV
-              </Label>
               {(cvFile || cvPath) && (
                 <p className="text-sm inline-flex items-center gap-2">
                   <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -451,16 +627,15 @@ export default function TrainerProfileForm({
               )}
               <input ref={cvInput} type="file" accept={CV_ACCEPT} className="hidden"
                 onChange={(e) => setCvFile(e.target.files?.[0] ?? null)} />
-              <Button type="button" variant="outline" size="sm" onClick={() => cvInput.current?.click()}>
+              <Button type="button" variant="outline" size="sm"
+                className={errors.cv ? "border-destructive text-destructive hover:text-destructive" : ""}
+                onClick={() => cvInput.current?.click()}>
                 <FileText className="mr-2 h-4 w-4" /> {cvFile || cvPath ? "Change CV" : "Upload CV"}
               </Button>
             </div>
 
             {/* Certificates */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <Award className="h-4 w-4 text-muted-foreground" /> Certificates
-              </Label>
               {(existingCerts.length > 0 || newCerts.length > 0) && (
                 <ul className="space-y-1.5">
                   {existingCerts.map((c) => (
@@ -491,7 +666,9 @@ export default function TrainerProfileForm({
               )}
               <input ref={certInput} type="file" accept={CERT_ACCEPT} multiple className="hidden"
                 onChange={(e) => { onPickCerts(e.target.files); e.target.value = ""; }} />
-              <Button type="button" variant="outline" size="sm" onClick={() => certInput.current?.click()}>
+              <Button type="button" variant="outline" size="sm"
+                className={errors.certs ? "border-destructive text-destructive hover:text-destructive" : ""}
+                onClick={() => certInput.current?.click()}>
                 <Plus className="mr-2 h-4 w-4" /> Add certificate
               </Button>
             </div>
@@ -546,11 +723,30 @@ export default function TrainerProfileForm({
         <Button variant="outline" size="sm" onClick={onSignOut} className="text-destructive hover:text-destructive">
           <LogOut className="mr-2 h-4 w-4" /> Sign out
         </Button>
-        <Button size="sm" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
+        <Button size="sm" className="hidden md:inline-flex" onClick={() => save.mutate()} disabled={!dirty || save.isPending}>
           {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
           Save profile
         </Button>
       </div>
     </div>
+
+    {/* Mobile: clearance so nothing hides behind the sticky save bar */}
+    <div className="h-16 md:hidden" />
+
+    {/* Mobile: sticky save bar, fixed above the bottom nav */}
+    <div
+      className="md:hidden fixed inset-x-0 z-40 border-t bg-white px-4 py-3 flex items-center gap-3 shadow-[0_-4px_20px_rgba(30,58,95,0.08)]"
+      style={{ bottom: "calc(64px + env(safe-area-inset-bottom))" }}
+    >
+      <Button variant="outline" onClick={discard} disabled={!dirty || save.isPending} className="flex-1">
+        Discard
+      </Button>
+      <Button onClick={() => save.mutate()} disabled={!dirty || save.isPending}
+        className="flex-[2] bg-fv-orange text-white hover:bg-fv-orange/90 font-bold">
+        {save.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+        Save
+      </Button>
+    </div>
+    </>
   );
 }

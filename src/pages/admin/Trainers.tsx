@@ -17,9 +17,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/dates";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell, BadgeCheck, Mail, Phone, ClipboardList } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, CalendarOff, Clock, Info, AlertTriangle, Loader2, Dumbbell, BadgeCheck, Mail, Phone, ClipboardList, X } from "lucide-react";
 import { toast } from "sonner";
 import TrainerReviewDialog from "@/components/admin/TrainerReviewDialog";
+import { SPECIALIZATIONS } from "@/lib/specializations";
 
 interface Trainer {
   id: string;
@@ -27,6 +28,7 @@ interface Trainer {
   name: string;
   contact: string | null;
   specialization: string | null;
+  specializations: string[] | null;
   active: boolean;
   email: string | null;
 }
@@ -73,7 +75,7 @@ export default function Trainers() {
   const [editing, setEditing] = useState<Trainer | null>(null);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [specialization, setSpecialization] = useState("");
+  const [specializations, setSpecializations] = useState<string[]>([]);
   const [active, setActive] = useState(true);
   const [societyIds, setSocietyIds] = useState<string[]>([]);
   const [createLogin, setCreateLogin] = useState(false);
@@ -116,7 +118,8 @@ export default function Trainers() {
     queryFn: async () => {
       const { data, error } = await supabase.from("trainers").select("*").order("name");
       if (error) throw error;
-      return data as Trainer[];
+      // `specializations` (text[]) exists at runtime but isn't in the generated types yet.
+      return data as unknown as Trainer[];
     },
   });
 
@@ -344,7 +347,7 @@ export default function Trainers() {
 
   // ── Trainer add/edit helpers ───────────────────────────────────────────────
   const startNew = () => {
-    setEditing(null); setName(""); setContact(""); setSpecialization("");
+    setEditing(null); setName(""); setContact(""); setSpecializations([]);
     setActive(true); setSocietyIds([]); setCreateLogin(false);
     setLoginEmail("");
     setSlotsBySociety({}); setSlotDraft({});
@@ -353,7 +356,17 @@ export default function Trainers() {
 
   const startEdit = (t: Trainer) => {
     setEditing(t);
-    setName(t.name); setContact(t.contact ?? ""); setSpecialization(t.specialization ?? "");
+    setName(t.name); setContact(t.contact ?? "");
+    // Prefer the shared multi-select array; fall back to migrating a legacy
+    // single free-text specialization into the array on first edit.
+    setSpecializations(
+      Array.isArray(t.specializations) && t.specializations.length > 0
+        ? t.specializations
+        : t.specialization
+          ? t.specialization.split(",").map((s) => s.trim()).filter(Boolean)
+          : []
+    );
+   
     setActive(t.active);
     setSocietyIds(links.filter((l) => l.trainer_id === t.id).map((l) => l.society_id));
     setCreateLogin(false); setLoginEmail("");
@@ -412,7 +425,7 @@ export default function Trainers() {
         const newUserId = crypto.randomUUID();
         const { data: created, error } = await supabase.from("trainers").insert({
           user_id: newUserId,
-          name, contact: contact || null, specialization: specialization || null, active,
+          name, contact: contact || null, specialization: specializations.join(", ") || null, specializations, active,
           // No plaintext password stored in Supabase — the trainer sets their
           // own password in Firebase on first sign-in (or uses Google).
           email: loginEmail, password: "",
@@ -426,13 +439,13 @@ export default function Trainers() {
         trainerId = created?.id;
       } else if (editing) {
         const { error } = await supabase.from("trainers").update({
-          name, contact: contact || null, specialization: specialization || null, active,
-        }).eq("id", editing.id);
+          name, contact: contact || null, specialization: specializations.join(", ") || null, specializations, active,
+        } as any).eq("id", editing.id);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from("trainers").insert({
-          name, contact: contact || null, specialization: specialization || null, active,
-        }).select("id").single();
+          name, contact: contact || null, specialization: specializations.join(", ") || null, specializations, active,
+        } as any).select("id").single();
         if (error) throw error;
         trainerId = data.id;
       }
@@ -846,7 +859,11 @@ export default function Trainers() {
                     {t.name}
                     {t.user_id && <Badge variant="outline" className="ml-2 text-[10px]">login</Badge>}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{t.specialization ?? "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell max-w-[220px]">
+                    {(t.specializations && t.specializations.length > 0)
+                      ? t.specializations.join(", ")
+                      : (t.specialization ?? "—")}
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">{t.contact ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{count}</Badge></TableCell>
                   <TableCell className="font-mono text-xs">{(t as any).password ?? "—"}</TableCell>
@@ -1228,9 +1245,35 @@ export default function Trainers() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Specialization</Label>
-              <Input value={specialization} onChange={(e) => setSpecialization(e.target.value)}
-                placeholder="Senior Longevity, Post-Surgical, Strength Training…" />
+              <Label>Specializations</Label>
+              <p className="text-xs text-muted-foreground">Pick as many as apply — same list the trainer sees on their own profile.</p>
+              <Select
+                value=""
+                onValueChange={(v) => { if (v && !specializations.includes(v)) setSpecializations((s) => [...s, v]); }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Add a specialization…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPECIALIZATIONS.filter((s) => !specializations.includes(s)).map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {specializations.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {specializations.map((s) => (
+                    <span key={s} className="inline-flex items-center gap-1 rounded-full pl-2.5 pr-1.5 py-1 text-xs font-semibold"
+                      style={{ background: "rgba(240,167,32,0.14)", color: "#a07010" }}>
+                      {s}
+                      <button type="button" onClick={() => setSpecializations((prev) => prev.filter((x) => x !== s))}
+                        className="rounded-full hover:bg-black/10 p-0.5" aria-label={`Remove ${s}`}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex items-center justify-between rounded-lg border p-3">
               <Label>Active</Label>

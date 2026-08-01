@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +9,7 @@ import { CreditCard, CheckCircle2, CalendarDays, Gift, ArrowRight } from "lucide
 import { formatDate, daysBetween } from "@/lib/dates";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { usePlansTabVisible } from "@/hooks/usePlansTabVisible";
 import { usePauseStore } from "@/stores/pauseStore";
 import { ExplorePlansDialog, PlanOptionsList } from "@/components/plan/ExplorePlansDialog";
 import { calculatePlanEndDate, calculatePlanRenewalDate, extendEndDateBySessions, countLostTrainingDays, isoDate, formatPlanName } from "@/lib/sessionPlan";
@@ -27,7 +29,15 @@ const GOLD_DEEP  = "#b07d10";
 const WEEK_DAYS  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export default function Plan() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const navigate = useNavigate();
+  const { visible: plansTabVisible, isLoading: plansTabLoading } = usePlansTabVisible();
+  // If admin has hidden the Plan tab for this customer, they can't reach it by URL.
+  useEffect(() => {
+    if (role === "client" && !plansTabLoading && !plansTabVisible) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [role, plansTabLoading, plansTabVisible, navigate]);
   const { data: profile } = useProfile();
   const { history, activePause } = usePauseStore();
   const customerName = profile?.name ?? "";
