@@ -30,6 +30,10 @@ const cardName = (name: string) => {
   return w.length >= 2 ? `${w[0][0].toUpperCase()} ${w.slice(1).join(" ")}` : name;
 };
 
+/** Areas are compared case/space-insensitively — stored values ("Kalyan nagar")
+ *  don't always match the dropdown's canonical casing ("Kalyan Nagar"). */
+const norm = (s: string) => (s || "").trim().toLowerCase();
+
 type T = any;
 
 // A trainer appears once they're active and have started a real profile
@@ -89,8 +93,14 @@ export default function TrainerListing() {
         const hay = [t.name, t.city, ...(t.service_areas ?? []), ...(t.specializations ?? [])].join(" ").toLowerCase();
         if (!hay.includes(s)) return false;
       }
-      if (city && t.city !== city) return false;
-      if (area && !(t.service_areas ?? []).includes(area)) return false;
+      if (city) {
+        // A trainer is "in" a city if their city column matches OR they serve
+        // any area listed under that city (many trainers set areas, not city).
+        const cityAreas = areasForCity(city).map(norm);
+        const inCity = t.city === city || (t.service_areas ?? []).some((a: string) => cityAreas.includes(norm(a)));
+        if (!inCity) return false;
+      }
+      if (area && !(t.service_areas ?? []).some((a: string) => norm(a) === norm(area))) return false;
       if (online && !t.availability_online) return false;
       if (offline && !t.availability_offline) return false;
       if (gender && t.gender !== gender) return false;
