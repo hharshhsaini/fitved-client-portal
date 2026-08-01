@@ -109,8 +109,8 @@ export default function TrainerListing() {
         const y = t.years_experience ?? 0;
         if (b && !(y >= b.min && y < b.max)) return false;
       }
-      if (languages.length && !languages.some((l) => (t.languages ?? []).includes(l))) return false;
-      if (specs.length && !specs.some((sp) => (t.specializations ?? []).includes(sp))) return false;
+      if (languages.length && !languages.some((l) => (t.languages ?? []).some((tl: string) => norm(tl) === norm(l)))) return false;
+      if (specs.length && !specs.some((sp) => (t.specializations ?? []).some((ts: string) => norm(ts) === norm(sp)))) return false;
       return true;
     });
     list = [...list].sort((a, b) => {
@@ -185,7 +185,7 @@ export default function TrainerListing() {
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Area</label>
                 <Select value={area} onValueChange={setArea}>
                   <SelectTrigger><SelectValue placeholder="All areas" /></SelectTrigger>
-                  <SelectContent>{areasForCity(city).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
+                  <SelectContent>{[...areasForCity(city)].sort((a, b) => a.localeCompare(b)).map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             )}
