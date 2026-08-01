@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ClassCalendar } from "@/components/dashboard/ClassCalendar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -294,6 +295,32 @@ export function ProfileTab({ userId }: { userId: string }) {
     onError: (e) => toast.error(e instanceof Error ? e.message : "Save failed"),
   });
 
+  // ── Plan-tab visibility (per customer) ─────────────────────────────────────
+  // Default: hidden for new sign-ups, shown once they have any plan. Admin can
+  // force either way; the stored override wins over the automatic default.
+  const hasPlanHistory = !!calPlan;
+  const plansTabOverride = (profile as any)?.plans_tab_visible;
+  const plansTabOn =
+    plansTabOverride === true || plansTabOverride === false ? plansTabOverride : hasPlanHistory;
+  const setPlansTab = useMutation({
+    mutationFn: async (visible: boolean) => {
+      const { error } = await (supabase as any)
+        .from("profiles").update({ plans_tab_visible: visible }).eq("id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Plan tab visibility updated");
+      qc.invalidateQueries({ queryKey: ["customer-profile", userId] });
+      qc.invalidateQueries({ queryKey: ["plans-tab-visible"] });
+    },
+    onError: (e) =>
+      toast.error(
+        e instanceof Error && /column|schema cache|does not exist/i.test(e.message)
+          ? "Run the plans_tab_visible migration in Supabase first"
+          : e instanceof Error ? e.message : "Update failed",
+      ),
+  });
+
   const toggleRole = useMutation({
     mutationFn: async ({ role, add }: { role: AppRole; add: boolean }) => {
       if (add) {
@@ -436,7 +463,28 @@ export function ProfileTab({ userId }: { userId: string }) {
         {save.isPending ? "Saving…" : "Save profile"}
       </Button>
 
-
+      <div className="border-t pt-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Label>Show &quot;Plan&quot; tab to customer</Label>
+            <p className="mt-1 text-xs text-muted-foreground">
+              When off, this customer won&apos;t see the Plan tab in their app. New sign-ups
+              start off; it turns on automatically once they have a plan.
+            </p>
+          </div>
+          <Switch
+            checked={plansTabOn}
+            onCheckedChange={(v) => setPlansTab.mutate(v)}
+            disabled={setPlansTab.isPending}
+          />
+        </div>
+        {plansTabOverride == null && (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Currently <span className="font-medium">{plansTabOn ? "on" : "off"}</span> automatically
+            {" "}({hasPlanHistory ? "customer has a plan" : "no plan yet"}). Toggling sets it manually.
+          </p>
+        )}
+      </div>
 
       <div className="border-t pt-5 space-y-3">
         <Label>Reset birthday (password)</Label>

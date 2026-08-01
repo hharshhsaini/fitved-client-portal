@@ -12,6 +12,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlansTabVisible } from "@/hooks/usePlansTabVisible";
 
 const CLIENT_TABS = [
   { path: "/dashboard", Icon: LayoutDashboard, label: "Home" },
@@ -38,8 +39,12 @@ export function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useAuth();
+  const { visible: plansTabVisible } = usePlansTabVisible();
 
-  const NAV_TABS = role === "trainer" ? TRAINER_TABS : role === "admin" ? ADMIN_TABS : CLIENT_TABS;
+  let NAV_TABS = role === "trainer" ? TRAINER_TABS : role === "admin" ? ADMIN_TABS : CLIENT_TABS;
+  if (role === "client" && !plansTabVisible) {
+    NAV_TABS = NAV_TABS.filter((t) => t.path !== "/plan");
+  }
 
   return (
     <nav
