@@ -374,7 +374,7 @@ export default function Login() {
           <Tabs defaultValue="customer" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="customer">Customer</TabsTrigger>
-              <TabsTrigger value="staff">Staff</TabsTrigger>
+              <TabsTrigger value="staff">Trainers</TabsTrigger>
             </TabsList>
 
             <TabsContent value="customer" className="mt-5">
