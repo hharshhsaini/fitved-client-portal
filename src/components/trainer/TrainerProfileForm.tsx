@@ -74,11 +74,14 @@ function Field({ label, required, error, children }: { label: string; required?:
 }
 
 export default function TrainerProfileForm({
-  trainerId, contact, onSignOut,
+  trainerId, contact, onSignOut, onCompleted,
 }: {
   trainerId: string;
   contact: string | null;
   onSignOut: () => void;
+  /** Fired after a successful save — the profile is fully complete by then,
+   *  since every required field is validated before the save goes through. */
+  onCompleted?: () => void;
 }) {
   const qc = useQueryClient();
   const sb = supabase as any; // new columns/table absent from generated types until migration runs
@@ -276,6 +279,12 @@ export default function TrainerProfileForm({
       if (!education.trim()) errs.education = "Education is required";
       if (!Number.isFinite(years) || years < 0) errs.years = "Enter your years of experience";
       if (!Number.isFinite(clients) || clients < 0) errs.clients = "Enter the number of clients trained";
+      // Filter-critical fields — a trainer can't be found without these.
+      if (!gender) errs.gender = "Select your gender";
+      if (specializations.length === 0) errs.specializations = "Add at least one specialization";
+      if (!availOnline && !availOffline) errs.availability = "Choose at least one availability";
+      if (!city) errs.city = "Select your primary city";
+      if (languages.length === 0) errs.languages = "Add at least one language";
       setErrors(errs);
       if (Object.keys(errs).length) throw new Error("Please fix the highlighted fields");
       const primarySocial = [instagram, website, facebook, socialLink].map((s) => s.trim()).find(Boolean) || null;
@@ -353,6 +362,8 @@ export default function TrainerProfileForm({
       qc.invalidateQueries({ queryKey: ["trainer-profile-details", trainerId] });
       qc.invalidateQueries({ queryKey: ["trainer-certificates", trainerId] });
       qc.invalidateQueries({ queryKey: ["my-trainer-profile"] });
+      qc.invalidateQueries({ queryKey: ["trainer-profile-complete"] });
+      onCompleted?.();
     },
     onError: (e: any) => toast.error(e.message || "Could not save profile"),
   });
@@ -444,7 +455,7 @@ export default function TrainerProfileForm({
               <Input value={education} onChange={(e) => setEducation(e.target.value)}
                 placeholder="e.g. B.Sc Sports Science, ACE Certified" />
             </Field>
-            <Field label="Gender">
+            <Field label="Gender" required error={errors.gender}>
               <Select value={gender} onValueChange={setGender}>
                 <SelectTrigger><SelectValue placeholder="Select…" /></SelectTrigger>
                 <SelectContent>
@@ -471,10 +482,11 @@ export default function TrainerProfileForm({
 
           {/* Specializations — pick as many as you like */}
           <div className="mt-4 space-y-1.5">
-            <Label className="text-sm font-medium text-foreground flex items-center gap-1.5">
-              <Dumbbell className="h-4 w-4 text-muted-foreground" /> Specializations
+            <Label className={`text-sm font-medium flex items-center gap-1.5 ${errors.specializations ? "text-destructive" : "text-foreground"}`}>
+              <Dumbbell className="h-4 w-4 text-muted-foreground" /> Specializations <span className="text-destructive">*</span>
             </Label>
             <p className="text-xs text-muted-foreground -mt-1">Add all the areas you specialise in — you can pick as many as you like.</p>
+            {errors.specializations && <p className="text-xs font-medium text-destructive -mt-1">{errors.specializations}</p>}
             <Select value={addSpec} onValueChange={addSpecialization}>
               <SelectTrigger className="max-w-sm">
                 <SelectValue placeholder="Add a specialization…" />
@@ -511,7 +523,8 @@ export default function TrainerProfileForm({
 
         {/* Availability */}
         <section>
-          <SectionHeader icon={Wifi} title="Availability" />
+          <SectionHeader icon={Wifi} title="Availability" note="· required" />
+          {errors.availability && <p className="mb-2 text-xs font-medium text-destructive">{errors.availability}</p>}
           <div className="flex flex-col sm:flex-row gap-3">
             <label className={`flex items-center gap-3 rounded-xl border p-3 flex-1 cursor-pointer transition-colors ${availOnline ? "border-fv-orange bg-fv-orange/5" : "hover:bg-muted/40"}`}>
               <Checkbox checked={availOnline} onCheckedChange={(c) => setAvailOnline(!!c)} />
@@ -526,9 +539,9 @@ export default function TrainerProfileForm({
 
         {/* Location */}
         <section>
-          <SectionHeader icon={MapPin} title="City & areas served" />
+          <SectionHeader icon={MapPin} title="City & areas served" note="· required" />
           <div className="grid gap-4 md:grid-cols-2">
-            <Field label="Primary city">
+            <Field label="Primary city" required error={errors.city}>
               <Select value={city} onValueChange={(v) => { setCity(v); }}>
                 <SelectTrigger><SelectValue placeholder="Select your city…" /></SelectTrigger>
                 <SelectContent>
@@ -567,7 +580,8 @@ export default function TrainerProfileForm({
 
         {/* Languages */}
         <section>
-          <SectionHeader icon={LangIcon} title="Languages" />
+          <SectionHeader icon={LangIcon} title="Languages" note="· required" />
+          {errors.languages && <p className="mb-2 text-xs font-medium text-destructive">{errors.languages}</p>}
           <Select value={addLang} onValueChange={addLanguage}>
             <SelectTrigger className="max-w-sm"><SelectValue placeholder="Add a language…" /></SelectTrigger>
             <SelectContent>
