@@ -84,6 +84,23 @@ export default function Login() {
 
   const [busy, setBusy] = useState(false);
 
+  // Keep the address bar in sync with the current tab + mode, so trainers see
+  // (and can copy) the dedicated /trainer/signin · /trainer/signup URLs — and
+  // customers see /login · /signup — without a full navigation/reload.
+  useEffect(() => {
+    const target =
+      tab === "staff"
+        ? mode === "signup"
+          ? "/trainer/signup"
+          : "/trainer/signin"
+        : custMode === "signup"
+        ? "/signup"
+        : "/login";
+    if (location.pathname !== target) {
+      navigate(target, { replace: true });
+    }
+  }, [tab, mode, custMode, location.pathname, navigate]);
+
   // Customer sign-in: phone + birthday (unchanged).
   const handleCustomerSignin = async (e: React.FormEvent) => {
     e.preventDefault();
