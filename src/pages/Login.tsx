@@ -50,6 +50,13 @@ export default function Login() {
   const params = new URLSearchParams(location.search);
   const wantSignup =
     location.pathname === "/signup" || params.has("signup") || params.get("mode") === "signup";
+  // Dedicated trainer URLs — /trainer/signin, /trainer/login, /trainer/signup —
+  // open the Trainers tab directly so the links are shareable.
+  const isTrainerRoute = location.pathname.startsWith("/trainer/");
+  const wantTrainerSignup = location.pathname === "/trainer/signup";
+
+  // Which tab is open, driven by the URL.
+  const [tab, setTab] = useState<"customer" | "staff">(isTrainerRoute ? "staff" : "customer");
 
   // Customer state
   const [custMode, setCustMode] = useState<"signin" | "signup">(wantSignup ? "signup" : "signin");
@@ -64,7 +71,7 @@ export default function Login() {
 
   // Staff state — first-time email sign-in auto-creates the password, and
   // Google users set one from inside the dashboard, so no "setup" mode here.
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup">(wantTrainerSignup ? "signup" : "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -76,6 +83,23 @@ export default function Login() {
   const [adminPassword, setAdminPassword] = useState("");
 
   const [busy, setBusy] = useState(false);
+
+  // Keep the address bar in sync with the current tab + mode, so trainers see
+  // (and can copy) the dedicated /trainer/signin · /trainer/signup URLs — and
+  // customers see /login · /signup — without a full navigation/reload.
+  useEffect(() => {
+    const target =
+      tab === "staff"
+        ? mode === "signup"
+          ? "/trainer/signup"
+          : "/trainer/signin"
+        : custMode === "signup"
+        ? "/signup"
+        : "/login";
+    if (location.pathname !== target) {
+      navigate(target, { replace: true });
+    }
+  }, [tab, mode, custMode, location.pathname, navigate]);
 
   // Customer sign-in: phone + birthday (unchanged).
   const handleCustomerSignin = async (e: React.FormEvent) => {
@@ -371,7 +395,7 @@ export default function Login() {
             <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Fitness for grownups</p>
           </div>
 
-          <Tabs defaultValue="customer" className="w-full">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "customer" | "staff")} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="customer">Customer</TabsTrigger>
               <TabsTrigger value="staff">Trainers</TabsTrigger>

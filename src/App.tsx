@@ -65,6 +65,10 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Login />} />
+              {/* Dedicated, shareable trainer auth URLs (open the Trainers tab). */}
+              <Route path="/trainer/login" element={<Login />} />
+              <Route path="/trainer/signin" element={<Login />} />
+              <Route path="/trainer/signup" element={<Login />} />
               {/* Firebase email-link lands on /__/auth/action — redirect to
                   /signup so the existing isSignInWithEmailLink handler picks it up.
                   Query params (apiKey, oobCode, mode, continueUrl) are preserved. */}

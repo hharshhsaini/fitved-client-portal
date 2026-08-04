@@ -31,6 +31,7 @@ import {
 import { recalculatePlanDates } from "@/stores/pauseStore";
 import { trainerSessionsForMonth, trainerMonthActivity, monthLabel, recentMonthKeys, type DayActivity } from "@/lib/trainerSessions";
 import { toast } from "sonner";
+import TrainerCompleteProfileDialog from "@/components/trainer/TrainerCompleteProfileDialog";
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const NAVY        = "#1E3A5F";
@@ -110,6 +111,27 @@ export default function TrainerDashboard() {
         ? await q.eq("id", viewAsId).maybeSingle()
         : await q.or(`user_id.eq.${user!.id},id.eq.${user!.id}`).maybeSingle();
       return (data as TrainerRow | null) ?? null;
+    },
+  });
+
+  // Profile-completion gate: pull the fields required to be listed & filterable.
+  const [gateDone, setGateDone] = useState(false);
+  const { data: profileComplete } = useQuery({
+    queryKey: ["trainer-profile-complete", trainer?.id],
+    enabled: !!trainer && !isViewAs,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("trainers")
+        .select("photo_path, education, years_experience, clients_trained, gender, city, availability_online, availability_offline, languages, specializations")
+        .eq("id", trainer!.id)
+        .maybeSingle();
+      if (!data) return true; // don't block if we can't read it
+      return !!(
+        data.photo_path && data.education && data.years_experience != null && data.clients_trained != null &&
+        data.gender && data.city && (data.availability_online || data.availability_offline) &&
+        Array.isArray(data.languages) && data.languages.length > 0 &&
+        Array.isArray(data.specializations) && data.specializations.length > 0
+      );
     },
   });
 
@@ -1287,6 +1309,18 @@ export default function TrainerDashboard() {
   // ─────────────────────────────────────────────────────────────────────────
   return (
     <>
+      {/* Mandatory profile-completion gate — blocks until every filterable
+          field is filled so the trainer can actually be found in search. */}
+      {!isViewAs && profileComplete === false && !gateDone && (
+        <TrainerCompleteProfileDialog
+          open
+          trainerId={trainer.id}
+          contact={trainer.contact ?? null}
+          onSignOut={() => signOut()}
+          onCompleted={() => setGateDone(true)}
+        />
+      )}
+
       {/* Admin view-as banner */}
       {isViewAs && (
         <div className="flex items-center gap-2 px-4 py-2.5"
