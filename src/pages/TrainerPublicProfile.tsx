@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import BookTrialDialog from "@/components/trainer/BookTrialDialog";
 import {
   BadgeCheck, MapPin, Clock, Users, Wifi, Home, Languages as LangIcon, Dumbbell,
-  Award, Instagram, Linkedin, Youtube, Globe, Facebook, Star, Quote, ArrowRight,
+  Award, Instagram, Linkedin, Youtube, Globe, Facebook, Star, Quote, ArrowRight, ArrowLeft,
   Loader2, ExternalLink,
 } from "lucide-react";
+import { FitvedLogo } from "@/components/FitvedLogo";
 
 const BUCKET = "trainer-assets";
 const publicUrl = (p: string | null | undefined) => (p ? supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl : null);
@@ -115,7 +116,17 @@ export default function TrainerPublicProfile() {
     <div className="bg-fv-neutral min-h-screen">
       {/* Hero */}
       <section className="bg-fv-navy text-white">
-        <div className="mx-auto max-w-6xl px-4 py-10 md:py-16 grid md:grid-cols-[280px_1fr] gap-8 items-center">
+        <div className="mx-auto max-w-6xl px-4 pt-5">
+          <div className="flex items-center justify-between">
+            <Link to="/" aria-label="FitVed home" className="inline-flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm transition-transform hover:scale-[1.03]">
+              <FitvedLogo className="h-6 w-auto" showWord />
+            </Link>
+            <Link to="/trainers" className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/85 ring-1 ring-white/15 transition-colors hover:bg-white/15">
+              <ArrowLeft className="h-3.5 w-3.5" /> All trainers
+            </Link>
+          </div>
+        </div>
+        <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 md:pb-16 grid md:grid-cols-[280px_1fr] gap-8 items-center">
           <div className="mx-auto md:mx-0 h-56 w-56 rounded-3xl overflow-hidden grid place-items-center bg-white/10 shrink-0 text-5xl font-display shadow-[0_0_50px_rgba(255,107,53,0.25)]">
             {photo ? <img src={photo} alt={shortName(t.name)} className="h-full w-full object-cover" /> : initials}
           </div>
