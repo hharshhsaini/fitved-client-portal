@@ -114,6 +114,13 @@
 }
 
 @layer utilities {
+  /* Wizard step slide-in (trainer onboarding). --fv-from sets the entry offset. */
+  @keyframes fvSlideIn {
+    from { opacity: 0; transform: translateX(var(--fv-from, 40px)); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .fv-slide-in { animation: fvSlideIn 0.24s ease-out; }
+
   .bg-gradient-brand { background: var(--gradient-brand); }
   .bg-gradient-soft { background: var(--gradient-soft); }
   .bg-gradient-gold { background: var(--gradient-gold); }
