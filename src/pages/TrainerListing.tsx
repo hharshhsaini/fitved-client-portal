@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CITIES, areasForCity } from "@/lib/cities";
 import { SPECIALIZATIONS } from "@/lib/specializations";
 import {
-  Search, BadgeCheck, MapPin, Clock, Users, Wifi, Home, X, ArrowRight, SlidersHorizontal,
+  Search, BadgeCheck, MapPin, Clock, Users, Wifi, Home, X, ArrowRight, ArrowLeft, SlidersHorizontal,
 } from "lucide-react";
+import { FitvedLogo } from "@/components/FitvedLogo";
 
 const BUCKET = "trainer-assets";
 const PAGE = 9;
@@ -135,18 +136,20 @@ export default function TrainerListing() {
       <section className="relative overflow-hidden bg-fv-navy text-white">
         <div className="pointer-events-none absolute inset-0 opacity-[0.18]"
           style={{ backgroundImage: "radial-gradient(circle at 18% 25%, #FF6B35 0, transparent 42%), radial-gradient(circle at 88% 20%, #ffffff 0, transparent 46%)" }} />
-        <div className="relative mx-auto max-w-5xl px-4 py-11 md:py-16 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-white/80 ring-1 ring-white/15">
-            <BadgeCheck className="h-3.5 w-3.5 text-fv-orange" /> FitVed Certified Network
-          </span>
-          <h1 className="mt-5 font-display text-[2rem] leading-[1.1] md:text-5xl">
+        <div className="relative mx-auto max-w-5xl px-4 pt-5 pb-11 md:pb-16 text-center">
+          <div className="mb-8 flex items-center justify-between">
+            <Link to="/" aria-label="FitVed home" className="inline-flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm transition-transform hover:scale-[1.03]">
+              <FitvedLogo className="h-6 w-auto" showWord />
+            </Link>
+            <Link to="/" className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white/85 ring-1 ring-white/15 transition-colors hover:bg-white/15">
+              <ArrowLeft className="h-3.5 w-3.5" /> Back to home
+            </Link>
+          </div>
+          <h1 className="mx-auto mt-2 max-w-3xl font-display text-[2.6rem] font-semibold leading-[1.02] tracking-tight md:text-[4.25rem]">
             Find Your <span className="text-fv-orange">Certified Trainer</span>
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-white/70 md:text-lg">
-            Verified personal trainers &amp; yoga coaches for home visits, online coaching, weight&nbsp;loss, strength and rehab.
-          </p>
 
-          <div className="relative mx-auto mt-7 max-w-xl">
+          <div className="relative mx-auto mt-9 max-w-xl">
             <Search className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-fv-navy/40" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name, area, city or specialization…"
