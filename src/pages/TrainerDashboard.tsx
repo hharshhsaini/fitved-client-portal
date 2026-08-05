@@ -1421,7 +1421,7 @@ export default function TrainerDashboard() {
           background: `linear-gradient(135deg, ${NAVY} 0%, ${NAVY_LIGHT} 100%)`,
           padding: "16px 20px 24px",
         }}>
-          <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13 }}>{greeting} ✨</p>
+          <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 13 }}>{greeting}</p>
           <h2 className="font-display" style={{ fontSize: 26, fontWeight: 600, color: "#fff", letterSpacing: "-0.02em" }}>
             {firstName}
           </h2>

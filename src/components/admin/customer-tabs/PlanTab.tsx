@@ -313,7 +313,17 @@ export function PlanTab({ userId }: { userId: string }) {
     },
     onError: (e) => {
       console.error("Plan save error:", e);
-      toast.error(e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e) || "Save failed");
+      const raw = e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e) || "Save failed";
+      // The old plans table capped total_sessions to IN (8,12,36,72). Custom
+      // plans use any count, so surface the migration to run instead of the
+      // raw Postgres constraint error.
+      if (/plans_total_sessions_check/i.test(raw)) {
+        toast.error(
+          "Custom session counts aren't enabled on the database yet. Run migration 20260805120000_plans_allow_custom_sessions.sql in Supabase.",
+        );
+        return;
+      }
+      toast.error(raw);
     },
   });
 

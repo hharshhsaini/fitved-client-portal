@@ -30,6 +30,8 @@ const CLEAN_URL_MAP: Record<string, string> = {
 function serveCleanUrls(publicDir: string): Connect.NextHandleFunction {
   return (req, res, next) => {
     const url = decodeURIComponent((req.url || "").split("?")[0]);
+
+    // Hardcoded marketing pages
     const targetFile = CLEAN_URL_MAP[url];
     if (targetFile) {
       const file = path.join(publicDir, targetFile);
@@ -39,6 +41,25 @@ function serveCleanUrls(publicDir: string): Connect.NextHandleFunction {
         return;
       }
     }
+
+    // Dynamic: any path under /blog/ that maps to a .html file in public/blog/
+    if (url.startsWith("/blog")) {
+      const clean = url.endsWith("/") ? url + "index" : url;
+      const file = path.join(publicDir, clean + ".html");
+      if (fs.existsSync(file)) {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.end(fs.readFileSync(file));
+        return;
+      }
+      // Also try exact path as directory with index.html
+      const dirIndex = path.join(publicDir, url, "index.html");
+      if (fs.existsSync(dirIndex)) {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.end(fs.readFileSync(dirIndex));
+        return;
+      }
+    }
+
     next();
   };
 }

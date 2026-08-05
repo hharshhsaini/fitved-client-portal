@@ -1,0 +1,340 @@
+import { BlogArticle, BlogAuthor, BlogCategory, LocationSEOPage, TopicHub } from "./types";
+
+export const SEED_AUTHORS: BlogAuthor[] = [
+  {
+    id: "author-1",
+    name: "Dr. Ananya Sharma, Ph.D.",
+    slug: "dr-ananya-sharma",
+    avatar_url: "/images/blog/default.webp",
+    bio: "Senior Sports Nutritionist & Clinical Physiotherapist with 12+ years of experience specializing in Indian diet formulation and metabolic health.",
+    credentials: "Ph.D. Sports Nutrition, M.P.T. Rehabilitation",
+    areas_of_expertise: ["Nutrition", "PCOS", "Postpartum Rehab", "Indian Diets"],
+  },
+  {
+    id: "author-2",
+    name: "Vikramaditya Verma",
+    slug: "vikramaditya-verma",
+    avatar_url: "/images/blog/default.webp",
+    bio: "Head Strength & Conditioning Coach at FitVed. Certified CSCS and former national powerlifter.",
+    credentials: "NSCA-CSCS, Certified Master Trainer",
+    areas_of_expertise: ["Strength Training", "Hypertrophy", "Home Workouts", "Mobility"],
+  },
+  {
+    id: "author-3",
+    name: "Meera Kulkarni",
+    slug: "meera-kulkarni",
+    avatar_url: "/images/blog/default.webp",
+    bio: "Lead Yoga Instructor & Mindfulness Coach focusing on prenatal/postnatal care and holistic stress management.",
+    credentials: "RYT-500 Yoga Alliance Certified",
+    areas_of_expertise: ["Yoga", "Breathwork", "Prenatal", "Mindfulness"],
+  },
+];
+
+export const SEED_CATEGORIES: BlogCategory[] = [
+  { id: "cat-1", name: "Training", slug: "training", description: "Workout routines, form guides, and fitness science.", icon: "Dumbbell" },
+  { id: "cat-2", name: "Nutrition", slug: "nutrition", description: "Indian diet charts, macronutrient guides, and meal planning.", icon: "Salad" },
+  { id: "cat-3", name: "Recipes", slug: "recipes", description: "High-protein Indian recipes with calorie breakdowns.", icon: "Utensils" },
+  { id: "cat-4", name: "Weight Loss", slug: "weight-loss", description: "Sustainable fat loss strategies without crash dieting.", icon: "TrendingDown" },
+  { id: "cat-5", name: "Yoga", slug: "yoga", description: "Traditional asanas, flexibility training, and stress relief.", icon: "Sparkles" },
+  { id: "cat-6", name: "Women's Health", slug: "womens-health", description: "PCOS management, prenatal/postnatal recovery, and hormone health.", icon: "Heart" },
+  { id: "cat-7", name: "Comparison Guides", slug: "comparison-guides", description: "Head-to-head analysis of workouts, supplements, and fitness methods.", icon: "Scale" },
+];
+
+export const SEED_TOPIC_HUBS: TopicHub[] = [
+  {
+    id: "hub-1",
+    name: "High Protein Indian Diet",
+    slug: "high-protein-indian-diet",
+    title: "The Complete High Protein Indian Diet Guide",
+    subtitle: "How to hit 100g+ protein daily on a vegetarian or non-vegetarian Indian diet without supplements.",
+    hero_image: "/images/blog/default.webp",
+    description: "Explore meal plans, paneer vs whey comparisons, soya chunk recipes, and macro breakdowns tailored for Indian households.",
+  },
+  {
+    id: "hub-2",
+    name: "Weight Loss Strategy",
+    slug: "weight-loss-strategy",
+    title: "Science-Backed Indian Weight Loss Blueprint",
+    subtitle: "Lose fat sustainably while enjoying dal, rice, and home-cooked meals.",
+    hero_image: "/images/blog/default.webp",
+    description: "A complete collection of caloric deficit guides, walking routines, and lifestyle adjustments for working professionals.",
+  },
+  {
+    id: "hub-3",
+    name: "PCOS & Hormone Health",
+    slug: "pcos-hormone-health",
+    title: "PCOS & Thyroid Fitness Management Guide",
+    subtitle: "Manage insulin resistance, weight fluctuations, and energy drops with targeted exercise and diet.",
+    hero_image: "/images/blog/default.webp",
+    description: "Expert advice from clinical dietitians on low-GI Indian foods, resistance training for insulin sensitivity, and stress reduction.",
+  },
+];
+
+export const SEED_ARTICLES: BlogArticle[] = [
+  {
+    id: "art-1",
+    title: "How to Get 100g Protein Daily on a Pure Vegetarian Indian Diet",
+    slug: "100g-protein-vegetarian-indian-diet",
+    summary: "Discover exact meal charts, protein density tables, and daily meal plans using paneer, soya, sattu, lentils, and dairy.",
+    is_featured: true,
+    is_editor_pick: true,
+    is_popular: true,
+    published_at: "2026-07-25T10:00:00Z",
+    reading_time: 7,
+    featured_image: "/images/blog/default.webp",
+    tags: ["Protein", "Vegetarian", "Indian Diet", "Meal Prep", "Weight Loss"],
+    category_id: "cat-2",
+    author_id: "author-1",
+    seo_title: "100g Protein Vegetarian Indian Diet Chart & Meal Plan | FitVed",
+    seo_description: "Learn how to get 100 grams of high-quality protein on an Indian vegetarian diet using paneer, soya, dahi, and sattu with exact macro tables.",
+    topic_hub_slug: "high-protein-indian-diet",
+    content: {
+      keyTakeaways: [
+        "Combining grain + pulse sources (e.g. Rice + Dal) completes the essential amino acid profile.",
+        "Soya chunks offer 52g protein per 100g dry weight, making them the most cost-effective protein source in India.",
+        "Paneer is high in protein but calorie-dense; opt for low-fat paneer or balance fat intake throughout the day.",
+        "Greek yogurt (Hung curd) delivers double the protein of regular homemade curd.",
+      ],
+      medicalDisclaimer: true,
+      coachReviewBadge: "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      blocks: [
+        {
+          type: "paragraph",
+          content: "Hitting 100 grams of protein daily on a traditional Indian vegetarian diet is often considered difficult due to the carb-heavy nature of typical thalis. However, by strategically choosing high-protein Indian ingredients, you can easily hit your macro targets without relying solely on imported protein powders.",
+        },
+        {
+          type: "heading",
+          level: 2,
+          title: "Top High Protein Vegetarian Foods in India",
+        },
+        {
+          type: "nutrition_table",
+          title: "Protein Content of Indian Staples (per 100g)",
+          tableData: [
+            { Food: "Soya Chunks (Dry)", Protein: "52g", Calories: "345 kcal", Carbs: "33g" },
+            { Food: "Low Fat Paneer", Protein: "22g", Calories: "160 kcal", Carbs: "4g" },
+            { Food: "Sattu (Roasted Gram Flour)", Protein: "20g", Calories: "380 kcal", Carbs: "60g" },
+            { Food: "Hung Curd / Greek Yogurt", Protein: "10g", Calories: "90 kcal", Carbs: "4g" },
+            { Food: "Boiled Chickpeas (Kala Chana)", Protein: "9g", Calories: "164 kcal", Carbs: "27g" },
+          ],
+        },
+        {
+          type: "callout",
+          title: "Pro Tip for Digestion",
+          content: "If you experience bloating from soya chunks or legumes, soak them in warm water with a pinch of hing (asafoetida) for 30 minutes before cooking.",
+        },
+        {
+          type: "heading",
+          level: 2,
+          title: "Sample 100g Protein Indian Vegetarian Meal Plan",
+        },
+        {
+          type: "paragraph",
+          content: "Breakfast: 2 Besan-Sattu Chillas + 100g Hung Curd (24g Protein)\nLunch: 50g Soya Chunks curry + 1 Katori Dal + 2 Multigrain Rotis (38g Protein)\nEvening Snack: Roasted Chana + Whey/Sattu Shake (20g Protein)\nDinner: 150g Paneer Bhurji + Green Salad (25g Protein)",
+        },
+      ],
+    },
+    faq_schema: [
+      {
+        question: "Can soya chunks cause hormonal imbalance in men?",
+        answer: "No. Scientific studies show that moderate consumption of soya (up to 50g daily) does not adversely affect testosterone or estrogen levels in men.",
+      },
+      {
+        question: "Is Dal alone a complete protein source?",
+        answer: "No. Dal is low in methionine. However, when eaten with rice or roti (which contain methionine), it forms a complete protein.",
+      },
+    ],
+  },
+  {
+    id: "art-2",
+    title: "High Protein Paneer Bhurji Recipe (32g Protein in 15 Mins)",
+    slug: "high-protein-paneer-bhurji-recipe",
+    summary: "Quick, delicious, and low-carb Indian paneer bhurji prepared with minimum oil, packed with 32g protein.",
+    is_featured: false,
+    is_editor_pick: true,
+    is_popular: true,
+    published_at: "2026-07-28T09:00:00Z",
+    reading_time: 5,
+    featured_image: "/images/blog/default.webp",
+    tags: ["Recipes", "High Protein", "Paneer", "Vegetarian", "Quick Meal"],
+    category_id: "cat-3",
+    author_id: "author-1",
+    seo_title: "High Protein Paneer Bhurji Recipe (32g Protein) | FitVed",
+    seo_description: "Learn how to make low-fat High Protein Paneer Bhurji in 15 minutes with exact calorie and macro nutrition breakdown.",
+    recipe_details: {
+      prep_time_mins: 5,
+      cook_time_mins: 10,
+      servings: 1,
+      difficulty: "Easy",
+      calories: 320,
+      protein_g: 32,
+      carbs_g: 8,
+      fat_g: 16,
+      diet_type: "Vegetarian",
+      ingredients: [
+        "150g Low Fat Paneer (Crumbling)",
+        "1 tsp Mustard Oil / Ghee",
+        "1 Medium Onion (Finely Chopped)",
+        "1 Medium Tomato (Chopped)",
+        "1 Green Chili & 1 tsp Ginger-Garlic paste",
+        "Spices: Turmeric, Red Chili powder, Garam Masala, Salt",
+        "Fresh Coriander for Garnish",
+      ],
+      instructions: [
+        "Heat 1 tsp oil in a non-stick pan and add cumin seeds, green chili, and ginger-garlic paste.",
+        "Saute chopped onions until golden brown, then add tomatoes and cook until soft.",
+        "Add turmeric, red chili powder, and salt. Stir well for 1 minute.",
+        "Crumble 150g low-fat paneer directly into the pan and mix thoroughly for 2-3 minutes.",
+        "Garnish with fresh coriander and serve hot with multi-grain roti or toasted sourdough.",
+      ],
+      tips: ["Do not overcook paneer as it becomes chewy. 3 minutes on medium heat is ideal."],
+    },
+    content: {
+      keyTakeaways: [
+        "Uses low-fat paneer to keep calories controlled while maintaining 32g protein.",
+        "Takes under 15 minutes to cook, making it ideal for busy workdays.",
+      ],
+      blocks: [
+        {
+          type: "paragraph",
+          content: "Paneer Bhurji is one of India's favorite comfort foods. By tweaking cooking oils and using low-fat cottage cheese, this recipe turns into a high-protein bodybuilding powerhouse meal.",
+        },
+      ],
+    },
+  },
+  {
+    id: "art-3",
+    title: "Gym vs Home Workouts: Which is Better for Indian Working Professionals?",
+    slug: "gym-vs-home-workouts-comparison",
+    summary: "Detailed comparison evaluating cost, time savings, equipment, privacy, and long-term consistency for home vs gym training.",
+    is_featured: false,
+    is_editor_pick: true,
+    is_popular: true,
+    published_at: "2026-07-29T11:00:00Z",
+    reading_time: 6,
+    featured_image: "/images/blog/default.webp",
+    tags: ["Comparison", "Home Workout", "Gym", "Personal Training", "Lifestyle"],
+    category_id: "cat-7",
+    author_id: "author-2",
+    seo_title: "Gym vs Home Workouts Comparison for Working Professionals | FitVed",
+    seo_description: "Compare Gym vs Home Personal Training on cost, commute time, consistency, and privacy for Indian professionals.",
+    comparison_details: {
+      optionA: {
+        name: "At-Home Personal Training",
+        subtitle: "Guided 1-on-1 workouts in your apartment/society",
+        pros: [
+          "Zero travel time & zero traffic stress",
+          "100% personalized 1-on-1 attention",
+          "High consistency rate (92% completion)",
+          "Private & comfortable environment",
+        ],
+        cons: [
+          "Requires initial space in home or society gym",
+        ],
+        rating: 4.9,
+      },
+      optionB: {
+        name: "Commercial Gym Membership",
+        subtitle: "Access to large gym facilities and heavy weights",
+        pros: [
+          "Access to heavy machines and barbells",
+          "Social gym atmosphere",
+        ],
+        cons: [
+          "Average 45 mins wasted in daily traffic commute",
+          "Crowded peak hours (6 AM & 7 PM)",
+          "Low attendance retention (less than 30% after 3 months)",
+        ],
+        rating: 4.1,
+      },
+      winner: "optionA",
+      verdict: "At-home personal training wins for busy working professionals who struggle with consistency, daily traffic commute, and peak gym crowds.",
+      featureMatrix: [
+        { feature: "Time Requirement", optionAVal: "45 mins total", optionBVal: "1.5 to 2 hours with commute" },
+        { feature: "Personal Guidance", optionAVal: "Dedicated 1-on-1 Coach", optionBVal: "General trainer shared with 20+ people" },
+        { feature: "Consistency Rate", optionAVal: "92% Retention", optionBVal: "28% Retention" },
+        { feature: "Hygiene & Comfort", optionAVal: "100% Private", optionBVal: "Shared equipment" },
+      ],
+    },
+    content: {
+      blocks: [
+        {
+          type: "paragraph",
+          content: "Choosing between a gym membership and home workouts depends heavily on your daily schedule, traffic conditions in cities like Bangalore or Mumbai, and personal motivation.",
+        },
+      ],
+    },
+  },
+  {
+    id: "art-4",
+    title: "PCOS Weight Loss Guide: How to Reverse Insulin Resistance Naturally",
+    slug: "pcos-weight-loss-insulin-resistance-guide",
+    summary: "Comprehensive evidence-based strategy for women managing PCOS, hormonal acne, weight gain, and irregular cycles through targeted diet & exercise.",
+    is_featured: false,
+    is_editor_pick: true,
+    is_popular: true,
+    published_at: "2026-07-30T08:00:00Z",
+    reading_time: 8,
+    featured_image: "/images/blog/default.webp",
+    tags: ["Women's Health", "PCOS", "Weight Loss", "Hormones", "Nutrition"],
+    category_id: "cat-6",
+    author_id: "author-1",
+    seo_title: "PCOS Weight Loss & Insulin Resistance Guide | FitVed",
+    seo_description: "Learn how to manage PCOS weight gain, reduce insulin resistance with low-GI Indian foods and resistance training.",
+    topic_hub_slug: "pcos-hormone-health",
+    content: {
+      keyTakeaways: [
+        "Insulin resistance affects nearly 70% of women with PCOS.",
+        "Strength training improves insulin sensitivity better than chronic cardio.",
+        "Avoid strict zero-carb diets; prioritize complex carbs like ragi, jowar, and oats.",
+      ],
+      medicalDisclaimer: true,
+      coachReviewBadge: "Reviewed by Dr. Ananya Sharma, Ph.D.",
+      blocks: [
+        {
+          type: "paragraph",
+          content: "PCOS (Polycystic Ovary Syndrome) is one of the most common endocrine disorders affecting Indian women. Losing weight with PCOS can feel uphill because elevated insulin levels signal the body to store fat instead of burning it.",
+        },
+        {
+          type: "heading",
+          level: 2,
+          title: "Best Indian Foods for PCOS Management",
+        },
+        {
+          type: "paragraph",
+          content: "Incorporate low-glycemic foods such as sprouts, roasted chana, spinach, chia seeds, and cinnamon tea while minimizing refined maida and sugary beverages.",
+        },
+      ],
+    },
+  },
+];
+
+export const SEED_LOCATION_PAGES: LocationSEOPage[] = [
+  {
+    id: "loc-1",
+    city: "Bangalore",
+    slug: "personal-trainer-bangalore",
+    service_type: "Personal Training",
+    title: "Certified At-Home Personal Trainers in Bangalore",
+    meta_description: "Book verified personal fitness trainers & yoga instructors in HSR Layout, Koramangala, Whitefield, Indiranagar & Bellandur Bangalore.",
+    hero_image: "/images/blog/default.webp",
+    content: "FitVed connects Bangalore residents with certified personal trainers who deliver 1-on-1 home training sessions in HSR Layout, Koramangala, Whitefield, Bellandur, Sarjapur Road, and Electronic City. Skip the Silk Board traffic and achieve your fitness goals at home.",
+    faqs: [
+      { question: "Do trainers bring workout equipment?", answer: "Yes! FitVed trainers carry portable dumbbells, resistance bands, mats, and agility gear directly to your apartment." },
+      { question: "Which areas in Bangalore are covered?", answer: "We cover HSR Layout, Koramangala, Indiranagar, Whitefield, Bellandur, Sarjapur Road, Electronic City, JP Nagar, Hebbal, and surrounding tech parks." },
+    ],
+  },
+  {
+    id: "loc-2",
+    city: "Mumbai",
+    slug: "personal-trainer-mumbai",
+    service_type: "Personal Training",
+    title: "At-Home Personal Fitness Trainers in Mumbai",
+    meta_description: "Hire certified home fitness coaches in Bandra, Andheri, Powai, Lower Parel & Juhu Mumbai. Free 1-on-1 trial session.",
+    hero_image: "/images/blog/default.webp",
+    content: "Transform your fitness in Mumbai without navigating local train crowds or traffic. FitVed provides certified personal trainers for home workouts across Bandra, Andheri, Powai, Juhu, and Worli.",
+    faqs: [
+      { question: "Is at-home training suitable for compact Mumbai apartments?", answer: "Absolutely! Our routines require minimal 6x6 ft floor space and zero heavy bulky machinery." },
+    ],
+  },
+];

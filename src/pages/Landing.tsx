@@ -30,6 +30,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { resolveFeaturedImage } from "@/lib/blog/featuredImageMap";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,6 +44,7 @@ import {
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SEOFooter } from "@/components/blog/SEOFooter";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
@@ -251,9 +253,13 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* Section 3: FitVed Journal Exploration Section */}
+        <HomepageJournalSection />
       </main>
 
       <Footer />
+      {/* Explore Everything SEO Footer */}
+      <SEOFooter bgClass="bg-slate-900 text-slate-200 border-t border-white/10" />
       <MobileBar />
       <WhatsAppFloat />
       <DesktopFloatingCta />
@@ -1125,7 +1131,7 @@ function ValueComparisonMatrix() {
               <tr className="border-b border-white/10 bg-fv-navy/90 text-xs font-black uppercase tracking-wider text-white">
                 <th className="py-4 px-6 w-1/4">Key Feature</th>
                 <th className="py-4 px-6 w-1/3 bg-fv-orange/15 text-fv-orange border-x border-fv-orange/20">
-                  ✨ FitVed Society Fitness
+                  FitVed Society Fitness
                 </th>
                 <th className="py-4 px-6 w-1/5 text-white/50">Commercial Gyms</th>
                 <th className="py-4 px-6 w-1/5 text-white/50">Cult.fit Centers</th>
@@ -1616,7 +1622,7 @@ function Trainers() {
 
       <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between gap-2">
         <span className="text-[10px] font-semibold text-white/50 truncate">
-          🗣️ {t.languages.join(", ")}
+          Languages: {t.languages.join(", ")}
         </span>
         <Button
           onClick={() => scrollTo("contact")}
@@ -2127,22 +2133,183 @@ function EnquiryFormAndFAQ() {
   );
 }
 
+/* ---------- HOMEPAGE JOURNAL SECTION ---------- */
+function HomepageJournalSection() {
+  return (
+    <section id="journal" className="pt-16 pb-20 bg-fv-navy border-t border-white/10 text-white">
+      <div className="fluid-container space-y-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">
+          <div className="space-y-2">
+            <span className="text-xs font-black uppercase tracking-widest text-fv-orange">
+              FitVed Journal & Knowledge Hub
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+              Science-Backed Fitness & Indian Nutrition
+            </h2>
+            <p className="text-sm text-white/60 max-w-2xl">
+              Discover expert meal plans, protein guides, PCOS strategies, recipe charts, and calculators curated for Indian households.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild className="bg-fv-orange hover:bg-fv-orange/90 text-white font-bold text-xs px-5 h-10 shadow">
+              <Link to="/blog">View All 500+ Articles <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
+            </Button>
+            <Button asChild variant="outline" className="border-white/20 text-white hover:bg-white/10 font-semibold text-xs h-10">
+              <Link to="/blog/calculators">Science Calculators</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Featured Story */}
+        <div className="rounded-3xl border border-white/10 bg-white/5 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-0 shadow-2xl">
+          <div className="lg:col-span-7 relative aspect-video lg:aspect-auto overflow-hidden bg-slate-900">
+            <img
+              src={resolveFeaturedImage({ title: "100g protein vegetarian Indian diet", slug: "100g-protein-vegetarian-indian-diet" })}
+              alt="High protein vegetarian Indian diet chart and paneer meal plan"
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+              onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=1200&q=80"; }}
+            />
+            <div className="absolute top-4 left-4">
+              <span className="bg-fv-orange text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow">
+                Featured Story
+              </span>
+            </div>
+          </div>
+          <div className="lg:col-span-5 p-6 md:p-8 flex flex-col justify-between space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs text-fv-orange font-bold uppercase tracking-wider">
+                <span>Protein & Diet</span>
+                <span>•</span>
+                <span className="text-white/50">7 min read</span>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                How to Get 100g Protein Daily on a Pure Vegetarian Indian Diet
+              </h3>
+              <p className="text-xs sm:text-sm text-white/70 leading-relaxed line-clamp-3">
+                Discover exact meal charts, protein density tables, and daily meal plans using paneer, soya, sattu, lentils, and dairy.
+              </p>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <span className="text-xs text-white/50 font-medium">By Dr. Ananya Sharma</span>
+              <Button asChild size="sm" className="bg-fv-orange hover:bg-fv-orange/90 text-white font-bold text-xs">
+                <Link to="/blog/article/100g-protein-vegetarian-indian-diet">Read Article <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Top Guides Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3 flex flex-col justify-between hover:border-fv-orange/50 transition-all">
+            <div className="space-y-3">
+              <div className="aspect-video rounded-xl overflow-hidden bg-slate-900">
+                <img
+                  src={resolveFeaturedImage({ title: "High protein paneer bhurji recipe", slug: "high-protein-paneer-bhurji-recipe" })}
+                  alt="High protein low fat paneer bhurji recipe for Indian fitness"
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=1200&q=80"; }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-fv-orange uppercase tracking-wider">Recipes • 5 min read</span>
+              <h4 className="text-base font-bold text-white line-clamp-2">High Protein Paneer Bhurji Recipe (32g Protein in 15 Mins)</h4>
+              <p className="text-xs text-white/60 line-clamp-2">Quick, delicious, low-carb Indian cottage cheese bhurji prepared with minimum oil.</p>
+            </div>
+            <Button asChild size="sm" variant="ghost" className="text-xs text-fv-orange hover:text-white hover:bg-fv-orange/20 self-start">
+              <Link to="/blog/recipe/high-protein-paneer-bhurji-recipe">View Recipe →</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3 flex flex-col justify-between hover:border-fv-orange/50 transition-all">
+            <div className="space-y-3">
+              <div className="aspect-video rounded-xl overflow-hidden bg-slate-900">
+                <img
+                  src={resolveFeaturedImage({ title: "PCOS weight loss guide", slug: "pcos-weight-loss-insulin-resistance-guide" })}
+                  alt="PCOS weight loss guide and insulin resistance reversal diet"
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80"; }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-fv-orange uppercase tracking-wider">Women's Health • 8 min read</span>
+              <h4 className="text-base font-bold text-white line-clamp-2">PCOS Weight Loss Guide: How to Reverse Insulin Resistance Naturally</h4>
+              <p className="text-xs text-white/60 line-clamp-2">Evidence-based strategies for managing PCOS weight gain with low-GI Indian foods.</p>
+            </div>
+            <Button asChild size="sm" variant="ghost" className="text-xs text-fv-orange hover:text-white hover:bg-fv-orange/20 self-start">
+              <Link to="/blog/article/pcos-weight-loss-insulin-resistance-guide">Read Guide →</Link>
+            </Button>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-3 flex flex-col justify-between hover:border-fv-orange/50 transition-all">
+            <div className="space-y-3">
+              <div className="aspect-video rounded-xl overflow-hidden bg-slate-900">
+                <img
+                  src={resolveFeaturedImage({ title: "Gym vs home workouts comparison", slug: "gym-vs-home-workouts-comparison" })}
+                  alt="Gym vs home workouts comparison for Indian working professionals"
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80"; }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-fv-orange uppercase tracking-wider">Comparison • 6 min read</span>
+              <h4 className="text-base font-bold text-white line-clamp-2">Gym vs Home Workouts: Which is Better for Working Professionals?</h4>
+              <p className="text-xs text-white/60 line-clamp-2">Detailed comparison evaluating cost, time savings, traffic commute, and consistency.</p>
+            </div>
+            <Button asChild size="sm" variant="ghost" className="text-xs text-fv-orange hover:text-white hover:bg-fv-orange/20 self-start">
+              <Link to="/blog/compare/gym-vs-home-workouts-comparison">Compare Methods →</Link>
+            </Button>
+          </div>
+        </div>
+
+        {/* Categories Quick Bar */}
+        <div className="pt-6 border-t border-white/10 space-y-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-white/50">Explore Journal Topics:</span>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { name: "Nutrition", slug: "nutrition" },
+              { name: "Weight Loss", slug: "weight-loss" },
+              { name: "Muscle Gain", slug: "muscle-gain" },
+              { name: "Protein", slug: "protein" },
+              { name: "Recipes", slug: "recipes" },
+              { name: "Women's Health", slug: "womens-health" },
+              { name: "PCOS", slug: "pcos" },
+              { name: "Yoga", slug: "yoga" },
+              { name: "Supplements", slug: "supplements" },
+            ].map((cat) => (
+              <Link
+                key={cat.slug}
+                to={`/blog/category/${cat.slug}`}
+                className="text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-fv-orange hover:text-white text-white/80 border border-white/10 transition-colors"
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- FOOTER ---------- */
 function Footer() {
   return (
     <footer className="bg-fv-navy text-white/80 pt-12 pb-24 md:pt-16 md:pb-10 border-t border-white/10">
-      <div className="fluid-container grid md:grid-cols-3 gap-6">
-        <div className="text-left">
+      <div className="fluid-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="text-left space-y-3">
           <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2 w-fit border border-white/10">
             <img src={fitvedLogo} alt="Fitved" className="h-7 w-auto" />
           </div>
-          <p className="mt-3 text-xs text-white/50 uppercase tracking-wider leading-relaxed">
+          <p className="text-xs text-white/50 uppercase tracking-wider leading-relaxed">
             Calm strength, every day. <br />
             Society-based clinical fitness in Bangalore.
           </p>
         </div>
-        <div className="text-left">
-          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-2">Contact</h4>
+
+        <div className="text-left space-y-2">
+          <h4 className="text-white font-black uppercase tracking-widest text-xs">Contact</h4>
           <ul className="space-y-1.5 text-xs uppercase tracking-wider font-semibold">
             <li>
               <a href={`tel:${PHONE}`} className="hover:text-fv-orange transition-colors">{PHONE_DISPLAY}</a>
@@ -2159,20 +2326,33 @@ function Footer() {
                 rel="noopener"
                 className="hover:text-fv-orange inline-flex items-center gap-1.5 transition-colors"
               >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.334 3.608 1.308.975.975 1.246 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.333 2.633-1.308 3.608-.975.975-2.242 1.246-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.333-3.608-1.308-.975-.975-1.246-2.242-1.308-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.333-2.633 1.308-3.608.975-.975 2.242-1.246 3.608-1.308C8.416 2.175 8.796 2.163 12 2.163zm0-2.163C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12c0 3.259.014 3.668.072 4.948.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038C23.986 15.668 24 15.259 24 12s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
-                </svg>
                 Instagram
               </a>
             </li>
           </ul>
         </div>
-        <div className="text-left">
-          <h4 className="text-white font-black uppercase tracking-widest text-xs mb-2">Explore</h4>
+
+        <div className="text-left space-y-2">
+          <h4 className="text-white font-black uppercase tracking-widest text-xs">Explore Services</h4>
           <ul className="space-y-1.5 text-xs uppercase tracking-wider font-semibold">
             <li><Link to="/login" className="hover:text-fv-orange transition-colors">Client / Trainer Login</Link></li>
             <li><a href="/online-training" className="hover:text-fv-orange transition-colors">Online Training</a></li>
-            <li><a href="/blog/is-a-personal-trainer-worth-it-in-india" className="hover:text-fv-orange transition-colors">Is a Personal Trainer Worth It?</a></li>
+            <li><Link to="/trainers" className="hover:text-fv-orange transition-colors">Find Personal Trainers</Link></li>
+            <li><a href="/service-areas" className="hover:text-fv-orange transition-colors">Service Areas</a></li>
+          </ul>
+        </div>
+
+        <div className="text-left space-y-2">
+          <h4 className="text-white font-black uppercase tracking-widest text-xs">Fitness Journal</h4>
+          <ul className="space-y-1 text-xs uppercase tracking-wider font-semibold text-white/60">
+            <li><Link to="/blog" className="hover:text-fv-orange transition-colors">Latest Articles</Link></li>
+            <li><Link to="/blog/category/weight-loss" className="hover:text-fv-orange transition-colors">Weight Loss Guides</Link></li>
+            <li><Link to="/blog/category/protein" className="hover:text-fv-orange transition-colors">Protein Guides</Link></li>
+            <li><Link to="/blog/category/recipes" className="hover:text-fv-orange transition-colors">High-Protein Recipes</Link></li>
+            <li><Link to="/blog/category/womens-health" className="hover:text-fv-orange transition-colors">Women's Health</Link></li>
+            <li><Link to="/blog/category/pcos" className="hover:text-fv-orange transition-colors">PCOS Management</Link></li>
+            <li><Link to="/blog/calculators" className="hover:text-fv-orange transition-colors">Fitness Calculators</Link></li>
+            <li><Link to="/blog/category/meal-plans" className="hover:text-fv-orange transition-colors">Meal Plans</Link></li>
           </ul>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +31,14 @@ import FaqsPage from "./pages/FaqsPage";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import TrainerReferrals from "./pages/TrainerReferrals";
 import NotFound from "./pages/NotFound";
+import BlogLanding from "./pages/blog/BlogLanding";
+import ArticleDetailPage from "./pages/blog/ArticleDetailPage";
+import RecipeDetailPage from "./pages/blog/RecipeDetailPage";
+import ComparisonPage from "./pages/blog/ComparisonPage";
+import LocationSEOPage from "./pages/blog/LocationSEOPage";
+import TopicHubPage from "./pages/blog/TopicHubPage";
+import CalculatorsPage from "./pages/blog/CalculatorsPage";
+import StaticCategoryPage from "./pages/blog/StaticCategoryPage";
 
 const StaticPageRedirect = ({ file }: { file: string }) => {
   useEffect(() => {
@@ -53,12 +61,21 @@ const queryClient = new QueryClient({
   },
 });
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <PauseProvider>
             <Routes>
@@ -117,6 +134,18 @@ const App = () => (
               <Route path="/faqs" element={<FaqsPage />} />
               <Route path="/trainers" element={<TrainerListing />} />
               <Route path="/trainers/:slug" element={<TrainerPublicProfile />} />
+
+              {/* Canonical Blog / Journal routes */}
+              <Route path="/blog" element={<BlogLanding />} />
+              <Route path="/journal" element={<Navigate to="/blog" replace />} />
+              <Route path="/blog/article/:slug" element={<ArticleDetailPage />} />
+              <Route path="/blog/recipe/:slug" element={<RecipeDetailPage />} />
+              <Route path="/blog/compare/:slug" element={<ComparisonPage />} />
+              <Route path="/blog/location/:city/:slug" element={<LocationSEOPage />} />
+              <Route path="/blog/topic/:slug" element={<TopicHubPage />} />
+              <Route path="/blog/category/:category" element={<StaticCategoryPage />} />
+              <Route path="/blog/calculators" element={<CalculatorsPage />} />
+
               <Route path="/faqs.html" element={<FaqsPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,0 +1,826 @@
+[
+  {
+    "id": "r-001",
+    "title": "How Much Protein Should an Indian Eat Per Day?",
+    "slug": "how-much-protein-per-day-indian",
+    "summary": "A practical, science-backed breakdown of daily protein targets for Indians by body weight and goal, plus how to actually hit them on a vegetarian or non-veg diet.",
+    "featured_image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80",
+    "published_at": "2026-08-01T09:00:00Z",
+    "updated_at": "2026-08-04T09:00:00Z",
+    "reading_time": 7,
+    "tags": ["Protein", "Nutrition", "Indian Diet"],
+    "category_id": "cat-4",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": true,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "How Much Protein Should an Indian Eat Per Day? | FitVed",
+    "seo_description": "Find your exact daily protein target by body weight and goal, and see how to hit 80-120g on an Indian vegetarian or non-vegetarian diet.",
+    "canonical_url": "https://getfitved.com/blog/article/how-much-protein-per-day-indian",
+    "topic_hub_slug": "high-protein-indian-diet",
+    "content": {
+      "keyTakeaways": [
+        "Sedentary adults need roughly 0.8-1.0 g of protein per kg of body weight; active people and those losing fat need 1.6-2.2 g/kg.",
+        "The average Indian diet delivers only ~0.6 g/kg because it is dominated by rice, roti and dal — enough to avoid deficiency, not enough to build or protect muscle.",
+        "Spreading protein across 3-4 meals (20-35 g each) is more effective for muscle than eating it all at dinner.",
+        "Vegetarians can comfortably reach targets using dairy, soya, pulses and, if needed, a scoop of whey."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Protein is the one macronutrient most Indians under-eat. The ICMR-NIN recommends about 0.8-1 g per kg of body weight for a sedentary adult just to stay healthy, but that number rises sharply the moment you start training, trying to lose fat, or aiming to build muscle. Knowing your personal target is the first step to seeing results in the gym or on the scale."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Your Daily Protein Target by Goal"
+        },
+        {
+          "type": "nutrition_table",
+          "title": "Protein Needs per kg of Body Weight",
+          "tableData": [
+            { "Goal": "Sedentary / general health", "Protein per kg": "0.8 - 1.0 g", "Example (70 kg)": "56 - 70 g" },
+            { "Goal": "Active / fat loss", "Protein per kg": "1.6 - 2.0 g", "Example (70 kg)": "112 - 140 g" },
+            { "Goal": "Muscle gain", "Protein per kg": "1.6 - 2.2 g", "Example (70 kg)": "112 - 154 g" },
+            { "Goal": "Older adults (55+)", "Protein per kg": "1.2 - 1.5 g", "Example (70 kg)": "84 - 105 g" }
+          ]
+        },
+        {
+          "type": "tip",
+          "title": "Use lean body weight if you carry excess fat",
+          "content": "If you are significantly overweight, calculate protein on your target weight rather than current weight, otherwise the number becomes unrealistically high."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Why Most Indian Plates Fall Short"
+        },
+        {
+          "type": "paragraph",
+          "content": "A typical thali of 2 rotis, a katori of dal, sabzi and rice provides roughly 15-18 g of protein but 60-70 g of carbohydrate. The fix is not to cut carbs but to anchor every meal around a protein source: add dahi or a boiled egg to breakfast, paneer or soya to lunch, and chicken, fish or dal-plus-curd to dinner. This single habit typically adds 30-40 g of protein a day."
+        },
+        {
+          "type": "callout",
+          "title": "Distribution matters",
+          "content": "Your body can only use so much protein for muscle repair in one sitting. Aim for 20-35 g at each of 3-4 meals rather than one large protein-heavy dinner."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Is too much protein bad for the kidneys?", "answer": "In people with healthy kidneys, higher protein intakes up to 2 g/kg have not been shown to cause harm. Those with existing kidney disease should follow a doctor's guidance." },
+      { "question": "Can I get enough protein as a vegetarian?", "answer": "Yes. Combining dairy (paneer, curd, milk), soya, pulses and a scoop of whey easily reaches 100-120 g per day for most people." }
+    ]
+  },
+  {
+    "id": "r-002",
+    "title": "The 12 Best Vegetarian Protein Sources in India (With Numbers)",
+    "slug": "best-vegetarian-protein-sources-india",
+    "summary": "Ranked, real protein content of everyday Indian vegetarian foods — from soya chunks and paneer to sattu and rajma — so you can build high-protein meals that actually work.",
+    "featured_image": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80",
+    "published_at": "2026-07-30T09:00:00Z",
+    "updated_at": "2026-08-03T09:00:00Z",
+    "reading_time": 8,
+    "tags": ["Protein", "Vegetarian", "Nutrition"],
+    "category_id": "cat-4",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "12 Best Vegetarian Protein Sources in India | FitVed",
+    "seo_description": "A ranked list of high-protein Indian vegetarian foods with exact protein per 100g — soya, paneer, sattu, rajma, chana, tofu and more.",
+    "canonical_url": "https://getfitved.com/blog/article/best-vegetarian-protein-sources-india",
+    "topic_hub_slug": "high-protein-indian-diet",
+    "content": {
+      "keyTakeaways": [
+        "Soya chunks are the single most protein-dense Indian vegetarian food at ~52 g per 100 g dry.",
+        "Dairy (paneer, curd, milk) is the easiest high-quality, complete protein for most Indian households.",
+        "Pulses are excellent but not complete on their own — pair them with rice or roti to get all essential amino acids.",
+        "Adding just two of these foods to your day can raise intake by 30-40 g of protein."
+      ],
+      "medicalDisclaimer": false,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "The myth that vegetarians cannot hit their protein goals comes from not knowing which foods to prioritise. Below are the highest-return vegetarian protein sources available in every Indian kitchen or grocery store, with their real protein content so you can plan meals with confidence."
+        },
+        {
+          "type": "nutrition_table",
+          "title": "Protein Content of Indian Vegetarian Foods (per 100 g)",
+          "tableData": [
+            { "Food": "Soya chunks (dry)", "Protein": "52 g", "Notes": "Most cost-effective; soak before cooking" },
+            { "Food": "Tofu (soya paneer)", "Protein": "17 g", "Notes": "Low-fat, absorbs flavour well" },
+            { "Food": "Paneer (low-fat)", "Protein": "22 g", "Notes": "Complete protein; watch the fat" },
+            { "Food": "Sattu (roasted gram flour)", "Protein": "20 g", "Notes": "Great in drinks and parathas" },
+            { "Food": "Rajma (boiled)", "Protein": "9 g", "Notes": "Pair with rice for complete protein" },
+            { "Food": "Kala chana (boiled)", "Protein": "9 g", "Notes": "High fibre, low GI" },
+            { "Food": "Hung curd / Greek yogurt", "Protein": "10 g", "Notes": "Double the protein of normal curd" },
+            { "Food": "Moong dal (cooked)", "Protein": "7 g", "Notes": "Easy to digest" }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "How to Combine Them"
+        },
+        {
+          "type": "paragraph",
+          "content": "Cereals (rice, wheat) are low in the amino acid lysine, while pulses are low in methionine. Eaten together — dal-chawal, rajma-rice, roti-chana — they complement each other to form a complete protein, which is why traditional Indian combinations are nutritionally smart."
+        },
+        {
+          "type": "tip",
+          "title": "The two-scoop rule",
+          "content": "If you struggle to reach your target, a single 30 g scoop of whey or soya protein isolate adds ~24 g of high-quality protein with almost no cooking."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Do soya chunks lower testosterone in men?", "answer": "No. Research shows moderate soya intake (up to ~50 g dry per day) does not meaningfully affect testosterone or estrogen in men." },
+      { "question": "Is paneer or tofu better?", "answer": "Paneer has more protein per 100 g and is a complete dairy protein; tofu is lower in fat and suits vegans. Both are excellent — choose based on your calorie and diet preference." }
+    ]
+  },
+  {
+    "id": "r-003",
+    "title": "High-Protein Moong Dal Chilla Recipe (18g Protein, 10 Minutes)",
+    "slug": "moong-dal-chilla-recipe",
+    "summary": "A quick, savoury moong dal chilla that delivers 18 g of protein per serving — the perfect Indian high-protein breakfast for weight loss and muscle maintenance.",
+    "featured_image": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80",
+    "published_at": "2026-07-29T09:00:00Z",
+    "updated_at": "2026-08-02T09:00:00Z",
+    "reading_time": 5,
+    "tags": ["Recipes", "High Protein", "Breakfast", "Vegetarian"],
+    "category_id": "cat-5",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "High-Protein Moong Dal Chilla Recipe (18g Protein) | FitVed",
+    "seo_description": "Make a savoury moong dal chilla with 18g protein in 10 minutes. Full ingredients, steps and macro breakdown for an Indian high-protein breakfast.",
+    "canonical_url": "https://getfitved.com/blog/article/moong-dal-chilla-recipe",
+    "recipe_details": {
+      "prep_time_mins": 5,
+      "cook_time_mins": 10,
+      "servings": 1,
+      "difficulty": "Easy",
+      "calories": 280,
+      "protein_g": 18,
+      "carbs_g": 30,
+      "fat_g": 8,
+      "diet_type": "Vegetarian",
+      "ingredients": [
+        "1/2 cup yellow moong dal (soaked 2-3 hours)",
+        "2 tbsp besan (gram flour) for extra protein",
+        "1 green chilli + 1 inch ginger",
+        "1/4 cup finely chopped onion and coriander",
+        "1/2 tsp cumin, salt, pinch of turmeric",
+        "1 tsp oil for cooking",
+        "Optional: 2 tbsp grated low-fat paneer for filling"
+      ],
+      "instructions": [
+        "Grind the soaked moong dal with green chilli, ginger and a little water into a smooth, pourable batter.",
+        "Mix in besan, cumin, salt, turmeric, onion and coriander.",
+        "Heat a non-stick tawa on medium, brush with oil and pour a ladle of batter, spreading into a thin circle.",
+        "Cook 2-3 minutes until the base is golden, flip and cook the other side.",
+        "Optional: add grated paneer, fold, and serve hot with mint chutney or curd."
+      ],
+      "tips": ["Add the besan for a firmer chilla and an extra 4-5 g of protein per serving."]
+    },
+    "content": {
+      "keyTakeaways": [
+        "Delivers 18 g of protein and fibre for under 300 calories.",
+        "Ready in about 10 minutes with pantry staples.",
+        "Adding paneer or besan pushes protein above 22 g per serving."
+      ],
+      "medicalDisclaimer": false,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Most Indian breakfasts — poha, upma, paratha — are carb-heavy and protein-light, which leaves you hungry by 11 am. The moong dal chilla flips that ratio: it is protein-forward, high in fibre, and keeps you full through the morning, making it ideal for fat loss and busy workdays."
+        }
+      ]
+    }
+  },
+  {
+    "id": "r-004",
+    "title": "Soya Chunks: Benefits, Protein, and How to Eat Them",
+    "slug": "soya-chunks-protein-benefits",
+    "summary": "Why soya chunks (meal maker) are the most cost-effective protein in India, how much to eat, and how to cook them so they actually taste good.",
+    "featured_image": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=1200&q=80",
+    "published_at": "2026-07-28T09:00:00Z",
+    "updated_at": "2026-08-01T09:00:00Z",
+    "reading_time": 6,
+    "tags": ["Protein", "Vegetarian", "Nutrition"],
+    "category_id": "cat-4",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": false,
+    "published": true,
+    "seo_title": "Soya Chunks Benefits & Protein Content | FitVed",
+    "seo_description": "Soya chunks pack ~52g protein per 100g. Learn the benefits, how much to eat safely, and the best way to cook them for muscle and fat loss.",
+    "canonical_url": "https://getfitved.com/blog/article/soya-chunks-protein-benefits",
+    "topic_hub_slug": "high-protein-indian-diet",
+    "content": {
+      "keyTakeaways": [
+        "Soya chunks provide roughly 52 g of protein per 100 g dry — the highest of any everyday Indian vegetarian food.",
+        "They are a complete protein, containing all nine essential amino acids.",
+        "25-50 g dry per day is a sensible, well-tolerated amount for most adults.",
+        "Boiling and squeezing before cooking removes the raw smell and improves texture."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Soya chunks, also sold as meal maker or nutri nuggets, are made from defatted soya flour. Gram for gram they are the cheapest quality protein available in India, which makes them a staple for anyone building muscle or losing fat on a budget."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "How to Cook Them Right"
+        },
+        {
+          "type": "paragraph",
+          "content": "Boil the chunks for 5-7 minutes, drain, and squeeze out the water. This removes the beany smell and lets them absorb spices. Sauté with onion, tomato, ginger-garlic and garam masala for a high-protein curry, or add to pulao and biryani."
+        },
+        {
+          "type": "warning",
+          "title": "A note on moderation",
+          "content": "Very high soya intake (well above 50 g dry daily) is unnecessary and, for people with thyroid conditions, worth discussing with a doctor. For the general population, moderate amounts are safe and beneficial."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "How many soya chunks should I eat per day?", "answer": "25-50 g dry (about a handful to two handfuls) is a practical daily amount, providing 13-26 g of protein." },
+      { "question": "Are soya chunks good for weight loss?", "answer": "Yes. They are high in protein and fibre and low in fat once boiled, which keeps you full on fewer calories." }
+    ]
+  },
+  {
+    "id": "r-005",
+    "title": "How to Lose Belly Fat on an Indian Diet (Without Giving Up Rice)",
+    "slug": "how-to-lose-belly-fat-indian-diet",
+    "summary": "The real science of belly fat loss for Indians — why spot reduction is a myth, how to build a sustainable calorie deficit, and which home foods to prioritise.",
+    "featured_image": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
+    "published_at": "2026-07-27T09:00:00Z",
+    "updated_at": "2026-08-01T09:00:00Z",
+    "reading_time": 8,
+    "tags": ["Weight Loss", "Fat Loss", "Indian Diet"],
+    "category_id": "cat-2",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": true,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "How to Lose Belly Fat on an Indian Diet | FitVed",
+    "seo_description": "A science-backed guide to losing belly fat on Indian food — calorie deficit, protein, walking and the home foods that help you lose fat without cutting rice.",
+    "canonical_url": "https://getfitved.com/blog/article/how-to-lose-belly-fat-indian-diet",
+    "topic_hub_slug": "weight-loss-strategy",
+    "content": {
+      "keyTakeaways": [
+        "You cannot spot-reduce belly fat; you lose fat from the whole body by staying in a calorie deficit.",
+        "A deficit of 300-500 calories per day drives steady, sustainable fat loss of about 0.3-0.5 kg per week.",
+        "High protein and high fibre keep you full and protect muscle while you lose fat.",
+        "Daily walking and strength training accelerate results far more than any single 'fat-burning' food."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Belly fat is stubborn because it is often the last place the body draws from, not because it needs a special diet. The only reliable way to reduce it is an overall calorie deficit combined with strength training to keep muscle. The good news: you do not have to abandon rice, roti or Indian food to do it."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Build a Deficit You Can Sustain"
+        },
+        {
+          "type": "paragraph",
+          "content": "Aim to eat 300-500 calories below your maintenance level. Practical levers: swap deep-fried snacks for roasted chana or fruit, use less oil (measure it with a spoon), fill half your plate with vegetables, and keep sugary drinks and chai sugar in check. These small changes add up without leaving you hungry."
+        },
+        {
+          "type": "nutrition_table",
+          "title": "Easy Indian Swaps to Cut ~200-300 Calories",
+          "tableData": [
+            { "Instead of": "2 aloo parathas with butter", "Choose": "2 moong dal chillas", "Saves": "~250 kcal" },
+            { "Instead of": "Fried samosa (evening)", "Choose": "Roasted chana + curd", "Saves": "~200 kcal" },
+            { "Instead of": "Full-fat paneer curry", "Choose": "Low-fat paneer, less oil", "Saves": "~180 kcal" },
+            { "Instead of": "Sugary cola", "Choose": "Nimbu paani (no sugar)", "Saves": "~150 kcal" }
+          ]
+        },
+        {
+          "type": "tip",
+          "title": "Protein + fibre = fullness",
+          "content": "Anchor each meal with a protein source and vegetables. This blunts hunger and cravings, which is what actually makes a deficit sustainable."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Move Every Day"
+        },
+        {
+          "type": "paragraph",
+          "content": "A brisk 30-45 minute walk burns calories and improves insulin sensitivity, while 2-3 strength sessions a week preserve the muscle that keeps your metabolism high. Together they make fat loss faster and easier to maintain than dieting alone."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Do I have to stop eating rice to lose belly fat?", "answer": "No. Rice fits fine within a calorie deficit. Portion it sensibly and pair it with protein, vegetables and dal." },
+      { "question": "How long does it take to lose belly fat?", "answer": "At a 300-500 calorie deficit, most people lose 0.3-0.5 kg per week. Visible belly fat reduction usually takes 6-12 weeks of consistency." }
+    ]
+  },
+  {
+    "id": "r-006",
+    "title": "Calorie Deficit Explained Using Indian Food",
+    "slug": "calorie-deficit-explained-indian-food",
+    "summary": "What a calorie deficit really is, how to estimate your maintenance calories, and how to apply it to everyday Indian meals without counting every grain of rice.",
+    "featured_image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
+    "published_at": "2026-07-26T09:00:00Z",
+    "updated_at": "2026-07-31T09:00:00Z",
+    "reading_time": 7,
+    "tags": ["Weight Loss", "Nutrition", "Fat Loss"],
+    "category_id": "cat-2",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Calorie Deficit Explained with Indian Food | FitVed",
+    "seo_description": "Understand calorie deficit using real Indian meals. Learn to estimate maintenance calories and lose fat without obsessive counting.",
+    "canonical_url": "https://getfitved.com/blog/article/calorie-deficit-explained-indian-food",
+    "topic_hub_slug": "weight-loss-strategy",
+    "content": {
+      "keyTakeaways": [
+        "A calorie deficit means eating fewer calories than your body burns — it is the one requirement for fat loss.",
+        "A rough maintenance estimate is body weight (kg) x 30-33 for moderately active adults.",
+        "You do not need to count every meal; controlling portions of oil, rice and snacks is usually enough.",
+        "Protein and fibre make the same calorie budget far more filling."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Every diet that works — keto, intermittent fasting, vegetarian, low-carb — works for one reason: it puts you in a calorie deficit. Understanding this frees you from fad rules and lets you lose fat while still eating Indian food you enjoy."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Estimate Your Maintenance Calories"
+        },
+        {
+          "type": "paragraph",
+          "content": "For a quick estimate, multiply your body weight in kg by 30-33 if you are moderately active. A 70 kg person maintains at roughly 2,100-2,300 calories. Eat 300-500 below that to lose fat. Track your weight weekly (same day, morning) and adjust if it stalls for 2-3 weeks."
+        },
+        {
+          "type": "callout",
+          "title": "Liquid calories are the silent trap",
+          "content": "Two sugary chais, a cola and a fruit juice can add 400-600 calories a day without filling you up. Cutting these is often the single fastest deficit lever."
+        },
+        {
+          "type": "paragraph",
+          "content": "You do not need to weigh every roti forever. Learn the calorie ballpark of your common meals once, control portions of the calorie-dense parts (oil, ghee, rice, sweets), and let protein and vegetables fill the rest of the plate."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Do I need a food scale?", "answer": "It helps for a few weeks to learn portion sizes, but it is not mandatory. Consistent portion control and weekly weigh-ins are enough for most people." },
+      { "question": "Why has my weight loss stalled?", "answer": "Plateaus usually mean your intake has crept up or your maintenance dropped as you got lighter. Re-check portions and, if needed, reduce calories by another 150-200 or add more steps." }
+    ]
+  },
+  {
+    "id": "r-007",
+    "title": "Walking for Weight Loss: How Many Steps Do You Actually Need?",
+    "slug": "walking-for-weight-loss-steps",
+    "summary": "How walking drives fat loss, the real truth about the 10,000-step target, and how to fit steps into a busy Indian work schedule.",
+    "featured_image": "https://images.unsplash.com/photo-1461897104016-0b3b00cc81ee?w=1200&q=80",
+    "published_at": "2026-07-25T09:00:00Z",
+    "updated_at": "2026-07-30T09:00:00Z",
+    "reading_time": 6,
+    "tags": ["Weight Loss", "Walking", "Home Workouts"],
+    "category_id": "cat-2",
+    "author_id": "author-2",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Walking for Weight Loss: How Many Steps? | FitVed",
+    "seo_description": "Does walking burn fat? Learn how many steps you really need for weight loss and how to fit them into a busy day.",
+    "canonical_url": "https://getfitved.com/blog/article/walking-for-weight-loss-steps",
+    "topic_hub_slug": "weight-loss-strategy",
+    "content": {
+      "keyTakeaways": [
+        "Walking burns calories and improves insulin sensitivity, making a calorie deficit easier to maintain.",
+        "The 10,000-step figure is a useful goal, not a magic number — benefits begin well below it.",
+        "7,000-8,000 steps a day is linked with meaningful health and weight benefits for most people.",
+        "Post-meal walks are especially good for blood sugar control."
+      ],
+      "medicalDisclaimer": false,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Walking is the most underrated fat-loss tool because it is low-impact, sustainable and easy to do daily. It will not out-run a bad diet, but combined with a calorie deficit it noticeably speeds up results and protects joints better than intense cardio."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "How Many Steps?"
+        },
+        {
+          "type": "paragraph",
+          "content": "The famous 10,000-step target came from a 1960s marketing campaign, not a lab. Research since then shows health and weight benefits climb steadily and start to plateau around 7,000-8,000 steps for many adults. If you currently do 3,000, getting to 7,000 is a big win — don't get stuck on a round number."
+        },
+        {
+          "type": "tip",
+          "title": "Stack steps into your day",
+          "content": "A 10-15 minute walk after each main meal both hits your step goal and blunts the post-meal blood-sugar spike — a two-for-one benefit, especially for those with prediabetes."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Is walking enough to lose weight?", "answer": "Walking helps create a calorie deficit, but pairing it with a controlled diet and some strength training gives far better fat-loss and body-composition results." },
+      { "question": "Is it better to walk fast or long?", "answer": "Both help. A brisk pace burns more per minute; a longer easy walk adds more total steps. Do whichever you will actually keep doing." }
+    ]
+  },
+  {
+    "id": "r-008",
+    "title": "PCOS Diet Plan: A 7-Day Indian Meal Guide",
+    "slug": "pcos-diet-plan-indian",
+    "summary": "A practical, low-GI Indian eating framework for PCOS that helps manage insulin resistance, cravings and weight — with a sample day and food swaps.",
+    "featured_image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
+    "published_at": "2026-07-24T09:00:00Z",
+    "updated_at": "2026-07-30T09:00:00Z",
+    "reading_time": 9,
+    "tags": ["PCOS", "Women's Health", "Indian Diet", "Nutrition"],
+    "category_id": "cat-8",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": true,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "PCOS Diet Plan: 7-Day Indian Meal Guide | FitVed",
+    "seo_description": "A low-GI Indian PCOS diet framework to manage insulin resistance and weight, with a sample day, food swaps and protein-first meal structure.",
+    "canonical_url": "https://getfitved.com/blog/article/pcos-diet-plan-indian",
+    "topic_hub_slug": "pcos-hormone-health",
+    "content": {
+      "keyTakeaways": [
+        "PCOS is closely tied to insulin resistance, so a low-glycaemic, protein-forward diet is the foundation.",
+        "Prioritise millets, oats, whole pulses and vegetables over refined maida, white rice and sugar.",
+        "Protein and fibre at every meal steady blood sugar and reduce cravings.",
+        "Diet works best alongside strength training, sleep and stress management, not in isolation."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Around 7 in 10 women with PCOS have some degree of insulin resistance, which makes weight gain easier and weight loss harder. The aim of a PCOS diet is not extreme restriction but keeping blood sugar and insulin steady across the day using low-GI Indian foods, adequate protein and fibre."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "A Sample PCOS-Friendly Day"
+        },
+        {
+          "type": "nutrition_table",
+          "title": "Sample Low-GI Indian Day",
+          "tableData": [
+            { "Meal": "Breakfast", "Example": "Moong dal chilla + curd", "Why": "Protein-forward, low GI" },
+            { "Meal": "Lunch", "Example": "2 millet rotis + dal + sabzi + salad", "Why": "Fibre + complete protein" },
+            { "Meal": "Snack", "Example": "Roasted chana + green tea", "Why": "Steady energy, no sugar spike" },
+            { "Meal": "Dinner", "Example": "Paneer/tofu + vegetables + small portion rice", "Why": "Protein + controlled carbs" }
+          ]
+        },
+        {
+          "type": "tip",
+          "title": "Swap refined for whole",
+          "content": "Replace maida, white bread and sugary drinks with jowar/bajra rotis, whole fruit and unsweetened drinks. This one change reduces insulin spikes significantly."
+        },
+        {
+          "type": "warning",
+          "title": "Diet is one piece",
+          "content": "PCOS management improves most when diet is combined with resistance training, 7-8 hours of sleep and stress reduction. Speak to your doctor about your individual case."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Should women with PCOS avoid all carbs?", "answer": "No. The goal is better-quality carbs (millets, whole pulses, vegetables, whole fruit) and appropriate portions, not zero carbs, which is hard to sustain and unnecessary." },
+      { "question": "Can diet alone reverse PCOS?", "answer": "Diet can dramatically improve symptoms and insulin sensitivity, but the best results come from combining it with exercise, sleep, stress management and medical guidance." }
+    ]
+  },
+  {
+    "id": "r-009",
+    "title": "Low-GI Indian Foods for Diabetes and Blood Sugar Control",
+    "slug": "low-gi-indian-foods-diabetes",
+    "summary": "A guide to low-glycaemic Indian foods that help manage type 2 diabetes and prediabetes, plus meal-building rules to flatten your blood sugar curve.",
+    "featured_image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80",
+    "published_at": "2026-07-23T09:00:00Z",
+    "updated_at": "2026-07-29T09:00:00Z",
+    "reading_time": 8,
+    "tags": ["Diabetes", "Nutrition", "Indian Diet"],
+    "category_id": "cat-9",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Low-GI Indian Foods for Diabetes | FitVed",
+    "seo_description": "The best low-glycaemic Indian foods for diabetes and prediabetes, with simple meal rules to control blood sugar and HbA1c.",
+    "canonical_url": "https://getfitved.com/blog/article/low-gi-indian-foods-diabetes",
+    "content": {
+      "keyTakeaways": [
+        "The glycaemic index (GI) ranks how fast a food raises blood sugar; lower-GI meals produce gentler, steadier rises.",
+        "Millets, whole pulses, most vegetables and whole fruit are low-GI staples.",
+        "Pairing carbs with protein, fibre and healthy fat lowers the overall glycaemic response of a meal.",
+        "A short walk after meals meaningfully reduces post-meal blood sugar."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D. (Clinical Dietitian)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "For people with diabetes or prediabetes, what raises blood sugar most is not just how much carbohydrate you eat, but how quickly it digests. Choosing low-GI Indian foods and building balanced meals keeps blood sugar steadier and supports better HbA1c over time."
+        },
+        {
+          "type": "nutrition_table",
+          "title": "Swap High-GI for Low-GI",
+          "tableData": [
+            { "High-GI": "White rice", "Low-GI swap": "Millets (ragi, jowar, bajra) or brown rice", "Benefit": "Slower sugar rise" },
+            { "High-GI": "Maida roti / white bread", "Low-GI swap": "Whole-wheat or mixed-millet roti", "Benefit": "More fibre" },
+            { "High-GI": "Potato-heavy sabzi", "Low-GI swap": "Green leafy + non-starchy veg", "Benefit": "Lower load" },
+            { "High-GI": "Fruit juice", "Low-GI swap": "Whole fruit (guava, apple, pear)", "Benefit": "Fibre slows absorption" }
+          ]
+        },
+        {
+          "type": "tip",
+          "title": "The plate method",
+          "content": "Fill half your plate with non-starchy vegetables, a quarter with protein, and a quarter with a low-GI carb. This structure naturally flattens your blood-sugar curve."
+        },
+        {
+          "type": "callout",
+          "title": "Walk after you eat",
+          "content": "A 10-15 minute walk after meals helps muscles pull glucose from the blood and is one of the simplest, most effective habits for blood-sugar control."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Can diabetics eat rice?", "answer": "Yes, in controlled portions and ideally paired with protein, dal, vegetables and healthy fat. Choosing millets or brown rice further slows the sugar rise." },
+      { "question": "Are millets good for diabetes?", "answer": "Millets like ragi, jowar and bajra are high in fibre and generally lower-GI than white rice, making them a smart staple for blood-sugar control." }
+    ]
+  },
+  {
+    "id": "r-010",
+    "title": "Creatine for Indians: A Complete Beginner's Guide",
+    "slug": "creatine-guide-india",
+    "summary": "What creatine does, how to take it, whether you need to load, and how to choose a good creatine monohydrate in India — backed by decades of research.",
+    "featured_image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
+    "published_at": "2026-07-22T09:00:00Z",
+    "updated_at": "2026-07-28T09:00:00Z",
+    "reading_time": 7,
+    "tags": ["Supplements", "Creatine", "Muscle Gain"],
+    "category_id": "cat-22",
+    "author_id": "author-2",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Creatine for Indians: Complete Beginner's Guide | FitVed",
+    "seo_description": "How creatine works, correct dosage, whether to load, and how to pick creatine monohydrate in India. Evidence-based and simple.",
+    "canonical_url": "https://getfitved.com/blog/article/creatine-guide-india",
+    "content": {
+      "keyTakeaways": [
+        "Creatine monohydrate is the most researched, effective and safe sports supplement available.",
+        "A steady 3-5 g per day works; a loading phase is optional and only speeds up saturation.",
+        "It is especially useful for vegetarians, who tend to have lower baseline creatine stores.",
+        "Timing does not matter much — consistency does. Take it any time, every day."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Vikramaditya Verma (NSCA-CSCS)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Creatine helps your muscles regenerate energy (ATP) during short, intense efforts like lifting and sprinting. Decades of research make it the gold-standard supplement for strength, power and lean-muscle gains — and it is inexpensive."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "How to Take It"
+        },
+        {
+          "type": "paragraph",
+          "content": "The simplest approach is 3-5 g of creatine monohydrate every day, indefinitely. If you want faster results, you can 'load' with 20 g/day (split into 4 doses) for 5-7 days, then drop to 5 g — but this is optional and can cause mild bloating. Both methods reach the same end point."
+        },
+        {
+          "type": "callout",
+          "title": "Vegetarians benefit most",
+          "content": "Dietary creatine comes mainly from meat and fish, so Indian vegetarians usually start with lower muscle creatine stores and often notice a bigger effect."
+        },
+        {
+          "type": "tip",
+          "title": "Choose plain monohydrate",
+          "content": "Skip expensive 'advanced' forms. Plain micronised creatine monohydrate is the most studied and effective. Look for a trusted brand and ideally a third-party tested product."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Does creatine cause hair loss or kidney damage?", "answer": "In healthy people, research has not shown creatine to cause hair loss or kidney damage at recommended doses. Those with kidney conditions should consult a doctor first." },
+      { "question": "Do I need to cycle off creatine?", "answer": "No. You can take 3-5 g daily continuously. There is no need to cycle off." }
+    ]
+  },
+  {
+    "id": "r-011",
+    "title": "Vitamin D Deficiency in India: Signs, Causes and Fixes",
+    "slug": "vitamin-d-deficiency-india",
+    "summary": "Why vitamin D deficiency is so common in India despite the sunshine, the symptoms to watch for, and how to correct it through sun, food and supplements.",
+    "featured_image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80",
+    "published_at": "2026-07-21T09:00:00Z",
+    "updated_at": "2026-07-27T09:00:00Z",
+    "reading_time": 7,
+    "tags": ["Vitamins", "Supplements", "Nutrition"],
+    "category_id": "cat-24",
+    "author_id": "author-1",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Vitamin D Deficiency in India: Signs & Fixes | FitVed",
+    "seo_description": "Vitamin D deficiency is common in India. Learn the symptoms, why it happens despite sunshine, and how to fix it with sun, food and supplements.",
+    "canonical_url": "https://getfitved.com/blog/article/vitamin-d-deficiency-india",
+    "content": {
+      "keyTakeaways": [
+        "A large share of Indians are vitamin D deficient despite abundant sunshine.",
+        "Indoor lifestyles, sunscreen, pollution, darker skin and covered clothing all reduce skin synthesis.",
+        "Common signs include fatigue, bone and muscle aches, low mood and frequent illness.",
+        "Correction usually needs a combination of sensible sun exposure and, often, a supplement guided by a blood test."
+      ],
+      "medicalDisclaimer": true,
+      "coachReviewBadge": "Reviewed by Dr. Ananya Sharma, Ph.D.",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "It seems paradoxical that a sun-rich country has widespread vitamin D deficiency, but modern Indian life explains it: most of us work indoors, avoid the midday sun, live in polluted cities and cover up. The result is that the skin makes far less vitamin D than it could."
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "Common Symptoms"
+        },
+        {
+          "type": "paragraph",
+          "content": "Low vitamin D often shows up as persistent tiredness, aching bones or muscles, low back pain, frequent infections, hair fall and low mood. Because these are vague and common, deficiency is often missed until a blood test (25-hydroxyvitamin D) confirms it."
+        },
+        {
+          "type": "tip",
+          "title": "Sensible sun first",
+          "content": "Aim for 15-25 minutes of direct sunlight on arms and face a few times a week, ideally mid-morning. Food sources like fortified milk, egg yolk and fatty fish help but rarely fix a true deficiency alone."
+        },
+        {
+          "type": "warning",
+          "title": "Test before high-dose supplements",
+          "content": "High-dose vitamin D should be taken based on a blood test and medical advice, not guesswork, since it is fat-soluble and can accumulate."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "How much sunlight do I need for vitamin D?", "answer": "Roughly 15-25 minutes of direct sun on exposed skin (arms, face) several times a week helps, though needs vary by skin tone, season and location." },
+      { "question": "Should everyone take a vitamin D supplement?", "answer": "Not automatically. Get a blood test; if you are deficient, your doctor can recommend an appropriate dose and duration." }
+    ]
+  },
+  {
+    "id": "r-012",
+    "title": "A Beginner's No-Equipment Home Workout (Full Body)",
+    "slug": "beginner-home-workout-no-equipment",
+    "summary": "A simple, effective full-body home workout using only bodyweight — perfect for beginners who want to build strength and lose fat without a gym.",
+    "featured_image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80",
+    "published_at": "2026-07-20T09:00:00Z",
+    "updated_at": "2026-07-26T09:00:00Z",
+    "reading_time": 7,
+    "tags": ["Home Workouts", "Beginner Guides", "Fat Loss"],
+    "category_id": "cat-15",
+    "author_id": "author-2",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Beginner No-Equipment Home Workout (Full Body) | FitVed",
+    "seo_description": "A beginner-friendly full-body home workout with no equipment. Build strength and burn fat with simple bodyweight moves you can do anywhere.",
+    "canonical_url": "https://getfitved.com/blog/article/beginner-home-workout-no-equipment",
+    "content": {
+      "keyTakeaways": [
+        "You can build real strength and lose fat at home with only bodyweight exercises.",
+        "Focus on a few compound movements: squats, push-ups, lunges, glute bridges and planks.",
+        "Progress by adding reps, sets or slowing the tempo before you ever need weights.",
+        "Consistency of 3 sessions a week beats occasional intense workouts."
+      ],
+      "medicalDisclaimer": false,
+      "coachReviewBadge": "Reviewed by Vikramaditya Verma (NSCA-CSCS)",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "You do not need a gym or equipment to start getting fit. A well-structured bodyweight routine trains every major muscle group, raises your heart rate and can be done in a bedroom or living room. The key is to pick a handful of effective moves and get progressively better at them."
+        },
+        {
+          "type": "workout_table",
+          "title": "Full-Body Beginner Routine (3x per week)",
+          "tableData": [
+            { "Exercise": "Bodyweight squat", "Sets x Reps": "3 x 12-15", "Targets": "Legs, glutes" },
+            { "Exercise": "Knee or incline push-up", "Sets x Reps": "3 x 8-12", "Targets": "Chest, shoulders, triceps" },
+            { "Exercise": "Reverse lunge", "Sets x Reps": "3 x 10 each leg", "Targets": "Legs, balance" },
+            { "Exercise": "Glute bridge", "Sets x Reps": "3 x 15", "Targets": "Glutes, lower back" },
+            { "Exercise": "Plank", "Sets x Reps": "3 x 20-40 sec", "Targets": "Core" }
+          ]
+        },
+        {
+          "type": "heading",
+          "level": 2,
+          "title": "How to Progress"
+        },
+        {
+          "type": "paragraph",
+          "content": "Once a set feels easy, add 2-3 reps, then an extra set, then slow the lowering phase to 3 seconds to increase difficulty. When bodyweight becomes too easy, progress to harder variations (full push-ups, split squats) or add resistance with bands or a loaded backpack."
+        },
+        {
+          "type": "tip",
+          "title": "Warm up and rest",
+          "content": "Do 3-5 minutes of light movement before you start, and rest 45-60 seconds between sets. Take at least one rest day between sessions so muscles recover and grow."
+        }
+      ]
+    },
+    "faq_schema": [
+      { "question": "Can I build muscle without weights?", "answer": "Beginners can build noticeable muscle with bodyweight training by progressing reps, tempo and harder variations. Eventually adding resistance helps continued gains." },
+      { "question": "How often should a beginner work out at home?", "answer": "Three full-body sessions a week with rest days in between is ideal for building strength while allowing recovery." }
+    ]
+  },
+  {
+    "id": "r-013",
+    "title": "Whey vs Plant Protein: Which Is Better for Indians?",
+    "slug": "whey-vs-plant-protein-comparison",
+    "summary": "A head-to-head comparison of whey and plant protein on quality, digestion, cost and results, to help Indian vegetarians and non-vegetarians choose.",
+    "featured_image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
+    "published_at": "2026-07-19T09:00:00Z",
+    "updated_at": "2026-07-25T09:00:00Z",
+    "reading_time": 6,
+    "tags": ["Comparison", "Supplements", "Protein", "Whey Protein"],
+    "category_id": "cat-37",
+    "author_id": "author-2",
+    "is_featured": false,
+    "is_editor_pick": false,
+    "is_popular": true,
+    "published": true,
+    "seo_title": "Whey vs Plant Protein for Indians | FitVed",
+    "seo_description": "Whey vs plant protein compared on quality, digestion, cost and muscle results — which protein powder should Indians choose?",
+    "canonical_url": "https://getfitved.com/blog/article/whey-vs-plant-protein-comparison",
+    "comparison_details": {
+      "optionA": {
+        "name": "Whey Protein",
+        "subtitle": "Dairy-derived, fast-digesting complete protein",
+        "pros": [
+          "Complete amino acid profile with high leucine for muscle building",
+          "Fast digesting and highly bioavailable",
+          "Cost-effective per gram of protein",
+          "Neutral, mixable taste"
+        ],
+        "cons": [
+          "Not suitable for vegans or the lactose intolerant (unless isolate)"
+        ],
+        "rating": 4.7
+      },
+      "optionB": {
+        "name": "Plant Protein",
+        "subtitle": "Pea, soya or blended vegan protein",
+        "pros": [
+          "Suitable for vegans and lactose-intolerant users",
+          "Often higher in fibre",
+          "Soya and blends can be complete proteins"
+        ],
+        "cons": [
+          "Single-source (e.g. pea) may be lower in some amino acids",
+          "Can be grittier in texture",
+          "Sometimes more expensive per gram of protein"
+        ],
+        "rating": 4.3
+      },
+      "winner": "optionA",
+      "verdict": "For most people who tolerate dairy, whey offers the best mix of quality, absorption and value. Vegans and the lactose-intolerant should choose a soya or blended plant protein to ensure a complete amino acid profile.",
+      "featureMatrix": [
+        { "feature": "Protein quality", "optionAVal": "Complete, high leucine", "optionBVal": "Good (best from soya/blends)" },
+        { "feature": "Digestion speed", "optionAVal": "Fast", "optionBVal": "Moderate" },
+        { "feature": "Suitable for vegans", "optionAVal": "No", "optionBVal": "Yes" },
+        { "feature": "Cost per gram protein", "optionAVal": "Lower", "optionBVal": "Similar to higher" }
+      ]
+    },
+    "content": {
+      "blocks": [
+        {
+          "type": "paragraph",
+          "content": "Protein powder is a convenient way to close the daily protein gap, but which type is right for you? The honest answer depends on whether you consume dairy, how your gut handles lactose, and your budget. Both whey and plant protein can absolutely help you build muscle and lose fat."
+        }
+      ]
+    }
+  }
+]
