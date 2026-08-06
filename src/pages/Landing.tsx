@@ -45,6 +45,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SEOFooter } from "@/components/blog/SEOFooter";
+import { GeoSEOFooter } from "@/components/GeoSEOFooter";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
@@ -260,6 +261,7 @@ export default function Landing() {
       <Footer />
       {/* Explore Everything SEO Footer */}
       <SEOFooter bgClass="bg-slate-900 text-slate-200 border-t border-white/10" />
+      <GeoSEOFooter />
       <MobileBar />
       <WhatsAppFloat />
       <DesktopFloatingCta />

@@ -9,6 +9,7 @@ import fitvedLogo from "@/assets/fitved-logo.png";
 import { BookTrialModal } from "@/components/BookTrialModal";
 import { CATEGORIES_DATA } from "@/data/blog/categories";
 import { SEOFooter } from "@/components/blog/SEOFooter";
+import { GeoSEOFooter } from "@/components/GeoSEOFooter";
 
 interface BlogLayoutProps {
   children: React.ReactNode;
@@ -153,6 +154,7 @@ export function BlogLayout({ children, breadcrumbs }: BlogLayoutProps) {
 
       {/* Explore Everything SEO Footer */}
       <SEOFooter />
+      <GeoSEOFooter />
 
       <BookTrialModal open={trialModalOpen} onOpenChange={setTrialModalOpen} />
     </div>
