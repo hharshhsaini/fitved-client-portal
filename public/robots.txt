@@ -3,7 +3,11 @@
 User-agent: *
 Allow: /$
 Allow: /corporate
+Allow: /trainers
 Allow: /blog/
+Allow: /blog/*
+Allow: /faqs
+Allow: /personal-training
 Allow: /societies/
 Disallow: /dashboard
 Disallow: /admin

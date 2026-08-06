@@ -1,0 +1,317 @@
+[
+  {
+    "slug": "weight-loss",
+    "name": "Weight Loss",
+    "group": "Goal",
+    "heading": "Weight Loss Guides for Indians",
+    "metaTitle": "Weight Loss Tips, Diet Plans & Exercises — FitVed",
+    "metaDescription": "Science-backed weight loss guides tailored for Indian diets. Belly fat, plateau breaking, calorie plans, and safe fat-loss strategies from certified coaches.",
+    "intro": "Practical, evidence-based weight loss advice built around Indian food, lifestyles, and budgets. No crash diets — just sustainable fat loss."
+  },
+  {
+    "slug": "muscle-gain",
+    "name": "Muscle Gain",
+    "group": "Goal",
+    "heading": "Muscle Building Guides",
+    "metaTitle": "Muscle Gain Tips, Workouts & Indian Diet Plans — FitVed",
+    "metaDescription": "Build muscle with Indian foods. Workout programs, bulking diets, protein tips, and progressive overload guides from certified FitVed trainers.",
+    "intro": "Everything you need to build lean muscle — from protein-rich Indian meals to beginner-friendly gym programs."
+  },
+  {
+    "slug": "fat-loss",
+    "name": "Fat Loss",
+    "group": "Goal",
+    "heading": "Fat Loss & Body Recomposition",
+    "metaTitle": "Fat Loss Guides — Burn Fat, Keep Muscle — FitVed",
+    "metaDescription": "Learn to lose fat without losing muscle. Indian diet tips, cardio vs weight training, and body recomposition strategies.",
+    "intro": "Targeted fat loss strategies that preserve muscle and fit Indian eating patterns."
+  },
+  {
+    "slug": "strength",
+    "name": "Strength Training",
+    "group": "Goal",
+    "heading": "Strength Training for Every Level",
+    "metaTitle": "Strength Training Programs & Tips — FitVed",
+    "metaDescription": "Strength training guides from beginner to advanced. Compound lifts, progressive overload, home and gym programs.",
+    "intro": "Build real-world strength with structured programs, whether you train at home or in the gym."
+  },
+  {
+    "slug": "mobility",
+    "name": "Mobility & Flexibility",
+    "group": "Goal",
+    "heading": "Mobility & Flexibility Guides",
+    "metaTitle": "Mobility Exercises & Stretching Routines — FitVed",
+    "metaDescription": "Improve flexibility and joint mobility with daily routines. Desk worker stretches, hip openers, and recovery protocols.",
+    "intro": "Move better, feel better. Mobility routines for desk workers, athletes, and everyone in between."
+  },
+  {
+    "slug": "pcos",
+    "name": "PCOS",
+    "group": "Health Condition",
+    "heading": "PCOS Diet, Exercise & Management",
+    "metaTitle": "PCOS Diet & Exercise Guide for Indian Women — FitVed",
+    "metaDescription": "Manage PCOS naturally with Indian diet plans, the right exercises, and lifestyle changes. Evidence-based guides from certified trainers.",
+    "intro": "Managing PCOS through diet, exercise, and lifestyle — with Indian foods and practical routines."
+  },
+  {
+    "slug": "diabetes",
+    "name": "Diabetes",
+    "group": "Health Condition",
+    "heading": "Diabetes Diet & Exercise Guides",
+    "metaTitle": "Diabetes Diet, Exercise & Indian Food Guide — FitVed",
+    "metaDescription": "Control blood sugar with the right Indian foods and exercises. Type 2 diabetes, prediabetes, and insulin resistance guides.",
+    "intro": "Control and prevent diabetes with Indian-specific diet plans, safe exercises, and blood sugar management."
+  },
+  {
+    "slug": "prediabetes",
+    "name": "Prediabetes",
+    "group": "Health Condition",
+    "heading": "Prediabetes Reversal Guides",
+    "metaTitle": "Reverse Prediabetes — Diet & Exercise Guide — FitVed",
+    "metaDescription": "Reverse prediabetes with the right diet and exercise. Indian food swaps, blood sugar management, and lifestyle changes.",
+    "intro": "Catch it early, reverse it naturally. Prediabetes diet and exercise guides for Indians."
+  },
+  {
+    "slug": "thyroid",
+    "name": "Thyroid",
+    "group": "Health Condition",
+    "heading": "Thyroid Health & Fitness Guides",
+    "metaTitle": "Thyroid Diet & Exercise Tips for Indians — FitVed",
+    "metaDescription": "Manage hypothyroid and hyperthyroid conditions with the right Indian foods, exercises, and lifestyle changes.",
+    "intro": "Thyroid-friendly eating and exercise plans designed for Indian lifestyles."
+  },
+  {
+    "slug": "heart-health",
+    "name": "Heart Health",
+    "group": "Health Condition",
+    "heading": "Heart Health & Cardiac Fitness",
+    "metaTitle": "Heart Health — Diet, Exercise & Prevention — FitVed",
+    "metaDescription": "Lower cholesterol, manage blood pressure, and protect your heart with Indian diet plans and safe exercises.",
+    "intro": "Protect your heart with the right food, exercise, and lifestyle — tailored for Indian risk factors."
+  },
+  {
+    "slug": "fatty-liver",
+    "name": "Fatty Liver",
+    "group": "Health Condition",
+    "heading": "Fatty Liver Diet & Exercise",
+    "metaTitle": "Fatty Liver Reversal — Diet & Exercise Guide — FitVed",
+    "metaDescription": "Reverse fatty liver (NAFLD) with the right Indian diet, exercises, and lifestyle changes. No medication needed.",
+    "intro": "Reverse fatty liver naturally with diet adjustments, the right exercise, and simple lifestyle changes."
+  },
+  {
+    "slug": "gut-health",
+    "name": "Gut Health",
+    "group": "Health Condition",
+    "heading": "Gut Health & Digestive Wellness",
+    "metaTitle": "Gut Health — Indian Foods & Probiotics Guide — FitVed",
+    "metaDescription": "Improve digestion with Indian fermented foods, fiber-rich meals, and gut-friendly habits. Bloating, IBS, and probiotic guides.",
+    "intro": "A healthy gut is the foundation. Indian fermented foods, fiber strategies, and digestive wellness."
+  },
+  {
+    "slug": "nutrition",
+    "name": "Nutrition",
+    "group": "Nutrition",
+    "heading": "Nutrition Science & Indian Diet",
+    "metaTitle": "Nutrition Guides — Indian Diet & Food Science — FitVed",
+    "metaDescription": "Evidence-based nutrition guides for Indians. Macros, calories, meal timing, Indian food science, and dietary strategies.",
+    "intro": "Understand what you eat. Science-based nutrition guides built around Indian foods and eating habits."
+  },
+  {
+    "slug": "protein",
+    "name": "Protein",
+    "group": "Nutrition",
+    "heading": "Protein Guides for Indians",
+    "metaTitle": "Protein — Sources, Requirements & Myths — FitVed",
+    "metaDescription": "How much protein do Indians need? Best vegetarian and non-veg sources, timing, and protein myths busted.",
+    "intro": "India's biggest nutritional gap, demystified. How much you need, where to get it, and what doesn't work."
+  },
+  {
+    "slug": "indian-diet",
+    "name": "Indian Diet",
+    "group": "Nutrition",
+    "heading": "Indian Diet & Regional Foods",
+    "metaTitle": "Indian Diet Plans — Regional, Traditional & Modern — FitVed",
+    "metaDescription": "Healthy Indian diet plans by region. South Indian, North Indian, vegetarian, non-veg, and festival eating guides.",
+    "intro": "Healthy eating doesn't mean giving up Indian food. Regional diet plans, traditional wisdom, and modern nutrition."
+  },
+  {
+    "slug": "meal-plans",
+    "name": "Meal Plans",
+    "group": "Nutrition",
+    "heading": "Weekly & Monthly Meal Plans",
+    "metaTitle": "Indian Meal Plans — Weekly, Budget & Goal-Based — FitVed",
+    "metaDescription": "Ready-to-follow Indian meal plans for weight loss, muscle gain, diabetes, and budget-friendly eating.",
+    "intro": "Follow-along meal plans with Indian foods, shopping lists, and prep guides for every goal."
+  },
+  {
+    "slug": "recipes",
+    "name": "Recipes",
+    "group": "Nutrition",
+    "heading": "Healthy Indian Recipes",
+    "metaTitle": "Healthy Indian Recipes — High Protein, Low Cal — FitVed",
+    "metaDescription": "Healthy Indian recipes for every meal. High protein breakfast, quick lunch, dinner ideas, and healthy snacks.",
+    "intro": "Delicious, healthy Indian recipes you'll actually want to eat. Quick, affordable, and macro-friendly."
+  },
+  {
+    "slug": "supplements",
+    "name": "Supplements",
+    "group": "Nutrition",
+    "heading": "Supplement Guides for Indians",
+    "metaTitle": "Supplements — What Works, What Doesn't — FitVed",
+    "metaDescription": "Which supplements actually work for Indians? Whey protein, creatine, vitamin D, B12, and fish oil — honest reviews.",
+    "intro": "Cut through the supplement hype. What actually works, what's a waste, and what Indians genuinely need."
+  },
+  {
+    "slug": "vegetarian",
+    "name": "Vegetarian Fitness",
+    "group": "Nutrition",
+    "heading": "Vegetarian Diet & Fitness",
+    "metaTitle": "Vegetarian Fitness — Protein, Meals & Muscle — FitVed",
+    "metaDescription": "Build muscle and stay fit on a vegetarian Indian diet. Protein sources, meal plans, and supplement tips for vegetarians.",
+    "intro": "Yes, you can build muscle and lose fat on a vegetarian diet. Here's exactly how."
+  },
+  {
+    "slug": "healthy-breakfast",
+    "name": "Healthy Breakfast",
+    "group": "Nutrition",
+    "heading": "Healthy Indian Breakfast Ideas",
+    "metaTitle": "Healthy Indian Breakfast — Quick & High Protein — FitVed",
+    "metaDescription": "Quick, healthy Indian breakfast ideas with protein counts. Idli upgrades, oats recipes, egg combos, and more.",
+    "intro": "Start your day right. High-protein Indian breakfast ideas that take under 15 minutes."
+  },
+  {
+    "slug": "healthy-dinner",
+    "name": "Healthy Dinner",
+    "group": "Nutrition",
+    "heading": "Healthy Indian Dinner Ideas",
+    "metaTitle": "Healthy Indian Dinner — Light & Nutritious — FitVed",
+    "metaDescription": "Healthy Indian dinner ideas that are light, nutritious, and satisfying. Low-carb options, soup meals, and dal combos.",
+    "intro": "Light, satisfying Indian dinners that support your goals without leaving you hungry."
+  },
+  {
+    "slug": "healthy-snacks",
+    "name": "Healthy Snacks",
+    "group": "Nutrition",
+    "heading": "Healthy Indian Snack Ideas",
+    "metaTitle": "Healthy Indian Snacks — Low Cal & High Protein — FitVed",
+    "metaDescription": "Healthy Indian snack ideas for weight loss and muscle gain. Roasted makhana, chana, protein ladoo, and more.",
+    "intro": "Snack smart. Indian snack ideas that are tasty, affordable, and actually good for you."
+  },
+  {
+    "slug": "home-workout",
+    "name": "Home Workout",
+    "group": "Workout",
+    "heading": "Home Workout Programs",
+    "metaTitle": "Home Workouts — No Equipment, All Levels — FitVed",
+    "metaDescription": "Effective home workouts with no equipment needed. Full body, upper body, lower body, and apartment-friendly routines.",
+    "intro": "No gym? No problem. Effective bodyweight workouts you can do in your living room."
+  },
+  {
+    "slug": "gym",
+    "name": "Gym Workouts",
+    "group": "Workout",
+    "heading": "Gym Workout Programs",
+    "metaTitle": "Gym Workouts — Beginner to Advanced — FitVed",
+    "metaDescription": "Gym workout programs for beginners to advanced. Push-pull-legs, full body splits, and equipment guides.",
+    "intro": "Structured gym programs with clear progressions, exercise guides, and split routines."
+  },
+  {
+    "slug": "yoga",
+    "name": "Yoga",
+    "group": "Workout",
+    "heading": "Yoga Guides & Practices",
+    "metaTitle": "Yoga — Poses, Benefits & Programs — FitVed",
+    "metaDescription": "Yoga guides for all levels. Poses for flexibility, strength, stress relief, and specific health conditions.",
+    "intro": "Yoga for modern Indian life — flexibility, strength, stress relief, and healing."
+  },
+  {
+    "slug": "walking",
+    "name": "Walking",
+    "group": "Workout",
+    "heading": "Walking for Fitness & Health",
+    "metaTitle": "Walking — Steps, Routes & Weight Loss — FitVed",
+    "metaDescription": "Walking for weight loss, heart health, and fitness. Step goals, walking programs, and Indian walking guides.",
+    "intro": "The most underrated exercise. Walking guides for weight loss, heart health, and daily fitness."
+  },
+  {
+    "slug": "running",
+    "name": "Running",
+    "group": "Workout",
+    "heading": "Running Guides for Indians",
+    "metaTitle": "Running — Beginner Plans & Training Tips — FitVed",
+    "metaDescription": "Start running or improve your pace. Couch to 5K, marathon prep, running in Indian heat, and injury prevention.",
+    "intro": "From your first kilometer to your first marathon. Running guides for Indian conditions."
+  },
+  {
+    "slug": "pilates",
+    "name": "Pilates",
+    "group": "Workout",
+    "heading": "Pilates for Core & Posture",
+    "metaTitle": "Pilates — Core, Posture & Flexibility — FitVed",
+    "metaDescription": "Pilates exercises for core strength, better posture, and flexibility. Mat and reformer guides for beginners.",
+    "intro": "Build a strong core and perfect posture with Pilates — no equipment needed for mat work."
+  },
+  {
+    "slug": "women",
+    "name": "Women's Fitness",
+    "group": "Audience",
+    "heading": "Women's Health & Fitness",
+    "metaTitle": "Women's Fitness — Health, Hormones & Workouts — FitVed",
+    "metaDescription": "Fitness and nutrition guides designed for Indian women. PCOS, pregnancy, periods, hormones, and safe workouts.",
+    "intro": "Fitness advice designed for women's bodies and lives — hormones, cycles, and real-world schedules."
+  },
+  {
+    "slug": "corporate-wellness",
+    "name": "Corporate Wellness",
+    "group": "Audience",
+    "heading": "Corporate Wellness & Office Health",
+    "metaTitle": "Corporate Wellness — Office Health & Productivity — FitVed",
+    "metaDescription": "Stay healthy at your desk job. Office exercises, posture fixes, meal prep for IT professionals, and corporate wellness programs.",
+    "intro": "Desk job health doesn't have to suffer. Practical wellness for Indian corporate professionals."
+  },
+  {
+    "slug": "pregnancy",
+    "name": "Pregnancy & Postpartum",
+    "group": "Audience",
+    "heading": "Pregnancy & Postpartum Fitness",
+    "metaTitle": "Pregnancy Exercise & Postpartum Recovery — FitVed",
+    "metaDescription": "Safe exercises during pregnancy and postpartum recovery guides. Prenatal yoga, breastfeeding nutrition, and diastasis recti.",
+    "intro": "Safe movement through pregnancy and smart recovery after. Doctor-approved, trainer-guided."
+  },
+  {
+    "slug": "sleep",
+    "name": "Sleep & Recovery",
+    "group": "Lifestyle",
+    "heading": "Sleep, Rest & Recovery",
+    "metaTitle": "Sleep & Recovery — Better Rest, Better Results — FitVed",
+    "metaDescription": "Improve sleep quality for better fitness results. Recovery protocols, rest day strategies, and Indian sleep hygiene.",
+    "intro": "Recovery is where results happen. Sleep better, recover faster, train harder."
+  },
+  {
+    "slug": "mental-wellness",
+    "name": "Mental Wellness",
+    "group": "Lifestyle",
+    "heading": "Mental Wellness & Stress Relief",
+    "metaTitle": "Mental Wellness — Stress, Anxiety & Exercise — FitVed",
+    "metaDescription": "Exercise for mental health. Stress management, anxiety relief, mindfulness, and building mental resilience through fitness.",
+    "intro": "Your mind and body are connected. Exercise, mindfulness, and practical stress management."
+  },
+  {
+    "slug": "healthy-habits",
+    "name": "Healthy Habits",
+    "group": "Lifestyle",
+    "heading": "Healthy Habits & Daily Routines",
+    "metaTitle": "Healthy Habits — Morning Routines & Lifestyle — FitVed",
+    "metaDescription": "Build healthy habits that stick. Morning routines, hydration, screen time, and daily wellness practices for Indians.",
+    "intro": "Small daily habits that compound into big health changes. Practical, not preachy."
+  },
+  {
+    "slug": "fitness",
+    "name": "Fitness",
+    "group": "Lifestyle",
+    "heading": "General Fitness & Training",
+    "metaTitle": "Fitness Guides — Exercise Science & Training — FitVed",
+    "metaDescription": "Evidence-based fitness guides. Exercise science, training principles, workout programming, and fitness myths busted.",
+    "intro": "The science and practice of getting fit — evidence-based, no bro-science."
+  }
+]

@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   const firstName = (profile?.name ?? user?.email?.split("@")[0] ?? "there").split(" ")[0];
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning ✨" : hour < 17 ? "Good afternoon ✨" : "Good evening ✨";
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   // ── Data queries (unchanged from original) ──────────────────────────────────
   const { data: plan } = useQuery({
