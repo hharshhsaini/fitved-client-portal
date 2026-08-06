@@ -161,7 +161,7 @@ export default function TrainerCompleteProfileDialog({
       subtitle: "Pick as many as apply — clients filter by these.",
       valid: () => (specs.length ? "" : "Add at least one specialization"),
       body: (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-h-[45vh] overflow-y-auto pr-1">
           {SPECIALIZATIONS.map((s) => {
             const on = specs.includes(s);
             return (
@@ -292,7 +292,7 @@ export default function TrainerCompleteProfileDialog({
   return (
     <Dialog open={open}>
       <DialogContent
-        className="max-w-lg gap-0 overflow-hidden p-0 [&>button]:hidden"
+        className="max-w-lg gap-0 overflow-x-hidden overflow-y-auto max-h-[90dvh] p-0 [&>button]:hidden"
         onInteractOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
