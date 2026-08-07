@@ -141,13 +141,14 @@ export default function AdminDashboard() {
 
       // Not renewed = each client's most recent plan has already ended,
       // so they have no current coverage and haven't been renewed.
+      // "stopped" customers deliberately churned — don't chase them for renewal.
       const latestPlan = new Map<string, any>();
       for (const p of plans) {
         const cur = latestPlan.get(p.user_id);
         if (!cur || p.end_date > cur.end_date) latestPlan.set(p.user_id, p);
       }
       const notRenewed: LapsedRow[] = [...latestPlan.values()]
-        .filter((p) => p.end_date < todayISO || p.status === "cancelled" || p.status === "completed")
+        .filter((p) => p.status !== "stopped" && (p.end_date < todayISO || p.status === "cancelled" || p.status === "completed"))
         .map((p) => ({
           userId: p.user_id,
           name: profName.get(p.user_id) ?? "—",
