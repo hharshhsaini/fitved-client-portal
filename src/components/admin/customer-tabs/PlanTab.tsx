@@ -16,13 +16,14 @@ import {
 } from "@/lib/sessionPlan";
 import { CustomPlanPrices } from "./CustomPlanPrices";
 
-// Two statuses only: a plan is either running or it has ended. Pauses are
-// tracked in the pauses table and never change the plan status; legacy
+// Plan lifecycle: "active" (running), "completed" (ran its course and ended),
+// or "stopped" (customer stopped buying plans / churned — admin-set). Pauses
+// are tracked in the pauses table and never change the plan status; legacy
 // "paused"/"cancelled" rows are shown as completed.
-type PlanStatus = "active" | "completed";
+type PlanStatus = "active" | "completed" | "stopped";
 
 const normalizeStatus = (s: string | null | undefined): PlanStatus =>
-  s === "active" ? "active" : "completed";
+  s === "active" ? "active" : s === "stopped" ? "stopped" : "completed";
 
 const isValidDate = (dStr: string) => {
   if (!dStr) return false;
@@ -89,7 +90,11 @@ export function PlanTab({ userId }: { userId: string }) {
   // session count and price, without touching the Plans catalog.
   const [customPlan, setCustomPlan] = useState(false);
   useEffect(() => {
-    if (plan && plan.status === "active") {
+    // Load the latest plan whatever its status, so the Status dropdown always
+    // reflects reality (a completed/stopped plan must not show as "Active" here
+    // while the customer list shows "completed"). The next cycle is started via
+    // the "Renew / extend" section below, not by blanking this form.
+    if (plan) {
       setTotalSessions(plan.total_sessions);
       setTrainingDays(plan.training_days ?? []);
       setStartDate(plan.start_date);
@@ -101,7 +106,7 @@ export function PlanTab({ userId }: { userId: string }) {
       setAutoRenew(plan.auto_renew);
       setStatus(normalizeStatus(plan.status));
     } else {
-      // Clear inputs for new plan creation if no plan exists or latest plan has ended
+      // Clear inputs for new plan creation when no plan exists at all
       setTotalSessions(12);
       setTrainingDays([]);
       setStartDate(new Date().toISOString().slice(0, 10));
@@ -178,7 +183,9 @@ export function PlanTab({ userId }: { userId: string }) {
   const save = useMutation({
     mutationFn: async () => {
       if (!trainingDays.length) throw new Error("Select at least one training day");
-      const payload = {
+      // `any` payload: the generated types don't yet include the "stopped"
+      // status enum value (added by migration 20260807120000).
+      const payload: any = {
         user_id: userId,
         total_sessions: totalSessions,
         training_days: trainingDays,
@@ -191,7 +198,7 @@ export function PlanTab({ userId }: { userId: string }) {
         auto_renew: autoRenew,
         status,
       };
-      if (plan && plan.status === "active") {
+      if (plan) {
         const { data, error } = await supabase.from("plans").update(payload).eq("id", plan.id).select();
         if (error) throw error;
         if (!data || data.length === 0) {
@@ -323,6 +330,13 @@ export function PlanTab({ userId }: { userId: string }) {
         );
         return;
       }
+      // The "stopped" status needs the plan_status enum widened in the live DB.
+      if (/invalid input value for enum plan_status|plan_status/i.test(raw)) {
+        toast.error(
+          "The 'Stopped' status isn't enabled on the database yet. Run migration 20260807120000_plan_status_add_stopped.sql in Supabase.",
+        );
+        return;
+      }
       toast.error(raw);
     },
   });
@@ -388,7 +402,7 @@ export function PlanTab({ userId }: { userId: string }) {
 
   // A loaded plan whose session count isn't in the catalog is a custom plan.
   useEffect(() => {
-    if (plan && plan.status === "active" && planOptions.length > 0) {
+    if (plan && planOptions.length > 0) {
       const inCatalog =
         plan.total_sessions === 8 ||
         planOptions.some((o) => o.total_sessions === plan.total_sessions);
@@ -672,10 +686,12 @@ export function PlanTab({ userId }: { userId: string }) {
             <SelectContent>
               <SelectItem value="active">Active — plan is running</SelectItem>
               <SelectItem value="completed">Completed — plan has ended</SelectItem>
+              <SelectItem value="stopped">Stopped — customer stopped buying plans</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
             Pauses don't change this — manage breaks in the Pauses tab. Expired plans complete automatically.
+            {status === "stopped" && " Marking Stopped keeps existing records but won't add any new billing."}
           </p>
         </div>
       </div>
@@ -691,7 +707,7 @@ export function PlanTab({ userId }: { userId: string }) {
       </div>
 
       <Button onClick={() => save.mutate()} disabled={save.isPending}>
-        {save.isPending ? "Saving…" : (plan && plan.status === "active") ? "Update plan" : "Create plan"}
+        {save.isPending ? "Saving…" : plan ? "Update plan" : "Create plan"}
       </Button>
 
       {/* Manual renewal / extension — the only way a plan rolls into its next cycle */}

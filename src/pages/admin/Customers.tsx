@@ -121,7 +121,7 @@ export default function Customers() {
                   <TableCell className="hidden lg:table-cell">{c.trainer_name ?? "—"}</TableCell>
                   <TableCell>{c.plan_type ?? "—"}</TableCell>
                   <TableCell>
-                    <Badge variant={c.plan_status === "active" ? "secondary" : "outline"}>
+                    <Badge variant={c.plan_status === "active" ? "secondary" : c.plan_status === "stopped" ? "destructive" : "outline"}>
                       {c.plan_status ?? "no plan"}
                     </Badge>
                   </TableCell>
