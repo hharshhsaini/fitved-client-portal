@@ -31,6 +31,7 @@ import FaqsPage from "./pages/FaqsPage";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import TrainerReferrals from "./pages/TrainerReferrals";
 import NotFound from "./pages/NotFound";
+import GeoLandingPage from "./pages/GeoLandingPage";
 import BlogLanding from "./pages/blog/BlogLanding";
 import ArticleDetailPage from "./pages/blog/ArticleDetailPage";
 import RecipeDetailPage from "./pages/blog/RecipeDetailPage";
@@ -147,6 +148,40 @@ const App = () => (
               <Route path="/blog/calculators" element={<CalculatorsPage />} />
 
               <Route path="/faqs.html" element={<FaqsPage />} />
+
+              {/* Geo SEO landing pages — all handled by one data-driven component */}
+              <Route path="/personal-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/online-personal-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/female-personal-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/strength-training/*" element={<GeoLandingPage />} />
+              <Route path="/vegetarian-muscle-building/*" element={<GeoLandingPage />} />
+              <Route path="/yoga/*" element={<GeoLandingPage />} />
+              <Route path="/yoga-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/online-yoga/*" element={<GeoLandingPage />} />
+              <Route path="/prenatal-yoga/*" element={<GeoLandingPage />} />
+              <Route path="/pilates-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/weight-loss-coach/*" element={<GeoLandingPage />} />
+              <Route path="/fat-loss-trainer/*" element={<GeoLandingPage />} />
+              <Route path="/powerlifting-coach/*" element={<GeoLandingPage />} />
+              <Route path="/pcos-fitness-coach/*" element={<GeoLandingPage />} />
+              <Route path="/diabetes-fitness-coach/*" element={<GeoLandingPage />} />
+              <Route path="/thyroid-fitness-coach/*" element={<GeoLandingPage />} />
+              <Route path="/diabetes-reversal-coach/*" element={<GeoLandingPage />} />
+              <Route path="/glp1-mounjaro-coach/*" element={<GeoLandingPage />} />
+              <Route path="/postpartum-weight-loss/*" element={<GeoLandingPage />} />
+              <Route path="/diastasis-recti-recovery/*" element={<GeoLandingPage />} />
+              <Route path="/post-pregnancy-weight-loss-coach/*" element={<GeoLandingPage />} />
+              <Route path="/lactation-safe-weight-loss/*" element={<GeoLandingPage />} />
+              <Route path="/corporate-wellness/*" element={<GeoLandingPage />} />
+              <Route path="/compare/*" element={<GeoLandingPage />} />
+              <Route path="/bmi-calculator" element={<GeoLandingPage />} />
+              <Route path="/calorie-calculator" element={<GeoLandingPage />} />
+              <Route path="/macro-calculator" element={<GeoLandingPage />} />
+              <Route path="/ideal-weight-calculator" element={<GeoLandingPage />} />
+              <Route path="/tdee-calculator" element={<GeoLandingPage />} />
+              <Route path="/daily-calorie-burn-calculator" element={<GeoLandingPage />} />
+              <Route path="/indian-fat-loss-guide" element={<GeoLandingPage />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </PauseProvider>
