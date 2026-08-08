@@ -13,7 +13,8 @@
     { "source": "/online-training.html", "destination": "/online-training", "permanent": true },
     { "source": "/service-areas.html", "destination": "/service-areas", "permanent": true },
     { "source": "/faqs.html", "destination": "/faqs", "permanent": true },
-    { "source": "/blog/is-a-personal-trainer-worth-it-in-india.html", "destination": "/blog/is-a-personal-trainer-worth-it-in-india", "permanent": true }
+    { "source": "/blog/is-a-personal-trainer-worth-it-in-india.html", "destination": "/blog/is-a-personal-trainer-worth-it-in-india", "permanent": true },
+    { "source": "/corporate.html", "destination": "/corporate", "permanent": true }
   ],
   "rewrites": [
     { "source": "/prenatal-postnatal-yoga", "destination": "/prenatal-postnatal-yoga-bangalore.html" },
