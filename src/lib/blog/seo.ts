@@ -1,6 +1,6 @@
 import { BlogArticle, BlogAuthor, FAQItem, RecipeDetails } from "./types";
 
-export const SITE_URL = "https://getfitved.com";
+export const SITE_URL = "https://www.getfitved.com";
 
 /** Descriptive, SEO-friendly alt text for an article's featured image. */
 export function articleAlt(article: Pick<BlogArticle, "title" | "tags" | "image_alt">): string {

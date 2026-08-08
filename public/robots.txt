@@ -8,6 +8,16 @@ Allow: /blog/
 Allow: /blog/*
 Allow: /faqs
 Allow: /personal-training
+Allow: /online-training
+Allow: /service-areas
+Allow: /yoga-classes-bangalore
+Allow: /weight-loss-program-bangalore
+Allow: /strength-training-bangalore
+Allow: /senior-fitness-bangalore
+Allow: /prenatal-postnatal-yoga
+Allow: /clinical-fitness-bangalore
+Allow: /womens-fitness-bangalore
+Allow: /diet-coaching-bangalore
 Allow: /personal-trainer/
 Allow: /online-personal-trainer/
 Allow: /female-personal-trainer/
@@ -69,4 +79,4 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-Sitemap: https://getfitved.com/sitemap.xml
+Sitemap: https://www.getfitved.com/sitemap.xml

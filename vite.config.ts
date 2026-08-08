@@ -25,6 +25,7 @@ const CLEAN_URL_MAP: Record<string, string> = {
   "/online-training": "online-training.html",
   "/service-areas": "service-areas.html",
   "/faqs": "faqs.html",
+  "/corporate": "corporate.html",
 };
 
 function serveCleanUrls(publicDir: string): Connect.NextHandleFunction {
