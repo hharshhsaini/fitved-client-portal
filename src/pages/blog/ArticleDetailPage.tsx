@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, Navigate } from "react-router-dom";
 import { ARTICLES_DATA } from "@/data/blog/articles";
+import slugRedirects from "@/data/blog/slugRedirects.json";
 import { AUTHORS_DATA } from "@/data/blog/authors";
 import { BlogArticle } from "@/lib/blog/types";
 import { BlogLayout } from "@/components/blog/BlogLayout";
@@ -24,7 +25,9 @@ export default function ArticleDetailPage() {
   const [copied, setCopied] = useState(false);
   const [trialModalOpen, setTrialModalOpen] = useState(false);
 
-  // Find static article from 508 articles dataset cleanly with useMemo
+  const redirectTarget = slug ? (slugRedirects as Record<string, string>)[slug] : undefined;
+  if (redirectTarget) return <Navigate to={`/blog/article/${redirectTarget}`} replace />;
+
   const { article, author, prevArticle, nextArticle, relatedArticles } = React.useMemo(() => {
     const idx = ARTICLES_DATA.findIndex((a) => a.slug === slug);
     const foundArt = idx !== -1 ? ARTICLES_DATA[idx] : ARTICLES_DATA[0];
@@ -61,7 +64,7 @@ export default function ArticleDetailPage() {
   const breadcrumbs = [
     { name: "Home", url: "/" },
     { name: "FitVed Journal", url: "/blog" },
-    { name: article.title, url: `/blog/article/${article.slug}` },
+    { name: article.display_title || article.title, url: `/blog/article/${article.slug}` },
   ];
 
   const articleSchema = generateArticleSchema(article, author);
@@ -105,7 +108,7 @@ export default function ArticleDetailPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground leading-tight">
-            {article.title}
+            {article.display_title || article.title}
           </h1>
 
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">

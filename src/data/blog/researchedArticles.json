@@ -2,7 +2,7 @@
   {
     "id": "r-001",
     "title": "How Much Protein Should an Indian Eat Per Day?",
-    "slug": "how-much-protein-per-day-indian",
+    "slug": "daily-protein-intake",
     "summary": "A practical, science-backed breakdown of daily protein targets for Indians by body weight and goal, plus how to actually hit them on a vegetarian or non-veg diet.",
     "featured_image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=1200&q=80",
     "published_at": "2026-08-01T09:00:00Z",
@@ -21,7 +21,7 @@
     "published": true,
     "seo_title": "How Much Protein Should an Indian Eat Per Day? | FitVed",
     "seo_description": "Find your exact daily protein target by body weight and goal, and see how to hit 80-120g on an Indian vegetarian or non-vegetarian diet.",
-    "canonical_url": "https://www.getfitved.com/blog/article/how-much-protein-per-day-indian",
+    "canonical_url": "https://www.getfitved.com/blog/article/daily-protein-intake",
     "topic_hub_slug": "high-protein-indian-diet",
     "content": {
       "keyTakeaways": [
@@ -104,7 +104,7 @@
   {
     "id": "r-002",
     "title": "The 12 Best Vegetarian Protein Sources in India (With Numbers)",
-    "slug": "best-vegetarian-protein-sources-india",
+    "slug": "vegetarian-protein-sources",
     "summary": "Ranked, real protein content of everyday Indian vegetarian foods — from soya chunks and paneer to sattu and rajma — so you can build high-protein meals that actually work.",
     "featured_image": "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=1200&q=80",
     "published_at": "2026-07-30T09:00:00Z",
@@ -123,7 +123,7 @@
     "published": true,
     "seo_title": "12 Best Vegetarian Protein Sources in India | FitVed",
     "seo_description": "A ranked list of high-protein Indian vegetarian foods with exact protein per 100g — soya, paneer, sattu, rajma, chana, tofu and more.",
-    "canonical_url": "https://www.getfitved.com/blog/article/best-vegetarian-protein-sources-india",
+    "canonical_url": "https://www.getfitved.com/blog/article/vegetarian-protein-sources",
     "topic_hub_slug": "high-protein-indian-diet",
     "content": {
       "keyTakeaways": [
@@ -216,7 +216,7 @@
   {
     "id": "r-003",
     "title": "High-Protein Moong Dal Chilla Recipe (18g Protein, 10 Minutes)",
-    "slug": "moong-dal-chilla-recipe",
+    "slug": "high-protein-moong-dal-chilla",
     "summary": "A quick, savoury moong dal chilla that delivers 18 g of protein per serving — the perfect Indian high-protein breakfast for weight loss and muscle maintenance.",
     "featured_image": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=1200&q=80",
     "published_at": "2026-07-29T09:00:00Z",
@@ -236,7 +236,7 @@
     "published": true,
     "seo_title": "High-Protein Moong Dal Chilla Recipe (18g Protein) | FitVed",
     "seo_description": "Make a savoury moong dal chilla with 18g protein in 10 minutes. Full ingredients, steps and macro breakdown for an Indian high-protein breakfast.",
-    "canonical_url": "https://www.getfitved.com/blog/recipe/moong-dal-chilla-recipe",
+    "canonical_url": "https://www.getfitved.com/blog/recipe/high-protein-moong-dal-chilla",
     "recipe_details": {
       "prep_time_mins": 5,
       "cook_time_mins": 10,
@@ -286,7 +286,7 @@
   {
     "id": "r-004",
     "title": "Soya Chunks: Benefits, Protein, and How to Eat Them",
-    "slug": "soya-chunks-protein-benefits",
+    "slug": "soya-chunks-protein",
     "summary": "Why soya chunks (meal maker) are the most cost-effective protein in India, how much to eat, and how to cook them so they actually taste good.",
     "featured_image": "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=1200&q=80",
     "published_at": "2026-07-28T09:00:00Z",
@@ -305,7 +305,7 @@
     "published": true,
     "seo_title": "Soya Chunks Benefits & Protein Content | FitVed",
     "seo_description": "Soya chunks pack ~52g protein per 100g. Learn the benefits, how much to eat safely, and the best way to cook them for muscle and fat loss.",
-    "canonical_url": "https://www.getfitved.com/blog/article/soya-chunks-protein-benefits",
+    "canonical_url": "https://www.getfitved.com/blog/article/soya-chunks-protein",
     "topic_hub_slug": "high-protein-indian-diet",
     "content": {
       "keyTakeaways": [
@@ -352,7 +352,7 @@
   {
     "id": "r-005",
     "title": "How to Lose Belly Fat on an Indian Diet (Without Giving Up Rice)",
-    "slug": "how-to-lose-belly-fat-indian-diet",
+    "slug": "lose-belly-fat-indian-diet",
     "summary": "The real science of belly fat loss for Indians — why spot reduction is a myth, how to build a sustainable calorie deficit, and which home foods to prioritise.",
     "featured_image": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=1200&q=80",
     "published_at": "2026-07-27T09:00:00Z",
@@ -371,7 +371,7 @@
     "published": true,
     "seo_title": "How to Lose Belly Fat on an Indian Diet | FitVed",
     "seo_description": "A science-backed guide to losing belly fat on Indian food — calorie deficit, protein, walking and the home foods that help you lose fat without cutting rice.",
-    "canonical_url": "https://www.getfitved.com/blog/article/how-to-lose-belly-fat-indian-diet",
+    "canonical_url": "https://www.getfitved.com/blog/article/lose-belly-fat-indian-diet",
     "topic_hub_slug": "weight-loss-strategy",
     "content": {
       "keyTakeaways": [
@@ -453,7 +453,7 @@
   {
     "id": "r-006",
     "title": "Calorie Deficit Explained Using Indian Food",
-    "slug": "calorie-deficit-explained-indian-food",
+    "slug": "calorie-deficit-indian-food",
     "summary": "What a calorie deficit really is, how to estimate your maintenance calories, and how to apply it to everyday Indian meals without counting every grain of rice.",
     "featured_image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
     "published_at": "2026-07-26T09:00:00Z",
@@ -472,7 +472,7 @@
     "published": true,
     "seo_title": "Calorie Deficit Explained with Indian Food | FitVed",
     "seo_description": "Understand calorie deficit using real Indian meals. Learn to estimate maintenance calories and lose fat without obsessive counting.",
-    "canonical_url": "https://www.getfitved.com/blog/article/calorie-deficit-explained-indian-food",
+    "canonical_url": "https://www.getfitved.com/blog/article/calorie-deficit-indian-food",
     "topic_hub_slug": "weight-loss-strategy",
     "content": {
       "keyTakeaways": [
@@ -523,7 +523,7 @@
   {
     "id": "r-007",
     "title": "Walking for Weight Loss: How Many Steps Do You Actually Need?",
-    "slug": "walking-for-weight-loss-steps",
+    "slug": "walking-for-weight-loss",
     "summary": "How walking drives fat loss, the real truth about the 10,000-step target, and how to fit steps into a busy Indian work schedule.",
     "featured_image": "https://images.unsplash.com/photo-1461897104016-0b3b00cc81ee?w=1200&q=80",
     "published_at": "2026-07-25T09:00:00Z",
@@ -542,7 +542,7 @@
     "published": true,
     "seo_title": "Walking for Weight Loss: How Many Steps? | FitVed",
     "seo_description": "Does walking burn fat? Learn how many steps you really need for weight loss and how to fit them into a busy day.",
-    "canonical_url": "https://www.getfitved.com/blog/article/walking-for-weight-loss-steps",
+    "canonical_url": "https://www.getfitved.com/blog/article/walking-for-weight-loss",
     "topic_hub_slug": "weight-loss-strategy",
     "content": {
       "keyTakeaways": [
@@ -588,7 +588,7 @@
   {
     "id": "r-008",
     "title": "PCOS Diet Plan: A 7-Day Indian Meal Guide",
-    "slug": "pcos-diet-plan-indian",
+    "slug": "pcos-diet-plan",
     "summary": "A practical, low-GI Indian eating framework for PCOS that helps manage insulin resistance, cravings and weight — with a sample day and food swaps.",
     "featured_image": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=1200&q=80",
     "published_at": "2026-07-24T09:00:00Z",
@@ -608,7 +608,7 @@
     "published": true,
     "seo_title": "PCOS Diet Plan: 7-Day Indian Meal Guide | FitVed",
     "seo_description": "A low-GI Indian PCOS diet framework to manage insulin resistance and weight, with a sample day, food swaps and protein-first meal structure.",
-    "canonical_url": "https://www.getfitved.com/blog/article/pcos-diet-plan-indian",
+    "canonical_url": "https://www.getfitved.com/blog/article/pcos-diet-plan",
     "topic_hub_slug": "pcos-hormone-health",
     "content": {
       "keyTakeaways": [
@@ -682,7 +682,7 @@
   {
     "id": "r-009",
     "title": "Low-GI Indian Foods for Diabetes and Blood Sugar Control",
-    "slug": "low-gi-indian-foods-diabetes",
+    "slug": "low-gi-indian-foods",
     "summary": "A guide to low-glycaemic Indian foods that help manage type 2 diabetes and prediabetes, plus meal-building rules to flatten your blood sugar curve.",
     "featured_image": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=1200&q=80",
     "published_at": "2026-07-23T09:00:00Z",
@@ -701,7 +701,7 @@
     "published": true,
     "seo_title": "Low-GI Indian Foods for Diabetes | FitVed",
     "seo_description": "The best low-glycaemic Indian foods for diabetes and prediabetes, with simple meal rules to control blood sugar and HbA1c.",
-    "canonical_url": "https://www.getfitved.com/blog/article/low-gi-indian-foods-diabetes",
+    "canonical_url": "https://www.getfitved.com/blog/article/low-gi-indian-foods",
     "content": {
       "keyTakeaways": [
         "The glycaemic index (GI) ranks how fast a food raises blood sugar; lower-GI meals produce gentler, steadier rises.",
@@ -769,7 +769,7 @@
   {
     "id": "r-010",
     "title": "Creatine for Indians: A Complete Beginner's Guide",
-    "slug": "creatine-guide-india",
+    "slug": "creatine-for-beginners",
     "summary": "What creatine does, how to take it, whether you need to load, and how to choose a good creatine monohydrate in India — backed by decades of research.",
     "featured_image": "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1200&q=80",
     "published_at": "2026-07-22T09:00:00Z",
@@ -788,7 +788,7 @@
     "published": true,
     "seo_title": "Creatine for Indians: Complete Beginner's Guide | FitVed",
     "seo_description": "How creatine works, correct dosage, whether to load, and how to pick creatine monohydrate in India. Evidence-based and simple.",
-    "canonical_url": "https://www.getfitved.com/blog/article/creatine-guide-india",
+    "canonical_url": "https://www.getfitved.com/blog/article/creatine-for-beginners",
     "content": {
       "keyTakeaways": [
         "Creatine monohydrate is the most researched, effective and safe sports supplement available.",
@@ -839,7 +839,7 @@
   {
     "id": "r-011",
     "title": "Vitamin D Deficiency in India: Signs, Causes and Fixes",
-    "slug": "vitamin-d-deficiency-india",
+    "slug": "vitamin-d-deficiency",
     "summary": "Why vitamin D deficiency is so common in India despite the sunshine, the symptoms to watch for, and how to correct it through sun, food and supplements.",
     "featured_image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1200&q=80",
     "published_at": "2026-07-21T09:00:00Z",
@@ -858,7 +858,7 @@
     "published": true,
     "seo_title": "Vitamin D Deficiency in India: Signs & Fixes | FitVed",
     "seo_description": "Vitamin D deficiency is common in India. Learn the symptoms, why it happens despite sunshine, and how to fix it with sun, food and supplements.",
-    "canonical_url": "https://www.getfitved.com/blog/article/vitamin-d-deficiency-india",
+    "canonical_url": "https://www.getfitved.com/blog/article/vitamin-d-deficiency",
     "content": {
       "keyTakeaways": [
         "A large share of Indians are vitamin D deficient despite abundant sunshine.",
@@ -909,7 +909,7 @@
   {
     "id": "r-012",
     "title": "A Beginner's No-Equipment Home Workout (Full Body)",
-    "slug": "beginner-home-workout-no-equipment",
+    "slug": "beginner-home-workout",
     "summary": "A simple, effective full-body home workout using only bodyweight — perfect for beginners who want to build strength and lose fat without a gym.",
     "featured_image": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80",
     "published_at": "2026-07-20T09:00:00Z",
@@ -928,7 +928,7 @@
     "published": true,
     "seo_title": "Beginner No-Equipment Home Workout (Full Body) | FitVed",
     "seo_description": "A beginner-friendly full-body home workout with no equipment. Build strength and burn fat with simple bodyweight moves you can do anywhere.",
-    "canonical_url": "https://www.getfitved.com/blog/article/beginner-home-workout-no-equipment",
+    "canonical_url": "https://www.getfitved.com/blog/article/beginner-home-workout",
     "content": {
       "keyTakeaways": [
         "You can build real strength and lose fat at home with only bodyweight exercises.",
@@ -1005,7 +1005,7 @@
   {
     "id": "r-013",
     "title": "Whey vs Plant Protein: Which Is Better for Indians?",
-    "slug": "whey-vs-plant-protein-comparison",
+    "slug": "whey-vs-plant-protein",
     "summary": "A head-to-head comparison of whey and plant protein on quality, digestion, cost and results, to help Indian vegetarians and non-vegetarians choose.",
     "featured_image": "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=80",
     "published_at": "2026-07-19T09:00:00Z",
@@ -1025,7 +1025,7 @@
     "published": true,
     "seo_title": "Whey vs Plant Protein for Indians | FitVed",
     "seo_description": "Whey vs plant protein compared on quality, digestion, cost and muscle results — which protein powder should Indians choose?",
-    "canonical_url": "https://www.getfitved.com/blog/compare/whey-vs-plant-protein-comparison",
+    "canonical_url": "https://www.getfitved.com/blog/compare/whey-vs-plant-protein",
     "comparison_details": {
       "optionA": {
         "name": "Whey Protein",
