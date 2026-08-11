@@ -8,7 +8,11 @@
     "published_at": "2026-08-01T09:00:00Z",
     "updated_at": "2026-08-04T09:00:00Z",
     "reading_time": 7,
-    "tags": ["Protein", "Nutrition", "Indian Diet"],
+    "tags": [
+      "Protein",
+      "Nutrition",
+      "Indian Diet"
+    ],
     "category_id": "cat-4",
     "author_id": "author-1",
     "is_featured": false,
@@ -42,10 +46,26 @@
           "type": "nutrition_table",
           "title": "Protein Needs per kg of Body Weight",
           "tableData": [
-            { "Goal": "Sedentary / general health", "Protein per kg": "0.8 - 1.0 g", "Example (70 kg)": "56 - 70 g" },
-            { "Goal": "Active / fat loss", "Protein per kg": "1.6 - 2.0 g", "Example (70 kg)": "112 - 140 g" },
-            { "Goal": "Muscle gain", "Protein per kg": "1.6 - 2.2 g", "Example (70 kg)": "112 - 154 g" },
-            { "Goal": "Older adults (55+)", "Protein per kg": "1.2 - 1.5 g", "Example (70 kg)": "84 - 105 g" }
+            {
+              "Goal": "Sedentary / general health",
+              "Protein per kg": "0.8 - 1.0 g",
+              "Example (70 kg)": "56 - 70 g"
+            },
+            {
+              "Goal": "Active / fat loss",
+              "Protein per kg": "1.6 - 2.0 g",
+              "Example (70 kg)": "112 - 140 g"
+            },
+            {
+              "Goal": "Muscle gain",
+              "Protein per kg": "1.6 - 2.2 g",
+              "Example (70 kg)": "112 - 154 g"
+            },
+            {
+              "Goal": "Older adults (55+)",
+              "Protein per kg": "1.2 - 1.5 g",
+              "Example (70 kg)": "84 - 105 g"
+            }
           ]
         },
         {
@@ -70,9 +90,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Is too much protein bad for the kidneys?", "answer": "In people with healthy kidneys, higher protein intakes up to 2 g/kg have not been shown to cause harm. Those with existing kidney disease should follow a doctor's guidance." },
-      { "question": "Can I get enough protein as a vegetarian?", "answer": "Yes. Combining dairy (paneer, curd, milk), soya, pulses and a scoop of whey easily reaches 100-120 g per day for most people." }
-    ]
+      {
+        "question": "Is too much protein bad for the kidneys?",
+        "answer": "In people with healthy kidneys, higher protein intakes up to 2 g/kg have not been shown to cause harm. Those with existing kidney disease should follow a doctor's guidance."
+      },
+      {
+        "question": "Can I get enough protein as a vegetarian?",
+        "answer": "Yes. Combining dairy (paneer, curd, milk), soya, pulses and a scoop of whey easily reaches 100-120 g per day for most people."
+      }
+    ],
+    "display_title": "How Much Protein Do You Need Daily?"
   },
   {
     "id": "r-002",
@@ -83,7 +110,11 @@
     "published_at": "2026-07-30T09:00:00Z",
     "updated_at": "2026-08-03T09:00:00Z",
     "reading_time": 8,
-    "tags": ["Protein", "Vegetarian", "Nutrition"],
+    "tags": [
+      "Protein",
+      "Vegetarian",
+      "Nutrition"
+    ],
     "category_id": "cat-4",
     "author_id": "author-1",
     "is_featured": false,
@@ -112,14 +143,46 @@
           "type": "nutrition_table",
           "title": "Protein Content of Indian Vegetarian Foods (per 100 g)",
           "tableData": [
-            { "Food": "Soya chunks (dry)", "Protein": "52 g", "Notes": "Most cost-effective; soak before cooking" },
-            { "Food": "Tofu (soya paneer)", "Protein": "17 g", "Notes": "Low-fat, absorbs flavour well" },
-            { "Food": "Paneer (low-fat)", "Protein": "22 g", "Notes": "Complete protein; watch the fat" },
-            { "Food": "Sattu (roasted gram flour)", "Protein": "20 g", "Notes": "Great in drinks and parathas" },
-            { "Food": "Rajma (boiled)", "Protein": "9 g", "Notes": "Pair with rice for complete protein" },
-            { "Food": "Kala chana (boiled)", "Protein": "9 g", "Notes": "High fibre, low GI" },
-            { "Food": "Hung curd / Greek yogurt", "Protein": "10 g", "Notes": "Double the protein of normal curd" },
-            { "Food": "Moong dal (cooked)", "Protein": "7 g", "Notes": "Easy to digest" }
+            {
+              "Food": "Soya chunks (dry)",
+              "Protein": "52 g",
+              "Notes": "Most cost-effective; soak before cooking"
+            },
+            {
+              "Food": "Tofu (soya paneer)",
+              "Protein": "17 g",
+              "Notes": "Low-fat, absorbs flavour well"
+            },
+            {
+              "Food": "Paneer (low-fat)",
+              "Protein": "22 g",
+              "Notes": "Complete protein; watch the fat"
+            },
+            {
+              "Food": "Sattu (roasted gram flour)",
+              "Protein": "20 g",
+              "Notes": "Great in drinks and parathas"
+            },
+            {
+              "Food": "Rajma (boiled)",
+              "Protein": "9 g",
+              "Notes": "Pair with rice for complete protein"
+            },
+            {
+              "Food": "Kala chana (boiled)",
+              "Protein": "9 g",
+              "Notes": "High fibre, low GI"
+            },
+            {
+              "Food": "Hung curd / Greek yogurt",
+              "Protein": "10 g",
+              "Notes": "Double the protein of normal curd"
+            },
+            {
+              "Food": "Moong dal (cooked)",
+              "Protein": "7 g",
+              "Notes": "Easy to digest"
+            }
           ]
         },
         {
@@ -139,9 +202,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Do soya chunks lower testosterone in men?", "answer": "No. Research shows moderate soya intake (up to ~50 g dry per day) does not meaningfully affect testosterone or estrogen in men." },
-      { "question": "Is paneer or tofu better?", "answer": "Paneer has more protein per 100 g and is a complete dairy protein; tofu is lower in fat and suits vegans. Both are excellent — choose based on your calorie and diet preference." }
-    ]
+      {
+        "question": "Do soya chunks lower testosterone in men?",
+        "answer": "No. Research shows moderate soya intake (up to ~50 g dry per day) does not meaningfully affect testosterone or estrogen in men."
+      },
+      {
+        "question": "Is paneer or tofu better?",
+        "answer": "Paneer has more protein per 100 g and is a complete dairy protein; tofu is lower in fat and suits vegans. Both are excellent — choose based on your calorie and diet preference."
+      }
+    ],
+    "display_title": "12 Vegetarian Protein Sources in India"
   },
   {
     "id": "r-003",
@@ -152,7 +222,12 @@
     "published_at": "2026-07-29T09:00:00Z",
     "updated_at": "2026-08-02T09:00:00Z",
     "reading_time": 5,
-    "tags": ["Recipes", "High Protein", "Breakfast", "Vegetarian"],
+    "tags": [
+      "Recipes",
+      "High Protein",
+      "Breakfast",
+      "Vegetarian"
+    ],
     "category_id": "cat-5",
     "author_id": "author-1",
     "is_featured": false,
@@ -161,7 +236,7 @@
     "published": true,
     "seo_title": "High-Protein Moong Dal Chilla Recipe (18g Protein) | FitVed",
     "seo_description": "Make a savoury moong dal chilla with 18g protein in 10 minutes. Full ingredients, steps and macro breakdown for an Indian high-protein breakfast.",
-    "canonical_url": "https://www.getfitved.com/blog/article/moong-dal-chilla-recipe",
+    "canonical_url": "https://www.getfitved.com/blog/recipe/moong-dal-chilla-recipe",
     "recipe_details": {
       "prep_time_mins": 5,
       "cook_time_mins": 10,
@@ -188,7 +263,9 @@
         "Cook 2-3 minutes until the base is golden, flip and cook the other side.",
         "Optional: add grated paneer, fold, and serve hot with mint chutney or curd."
       ],
-      "tips": ["Add the besan for a firmer chilla and an extra 4-5 g of protein per serving."]
+      "tips": [
+        "Add the besan for a firmer chilla and an extra 4-5 g of protein per serving."
+      ]
     },
     "content": {
       "keyTakeaways": [
@@ -203,7 +280,8 @@
           "content": "Most Indian breakfasts — poha, upma, paratha — are carb-heavy and protein-light, which leaves you hungry by 11 am. The moong dal chilla flips that ratio: it is protein-forward, high in fibre, and keeps you full through the morning, making it ideal for fat loss and busy workdays."
         }
       ]
-    }
+    },
+    "display_title": "High-Protein Moong Dal Chilla"
   },
   {
     "id": "r-004",
@@ -214,7 +292,11 @@
     "published_at": "2026-07-28T09:00:00Z",
     "updated_at": "2026-08-01T09:00:00Z",
     "reading_time": 6,
-    "tags": ["Protein", "Vegetarian", "Nutrition"],
+    "tags": [
+      "Protein",
+      "Vegetarian",
+      "Nutrition"
+    ],
     "category_id": "cat-4",
     "author_id": "author-1",
     "is_featured": false,
@@ -256,9 +338,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "How many soya chunks should I eat per day?", "answer": "25-50 g dry (about a handful to two handfuls) is a practical daily amount, providing 13-26 g of protein." },
-      { "question": "Are soya chunks good for weight loss?", "answer": "Yes. They are high in protein and fibre and low in fat once boiled, which keeps you full on fewer calories." }
-    ]
+      {
+        "question": "How many soya chunks should I eat per day?",
+        "answer": "25-50 g dry (about a handful to two handfuls) is a practical daily amount, providing 13-26 g of protein."
+      },
+      {
+        "question": "Are soya chunks good for weight loss?",
+        "answer": "Yes. They are high in protein and fibre and low in fat once boiled, which keeps you full on fewer calories."
+      }
+    ],
+    "display_title": "Soya Chunks: Protein, Benefits & Uses"
   },
   {
     "id": "r-005",
@@ -269,7 +358,11 @@
     "published_at": "2026-07-27T09:00:00Z",
     "updated_at": "2026-08-01T09:00:00Z",
     "reading_time": 8,
-    "tags": ["Weight Loss", "Fat Loss", "Indian Diet"],
+    "tags": [
+      "Weight Loss",
+      "Fat Loss",
+      "Indian Diet"
+    ],
     "category_id": "cat-2",
     "author_id": "author-1",
     "is_featured": false,
@@ -307,10 +400,26 @@
           "type": "nutrition_table",
           "title": "Easy Indian Swaps to Cut ~200-300 Calories",
           "tableData": [
-            { "Instead of": "2 aloo parathas with butter", "Choose": "2 moong dal chillas", "Saves": "~250 kcal" },
-            { "Instead of": "Fried samosa (evening)", "Choose": "Roasted chana + curd", "Saves": "~200 kcal" },
-            { "Instead of": "Full-fat paneer curry", "Choose": "Low-fat paneer, less oil", "Saves": "~180 kcal" },
-            { "Instead of": "Sugary cola", "Choose": "Nimbu paani (no sugar)", "Saves": "~150 kcal" }
+            {
+              "Instead of": "2 aloo parathas with butter",
+              "Choose": "2 moong dal chillas",
+              "Saves": "~250 kcal"
+            },
+            {
+              "Instead of": "Fried samosa (evening)",
+              "Choose": "Roasted chana + curd",
+              "Saves": "~200 kcal"
+            },
+            {
+              "Instead of": "Full-fat paneer curry",
+              "Choose": "Low-fat paneer, less oil",
+              "Saves": "~180 kcal"
+            },
+            {
+              "Instead of": "Sugary cola",
+              "Choose": "Nimbu paani (no sugar)",
+              "Saves": "~150 kcal"
+            }
           ]
         },
         {
@@ -330,9 +439,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Do I have to stop eating rice to lose belly fat?", "answer": "No. Rice fits fine within a calorie deficit. Portion it sensibly and pair it with protein, vegetables and dal." },
-      { "question": "How long does it take to lose belly fat?", "answer": "At a 300-500 calorie deficit, most people lose 0.3-0.5 kg per week. Visible belly fat reduction usually takes 6-12 weeks of consistency." }
-    ]
+      {
+        "question": "Do I have to stop eating rice to lose belly fat?",
+        "answer": "No. Rice fits fine within a calorie deficit. Portion it sensibly and pair it with protein, vegetables and dal."
+      },
+      {
+        "question": "How long does it take to lose belly fat?",
+        "answer": "At a 300-500 calorie deficit, most people lose 0.3-0.5 kg per week. Visible belly fat reduction usually takes 6-12 weeks of consistency."
+      }
+    ],
+    "display_title": "Lose Belly Fat Without Giving Up Rice"
   },
   {
     "id": "r-006",
@@ -343,7 +459,11 @@
     "published_at": "2026-07-26T09:00:00Z",
     "updated_at": "2026-07-31T09:00:00Z",
     "reading_time": 7,
-    "tags": ["Weight Loss", "Nutrition", "Fat Loss"],
+    "tags": [
+      "Weight Loss",
+      "Nutrition",
+      "Fat Loss"
+    ],
     "category_id": "cat-2",
     "author_id": "author-1",
     "is_featured": false,
@@ -389,9 +509,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Do I need a food scale?", "answer": "It helps for a few weeks to learn portion sizes, but it is not mandatory. Consistent portion control and weekly weigh-ins are enough for most people." },
-      { "question": "Why has my weight loss stalled?", "answer": "Plateaus usually mean your intake has crept up or your maintenance dropped as you got lighter. Re-check portions and, if needed, reduce calories by another 150-200 or add more steps." }
-    ]
+      {
+        "question": "Do I need a food scale?",
+        "answer": "It helps for a few weeks to learn portion sizes, but it is not mandatory. Consistent portion control and weekly weigh-ins are enough for most people."
+      },
+      {
+        "question": "Why has my weight loss stalled?",
+        "answer": "Plateaus usually mean your intake has crept up or your maintenance dropped as you got lighter. Re-check portions and, if needed, reduce calories by another 150-200 or add more steps."
+      }
+    ],
+    "display_title": "Calorie Deficit with Indian Food"
   },
   {
     "id": "r-007",
@@ -402,7 +529,11 @@
     "published_at": "2026-07-25T09:00:00Z",
     "updated_at": "2026-07-30T09:00:00Z",
     "reading_time": 6,
-    "tags": ["Weight Loss", "Walking", "Home Workouts"],
+    "tags": [
+      "Weight Loss",
+      "Walking",
+      "Home Workouts"
+    ],
     "category_id": "cat-2",
     "author_id": "author-2",
     "is_featured": false,
@@ -443,9 +574,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Is walking enough to lose weight?", "answer": "Walking helps create a calorie deficit, but pairing it with a controlled diet and some strength training gives far better fat-loss and body-composition results." },
-      { "question": "Is it better to walk fast or long?", "answer": "Both help. A brisk pace burns more per minute; a longer easy walk adds more total steps. Do whichever you will actually keep doing." }
-    ]
+      {
+        "question": "Is walking enough to lose weight?",
+        "answer": "Walking helps create a calorie deficit, but pairing it with a controlled diet and some strength training gives far better fat-loss and body-composition results."
+      },
+      {
+        "question": "Is it better to walk fast or long?",
+        "answer": "Both help. A brisk pace burns more per minute; a longer easy walk adds more total steps. Do whichever you will actually keep doing."
+      }
+    ],
+    "display_title": "Walking for Weight Loss: How Much Is Enough?"
   },
   {
     "id": "r-008",
@@ -456,7 +594,12 @@
     "published_at": "2026-07-24T09:00:00Z",
     "updated_at": "2026-07-30T09:00:00Z",
     "reading_time": 9,
-    "tags": ["PCOS", "Women's Health", "Indian Diet", "Nutrition"],
+    "tags": [
+      "PCOS",
+      "Women's Health",
+      "Indian Diet",
+      "Nutrition"
+    ],
     "category_id": "cat-8",
     "author_id": "author-1",
     "is_featured": false,
@@ -490,10 +633,26 @@
           "type": "nutrition_table",
           "title": "Sample Low-GI Indian Day",
           "tableData": [
-            { "Meal": "Breakfast", "Example": "Moong dal chilla + curd", "Why": "Protein-forward, low GI" },
-            { "Meal": "Lunch", "Example": "2 millet rotis + dal + sabzi + salad", "Why": "Fibre + complete protein" },
-            { "Meal": "Snack", "Example": "Roasted chana + green tea", "Why": "Steady energy, no sugar spike" },
-            { "Meal": "Dinner", "Example": "Paneer/tofu + vegetables + small portion rice", "Why": "Protein + controlled carbs" }
+            {
+              "Meal": "Breakfast",
+              "Example": "Moong dal chilla + curd",
+              "Why": "Protein-forward, low GI"
+            },
+            {
+              "Meal": "Lunch",
+              "Example": "2 millet rotis + dal + sabzi + salad",
+              "Why": "Fibre + complete protein"
+            },
+            {
+              "Meal": "Snack",
+              "Example": "Roasted chana + green tea",
+              "Why": "Steady energy, no sugar spike"
+            },
+            {
+              "Meal": "Dinner",
+              "Example": "Paneer/tofu + vegetables + small portion rice",
+              "Why": "Protein + controlled carbs"
+            }
           ]
         },
         {
@@ -509,9 +668,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Should women with PCOS avoid all carbs?", "answer": "No. The goal is better-quality carbs (millets, whole pulses, vegetables, whole fruit) and appropriate portions, not zero carbs, which is hard to sustain and unnecessary." },
-      { "question": "Can diet alone reverse PCOS?", "answer": "Diet can dramatically improve symptoms and insulin sensitivity, but the best results come from combining it with exercise, sleep, stress management and medical guidance." }
-    ]
+      {
+        "question": "Should women with PCOS avoid all carbs?",
+        "answer": "No. The goal is better-quality carbs (millets, whole pulses, vegetables, whole fruit) and appropriate portions, not zero carbs, which is hard to sustain and unnecessary."
+      },
+      {
+        "question": "Can diet alone reverse PCOS?",
+        "answer": "Diet can dramatically improve symptoms and insulin sensitivity, but the best results come from combining it with exercise, sleep, stress management and medical guidance."
+      }
+    ],
+    "display_title": "7-Day Indian Diet Plan for PCOS"
   },
   {
     "id": "r-009",
@@ -522,7 +688,11 @@
     "published_at": "2026-07-23T09:00:00Z",
     "updated_at": "2026-07-29T09:00:00Z",
     "reading_time": 8,
-    "tags": ["Diabetes", "Nutrition", "Indian Diet"],
+    "tags": [
+      "Diabetes",
+      "Nutrition",
+      "Indian Diet"
+    ],
     "category_id": "cat-9",
     "author_id": "author-1",
     "is_featured": false,
@@ -550,10 +720,26 @@
           "type": "nutrition_table",
           "title": "Swap High-GI for Low-GI",
           "tableData": [
-            { "High-GI": "White rice", "Low-GI swap": "Millets (ragi, jowar, bajra) or brown rice", "Benefit": "Slower sugar rise" },
-            { "High-GI": "Maida roti / white bread", "Low-GI swap": "Whole-wheat or mixed-millet roti", "Benefit": "More fibre" },
-            { "High-GI": "Potato-heavy sabzi", "Low-GI swap": "Green leafy + non-starchy veg", "Benefit": "Lower load" },
-            { "High-GI": "Fruit juice", "Low-GI swap": "Whole fruit (guava, apple, pear)", "Benefit": "Fibre slows absorption" }
+            {
+              "High-GI": "White rice",
+              "Low-GI swap": "Millets (ragi, jowar, bajra) or brown rice",
+              "Benefit": "Slower sugar rise"
+            },
+            {
+              "High-GI": "Maida roti / white bread",
+              "Low-GI swap": "Whole-wheat or mixed-millet roti",
+              "Benefit": "More fibre"
+            },
+            {
+              "High-GI": "Potato-heavy sabzi",
+              "Low-GI swap": "Green leafy + non-starchy veg",
+              "Benefit": "Lower load"
+            },
+            {
+              "High-GI": "Fruit juice",
+              "Low-GI swap": "Whole fruit (guava, apple, pear)",
+              "Benefit": "Fibre slows absorption"
+            }
           ]
         },
         {
@@ -569,9 +755,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Can diabetics eat rice?", "answer": "Yes, in controlled portions and ideally paired with protein, dal, vegetables and healthy fat. Choosing millets or brown rice further slows the sugar rise." },
-      { "question": "Are millets good for diabetes?", "answer": "Millets like ragi, jowar and bajra are high in fibre and generally lower-GI than white rice, making them a smart staple for blood-sugar control." }
-    ]
+      {
+        "question": "Can diabetics eat rice?",
+        "answer": "Yes, in controlled portions and ideally paired with protein, dal, vegetables and healthy fat. Choosing millets or brown rice further slows the sugar rise."
+      },
+      {
+        "question": "Are millets good for diabetes?",
+        "answer": "Millets like ragi, jowar and bajra are high in fibre and generally lower-GI than white rice, making them a smart staple for blood-sugar control."
+      }
+    ],
+    "display_title": "Low-GI Indian Foods for Blood Sugar"
   },
   {
     "id": "r-010",
@@ -582,7 +775,11 @@
     "published_at": "2026-07-22T09:00:00Z",
     "updated_at": "2026-07-28T09:00:00Z",
     "reading_time": 7,
-    "tags": ["Supplements", "Creatine", "Muscle Gain"],
+    "tags": [
+      "Supplements",
+      "Creatine",
+      "Muscle Gain"
+    ],
     "category_id": "cat-22",
     "author_id": "author-2",
     "is_featured": false,
@@ -628,9 +825,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Does creatine cause hair loss or kidney damage?", "answer": "In healthy people, research has not shown creatine to cause hair loss or kidney damage at recommended doses. Those with kidney conditions should consult a doctor first." },
-      { "question": "Do I need to cycle off creatine?", "answer": "No. You can take 3-5 g daily continuously. There is no need to cycle off." }
-    ]
+      {
+        "question": "Does creatine cause hair loss or kidney damage?",
+        "answer": "In healthy people, research has not shown creatine to cause hair loss or kidney damage at recommended doses. Those with kidney conditions should consult a doctor first."
+      },
+      {
+        "question": "Do I need to cycle off creatine?",
+        "answer": "No. You can take 3-5 g daily continuously. There is no need to cycle off."
+      }
+    ],
+    "display_title": "Creatine for Beginners: An Indian Guide"
   },
   {
     "id": "r-011",
@@ -641,7 +845,11 @@
     "published_at": "2026-07-21T09:00:00Z",
     "updated_at": "2026-07-27T09:00:00Z",
     "reading_time": 7,
-    "tags": ["Vitamins", "Supplements", "Nutrition"],
+    "tags": [
+      "Vitamins",
+      "Supplements",
+      "Nutrition"
+    ],
     "category_id": "cat-24",
     "author_id": "author-1",
     "is_featured": false,
@@ -687,9 +895,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "How much sunlight do I need for vitamin D?", "answer": "Roughly 15-25 minutes of direct sun on exposed skin (arms, face) several times a week helps, though needs vary by skin tone, season and location." },
-      { "question": "Should everyone take a vitamin D supplement?", "answer": "Not automatically. Get a blood test; if you are deficient, your doctor can recommend an appropriate dose and duration." }
-    ]
+      {
+        "question": "How much sunlight do I need for vitamin D?",
+        "answer": "Roughly 15-25 minutes of direct sun on exposed skin (arms, face) several times a week helps, though needs vary by skin tone, season and location."
+      },
+      {
+        "question": "Should everyone take a vitamin D supplement?",
+        "answer": "Not automatically. Get a blood test; if you are deficient, your doctor can recommend an appropriate dose and duration."
+      }
+    ],
+    "display_title": "Vitamin D Deficiency: Signs & Solutions"
   },
   {
     "id": "r-012",
@@ -700,7 +915,11 @@
     "published_at": "2026-07-20T09:00:00Z",
     "updated_at": "2026-07-26T09:00:00Z",
     "reading_time": 7,
-    "tags": ["Home Workouts", "Beginner Guides", "Fat Loss"],
+    "tags": [
+      "Home Workouts",
+      "Beginner Guides",
+      "Fat Loss"
+    ],
     "category_id": "cat-15",
     "author_id": "author-2",
     "is_featured": false,
@@ -728,11 +947,31 @@
           "type": "workout_table",
           "title": "Full-Body Beginner Routine (3x per week)",
           "tableData": [
-            { "Exercise": "Bodyweight squat", "Sets x Reps": "3 x 12-15", "Targets": "Legs, glutes" },
-            { "Exercise": "Knee or incline push-up", "Sets x Reps": "3 x 8-12", "Targets": "Chest, shoulders, triceps" },
-            { "Exercise": "Reverse lunge", "Sets x Reps": "3 x 10 each leg", "Targets": "Legs, balance" },
-            { "Exercise": "Glute bridge", "Sets x Reps": "3 x 15", "Targets": "Glutes, lower back" },
-            { "Exercise": "Plank", "Sets x Reps": "3 x 20-40 sec", "Targets": "Core" }
+            {
+              "Exercise": "Bodyweight squat",
+              "Sets x Reps": "3 x 12-15",
+              "Targets": "Legs, glutes"
+            },
+            {
+              "Exercise": "Knee or incline push-up",
+              "Sets x Reps": "3 x 8-12",
+              "Targets": "Chest, shoulders, triceps"
+            },
+            {
+              "Exercise": "Reverse lunge",
+              "Sets x Reps": "3 x 10 each leg",
+              "Targets": "Legs, balance"
+            },
+            {
+              "Exercise": "Glute bridge",
+              "Sets x Reps": "3 x 15",
+              "Targets": "Glutes, lower back"
+            },
+            {
+              "Exercise": "Plank",
+              "Sets x Reps": "3 x 20-40 sec",
+              "Targets": "Core"
+            }
           ]
         },
         {
@@ -752,9 +991,16 @@
       ]
     },
     "faq_schema": [
-      { "question": "Can I build muscle without weights?", "answer": "Beginners can build noticeable muscle with bodyweight training by progressing reps, tempo and harder variations. Eventually adding resistance helps continued gains." },
-      { "question": "How often should a beginner work out at home?", "answer": "Three full-body sessions a week with rest days in between is ideal for building strength while allowing recovery." }
-    ]
+      {
+        "question": "Can I build muscle without weights?",
+        "answer": "Beginners can build noticeable muscle with bodyweight training by progressing reps, tempo and harder variations. Eventually adding resistance helps continued gains."
+      },
+      {
+        "question": "How often should a beginner work out at home?",
+        "answer": "Three full-body sessions a week with rest days in between is ideal for building strength while allowing recovery."
+      }
+    ],
+    "display_title": "Beginner Full-Body Home Workout"
   },
   {
     "id": "r-013",
@@ -765,7 +1011,12 @@
     "published_at": "2026-07-19T09:00:00Z",
     "updated_at": "2026-07-25T09:00:00Z",
     "reading_time": 6,
-    "tags": ["Comparison", "Supplements", "Protein", "Whey Protein"],
+    "tags": [
+      "Comparison",
+      "Supplements",
+      "Protein",
+      "Whey Protein"
+    ],
     "category_id": "cat-37",
     "author_id": "author-2",
     "is_featured": false,
@@ -774,7 +1025,7 @@
     "published": true,
     "seo_title": "Whey vs Plant Protein for Indians | FitVed",
     "seo_description": "Whey vs plant protein compared on quality, digestion, cost and muscle results — which protein powder should Indians choose?",
-    "canonical_url": "https://www.getfitved.com/blog/article/whey-vs-plant-protein-comparison",
+    "canonical_url": "https://www.getfitved.com/blog/compare/whey-vs-plant-protein-comparison",
     "comparison_details": {
       "optionA": {
         "name": "Whey Protein",
@@ -808,10 +1059,26 @@
       "winner": "optionA",
       "verdict": "For most people who tolerate dairy, whey offers the best mix of quality, absorption and value. Vegans and the lactose-intolerant should choose a soya or blended plant protein to ensure a complete amino acid profile.",
       "featureMatrix": [
-        { "feature": "Protein quality", "optionAVal": "Complete, high leucine", "optionBVal": "Good (best from soya/blends)" },
-        { "feature": "Digestion speed", "optionAVal": "Fast", "optionBVal": "Moderate" },
-        { "feature": "Suitable for vegans", "optionAVal": "No", "optionBVal": "Yes" },
-        { "feature": "Cost per gram protein", "optionAVal": "Lower", "optionBVal": "Similar to higher" }
+        {
+          "feature": "Protein quality",
+          "optionAVal": "Complete, high leucine",
+          "optionBVal": "Good (best from soya/blends)"
+        },
+        {
+          "feature": "Digestion speed",
+          "optionAVal": "Fast",
+          "optionBVal": "Moderate"
+        },
+        {
+          "feature": "Suitable for vegans",
+          "optionAVal": "No",
+          "optionBVal": "Yes"
+        },
+        {
+          "feature": "Cost per gram protein",
+          "optionAVal": "Lower",
+          "optionBVal": "Similar to higher"
+        }
       ]
     },
     "content": {
@@ -821,6 +1088,7 @@
           "content": "Protein powder is a convenient way to close the daily protein gap, but which type is right for you? The honest answer depends on whether you consume dairy, how your gut handles lactose, and your budget. Both whey and plant protein can absolutely help you build muscle and lose fat."
         }
       ]
-    }
+    },
+    "display_title": "Whey vs Plant Protein: Which Is Better?"
   }
 ]

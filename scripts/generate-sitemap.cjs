@@ -7,7 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const SITE_URL = "https://getfitved.com";
+const SITE_URL = "https://www.getfitved.com";
 const today = new Date().toISOString().split("T")[0];
 
 // The 4 detailed curated articles live in articles.ts (TS), so their slugs are
