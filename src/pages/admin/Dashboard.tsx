@@ -73,7 +73,7 @@ export default function AdminDashboard() {
         // Fetch all billing with plan_id for proration (type marks refunds)
         (supabase as any).from("billing_history").select("amount, payment_date, plan_id, type"),
         supabase.from("societies").select("id, name"),
-        supabase.from("trainers").select("id, name"),
+        (supabase as any).from("trainers").select("id, name, assigned_admin_id"),
         (supabase as any).from("trainer_off_times").select("id, trainer_id, from_date, to_date, time_slot, reason").gte("to_date", todayISO).order("from_date"),
       ]);
 
@@ -91,8 +91,12 @@ export default function AdminDashboard() {
       const scopedPlanIds = new Set(allPlansForIncome.map((p) => p.id));
       const billing = ((billingRes.data ?? []) as any[]).filter((b) => b.plan_id && scopedPlanIds.has(b.plan_id));
       const societies = (societiesRes.data ?? []) as any[];
-      const trainers = (trainersRes.data ?? []) as any[];
-      const offRaw = (offRes.data ?? []) as any[];
+      // Trainers are per-admin too, so off-times only surface for this admin's trainers.
+      const trainers = ((trainersRes.data ?? []) as any[])
+        .filter((t) => (adminId ? t.assigned_admin_id === adminId : true));
+      const scopedTrainerIds = new Set(trainers.map((t) => t.id));
+      const offRaw = ((offRes.data ?? []) as any[])
+        .filter((o) => (adminId ? scopedTrainerIds.has(o.trainer_id) : true));
 
       const socName = new Map(societies.map((s) => [s.id, s.name]));
       const trName = new Map(trainers.map((t) => [t.id, t.name]));
