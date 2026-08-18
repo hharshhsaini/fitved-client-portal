@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,8 @@ import {
   Loader2, ExternalLink,
 } from "lucide-react";
 import { FitvedLogo } from "@/components/FitvedLogo";
+import { BlogSeo } from "@/components/blog/BlogSeo";
+import { SITE_URL } from "@/lib/blog/seo";
 
 const BUCKET = "trainer-assets";
 const publicUrl = (p: string | null | undefined) => (p ? supabase.storage.from(BUCKET).getPublicUrl(p).data.publicUrl : null);
@@ -70,20 +72,34 @@ export default function TrainerPublicProfile() {
 
   const t = q.data?.t;
 
-  // SEO meta
-  useEffect(() => {
-    if (!t) return;
-    document.title = `${shortName(t.name)} — Certified Trainer | FitVed`;
-    const setMeta = (n: string, c: string) => {
-      let el = document.querySelector(`meta[name="${n}"]`);
-      if (!el) { el = document.createElement("meta"); el.setAttribute("name", n); document.head.appendChild(el); }
-      el.setAttribute("content", c);
-    };
-    setMeta("description", (t.bio || t.about || `${shortName(t.name)} is a certified FitVed trainer.`).slice(0, 160));
-    let c = document.querySelector('link[rel="canonical"]');
-    if (!c) { c = document.createElement("link"); c.setAttribute("rel", "canonical"); document.head.appendChild(c); }
-    c.setAttribute("href", `${window.location.origin}/trainers/${slug}`);
-  }, [t, slug]);
+  const trainerSeoTitle = t ? `${shortName(t.name)} — Certified ${(t.specializations ?? [])[0] || "Fitness"} Trainer | FitVed` : "Trainer Profile | FitVed";
+  const trainerSeoDesc = t ? ((t.bio || t.about || `${shortName(t.name)} is a certified FitVed trainer.`).slice(0, 160)) : "";
+  const trainerCanonical = `${SITE_URL}/trainers/${slug}`;
+  const trainerPhoto = t ? publicUrl(t.photo_path) : null;
+  const trainerSpecs: string[] = t ? (t.specializations ?? []) : [];
+
+  const personSchema = t ? {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: shortName(t.name),
+    jobTitle: `Certified ${trainerSpecs[0] || "Fitness"} Trainer`,
+    description: trainerSeoDesc,
+    image: trainerPhoto || undefined,
+    url: trainerCanonical,
+    worksFor: { "@type": "Organization", name: "FitVed", url: SITE_URL },
+    knowsAbout: trainerSpecs,
+    ...(t.city ? { address: { "@type": "PostalAddress", addressLocality: t.city, addressCountry: "IN" } } : {}),
+  } : null;
+
+  const profileBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Trainers", item: `${SITE_URL}/trainers` },
+      ...(t ? [{ "@type": "ListItem", position: 3, name: shortName(t.name), item: trainerCanonical }] : []),
+    ],
+  };
 
   if (q.isLoading) {
     return (
@@ -120,6 +136,15 @@ export default function TrainerPublicProfile() {
 
   return (
     <div className="bg-fv-neutral min-h-screen">
+      <BlogSeo
+        title={trainerSeoTitle}
+        description={trainerSeoDesc}
+        canonical={trainerCanonical}
+        image={trainerPhoto || `${SITE_URL}/fitved-logo.png`}
+        type="website"
+        keywords={["personal trainer", "certified trainer", ...trainerSpecs.map(s => s.toLowerCase()), t.city?.toLowerCase()].filter(Boolean)}
+        jsonLd={[personSchema, profileBreadcrumb]}
+      />
       {/* Hero */}
       <section className="bg-fv-navy text-white">
         <div className="mx-auto max-w-6xl px-4 pt-5">
