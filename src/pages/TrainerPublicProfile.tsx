@@ -52,6 +52,12 @@ export default function TrainerPublicProfile() {
       if (!t && /^[0-9a-f-]{36}$/i.test(slug ?? "")) {
         ({ data: t } = await sb.from("trainers").select(cols).eq("id", slug).maybeSingle());
       }
+      // Legacy fallback: older shared links used a bare name slug (e.g. "suma").
+      // New slugs are "<name>-<spec>-<id>", so match anything starting with the
+      // old slug so those existing links keep resolving.
+      if (!t && slug) {
+        ({ data: t } = await sb.from("trainers").select(cols).ilike("slug", `${slug}-%`).limit(1).maybeSingle());
+      }
       if (!t || t.active === false) return null;
       const [media, tst, certs] = await Promise.all([
         sb.from("trainer_media").select("id, kind, file_path").eq("trainer_id", t.id).order("sort_order", { ascending: true }),
