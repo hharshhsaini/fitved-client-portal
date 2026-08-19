@@ -1245,7 +1245,7 @@ function Services() {
     },
     {
       num: "08",
-      title: "Online Coaching",
+      title: "Online Training",
       audience: "For Remote & Global Clients",
       category: "professionals",
       desc: "Train from anywhere with video-guided sessions, personalized programs, and real-time trainer feedback.",
