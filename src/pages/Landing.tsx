@@ -49,8 +49,8 @@ import { GeoSEOFooter } from "@/components/GeoSEOFooter";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import fitvedLogo from "@/assets/fitved-logo.png";
-import monalisaFit from "@/assets/monalisa-fit.png";
-import monalisaDoubtful from "@/assets/monalisa-doubtful.png";
+import monalisaFit from "@/assets/monalisa-fit.webp";
+import monalisaDoubtful from "@/assets/monalisa-doubtful.webp";
 import razorpayRizeLogo from "@/assets/razorpay-rize.svg";
 const heroHands = "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=1920&q=80";
 
