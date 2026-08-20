@@ -139,27 +139,19 @@ export function PlanOptionsList({ userId, customerName, customerPhone }: Props) 
       return core.map((label) => ({ label, included: true }));
     }
 
-    // Online Group — live, join-from-anywhere framing.
+    // Online Group — live, join-from-anywhere framing (curated, concise).
     if (online) {
       const list = [
-        { label: `${s} online group training sessions`, included: true },
+        { label: `${s} live online group sessions`, included: true },
         { label: `${p} pause classes`, included: true },
         { label: "Live trainer guidance", included: true },
         { label: "Structured workout plan", included: true },
         { label: "Progress tracking", included: true },
         { label: "Diet plan included", included: long },
-        { label: "WhatsApp support", included: true },
-        { label: "Access to online group sessions", included: true },
+        { label: "WhatsApp & Call support", included: true },
       ];
-      if (long) list.push(
-        { label: "Call support", included: true },
-        { label: "Personalised progress review", included: true },
-        { label: "Goal-based training guidance", included: true },
-      );
-      if (o.duration_months >= 6) list.push(
-        { label: "Long-term progress tracking", included: true },
-        { label: "Priority trainer support", included: true },
-      );
+      if (long) list.push({ label: "Personalised progress review", included: true });
+      if (o.duration_months >= 6) list.push({ label: "Priority trainer support", included: true });
       return list;
     }
 
