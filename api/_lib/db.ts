@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SERVICE_ROLE_KEY } from "./env.js";
-import { subscriptionTerm } from "./term.js";
+import { subscriptionTerm, termStart } from "./term.js";
 
 /**
  * Service-role client. This is the only identity allowed to mark a
@@ -114,11 +114,7 @@ export async function activateFromOrder(
         .order("end_date", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (running?.end_date && running.end_date >= start) {
-        const d = new Date(running.end_date + "T00:00:00Z");
-        d.setUTCDate(d.getUTCDate() + 1);
-        effectiveStart = d.toISOString().slice(0, 10);
-      }
+      effectiveStart = termStart(start, running?.end_date);
     }
 
     if (months > 0 && !startsOnAssignment) {

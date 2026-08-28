@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { visiblePlanOptions } from "@/lib/serviceMode";
 import { latestAssignment, canSkipBooking, repurchase } from "@/lib/repurchase";
 import { preloadCheckout } from "@/lib/payments";
+import { supportWhatsAppUrl, SUPPORT_WHATSAPP_DISPLAY } from "@/lib/support";
 
 const GOLD   = "#f0a720";
 const NAVY   = "#1E3A5F";
@@ -302,6 +303,42 @@ export function PlanOptionsList({ userId, customerName, customerPhone }: Props) 
       </div>
     </div>
   );
+
+  /**
+   * Another category, while a plan is running.
+   *
+   * Showing the prices at all invites a purchase that cannot go through — the
+   * plan they are paying for would be stranded on a different trainer and
+   * schedule. So the catalogue is replaced by the one thing that IS useful
+   * here: a way to ask us about it.
+   */
+  if (activePlan && activeType && type !== activeType) {
+    const label = type === "personal" ? "personal training" : "group training";
+    return (
+      <div className="flex flex-col gap-4">
+        {Toggle}
+        <div className="rounded-[20px] p-6 text-center"
+          style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
+          <p className="font-display" style={{ fontSize: 18, color: NAVY }}>
+            You're on a {activeMode2} {activeType} plan
+          </p>
+          <p style={{ fontSize: 13.5, color: MUTED, marginTop: 6, lineHeight: 1.55 }}>
+            It runs to {activePlan.end_date}. Changing category mid-plan isn't something
+            you can do here — talk to us and we'll sort it out with you.
+          </p>
+          <a
+            href={supportWhatsAppUrl(`Hi FitVed, I'm on a ${activeMode2} ${activeType} plan and I'd like to ask about ${label}.`)}
+            target="_blank" rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl font-semibold"
+            style={{ background: NAVY, color: "#fff", fontSize: 15, padding: "13px 0", textDecoration: "none" }}
+          >
+            Ask about {label} on WhatsApp
+          </a>
+          <p style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>{SUPPORT_WHATSAPP_DISPLAY}</p>
+        </div>
+      </div>
+    );
+  }
 
   // Waiting on the mode is not the same as having nothing to show — say so,
   // and hold the grid's shape so the page doesn't jump when the cards land.
