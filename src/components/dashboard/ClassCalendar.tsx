@@ -39,7 +39,7 @@ interface Props {
   sessions?: { session_date: string; status: string; attended: boolean | null }[];
 }
 
-type DayState = "attended" | "upcoming" | "paused" | "off" | "missed" | "rest" | "outside";
+type DayState = "attended" | "upcoming" | "paused" | "off" | "rest" | "outside";
 
 function todayLocalISO() {
   const d = new Date();
@@ -83,9 +83,10 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     if (sessions?.length) {
       const rec = byDate[date];
       if (rec) {
-        // An absence is the only thing that means "you weren't there".
-        if (rec.attended === false || rec.status === "missed") return "missed";
-        if (rec.status === "paused") return "paused";
+        // In FitVed a class the customer did not attend is a pause class —
+        // there is no separate "absent" state, so these are the same thing.
+        if (rec.attended === false || rec.status === "missed" || rec.status === "paused")
+          return "paused";
         if (rec.status === "trainer_off") return "off";
         if (rec.status === "cancelled") return "rest";
         if (rec.attended === true || rec.status === "completed") return "attended";
@@ -180,7 +181,6 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     switch (cell.state) {
       case "attended": return { title: "Class attended", sub: nice(cell.date) };
       case "upcoming": return { title: "Upcoming class", sub: nice(cell.date) };
-      case "missed":   return { title: "Absent — class ran", sub: nice(cell.date) };
       case "paused": {
         const p = pauses.find((p) => inRange(cell.date, p.from, p.to));
         return { title: "Paused", sub: p ? `${nice(p.from)} – ${nice(p.to)}` : nice(cell.date) };
@@ -222,11 +222,6 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, marginTop: 2 }} />
         </span>
       );
-    } else if (cell.state === "missed") {
-      // The class ran; this customer was marked absent.
-      box.background = "rgba(176,125,16,0.10)";
-      box.border = `1px solid ${GOLD}`;
-      content = <span style={{ color: GOLD_DEEP, fontWeight: 600 }}>{cell.d}</span>;
     } else if (cell.state === "upcoming") {
       content = <span style={{ color: NAVY, fontWeight: 500 }}>{cell.d}</span>;
     } else {
@@ -361,13 +356,6 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
             Paused
           </span>
         )}
-        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
-          <span className="flex items-center justify-center rounded-[5px]"
-            style={{ width: 15, height: 15, background: "rgba(176,125,16,0.10)", border: `1px solid ${GOLD}` }}>
-            <span style={{ fontSize: 9, color: GOLD_DEEP, fontWeight: 700 }}>!</span>
-          </span>
-          Absent
-        </span>
         <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
           <span className="flex items-center justify-center rounded-[5px]"
             style={{ width: 15, height: 15, background: "rgba(210,59,52,0.07)", border: "1px solid rgba(210,59,52,0.35)" }}>
