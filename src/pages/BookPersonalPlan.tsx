@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { slotSummary, STATUS_LABEL, OPEN_STATUSES, type BookingRequest } from "@/lib/bookingRequests";
 import { gatewayConfig, payForPlan, preloadCheckout } from "@/lib/payments";
 import { startCheckout } from "@/lib/repurchase";
+import { composeSlot, plusOneHour } from "@/lib/slotTime";
 
 const GOLD = "#f0a720";
 const NAVY = "#1E3A5F";
@@ -44,6 +45,13 @@ export default function BookPersonalPlan() {
   const [days, setDays] = useState<string[]>([]);
   const [ptStart, setPtStart] = useState("");
   const [ptEnd, setPtEnd] = useState("");
+  // Whether the customer has set the end themselves. Until they do, it simply
+  // follows the start — a class is an hour, so asking for both is asking twice.
+  const [endTouched, setEndTouched] = useState(false);
+  const pickStart = (v: string) => {
+    setPtStart(v);
+    if (!endTouched) setPtEnd(plusOneHour(v));
+  };
   const [society, setSociety] = useState("");
   const [address, setAddress] = useState("");
   const [paying, setPaying] = useState(false);
@@ -198,16 +206,7 @@ export default function BookPersonalPlan() {
     }
   };
 
-  // "7:00 AM – 8:00 AM" from two 24h inputs, matching how every other slot is
-  // written so trainer-availability checks can compare them.
-  const to12h = (v: string) => {
-    if (!v) return "";
-    const [H, M] = v.split(":").map(Number);
-    const period = H >= 12 ? "PM" : "AM";
-    const h = H % 12 === 0 ? 12 : H % 12;
-    return `${h}:${String(M).padStart(2, "0")} ${period}`;
-  };
-  const time = ptStart && ptEnd ? `${to12h(ptStart)} – ${to12h(ptEnd)}` : "";
+  const time = composeSlot(ptStart, ptEnd);
   const canContinueSlot = days.length === 3 && !!time && ptEnd > ptStart;
   const canContinueLocation = !!society.trim() && !!address.trim();
 
@@ -385,10 +384,10 @@ export default function BookPersonalPlan() {
             <Label>What time works for you?</Label>
             <div className="flex w-full min-w-0 items-center gap-2">
               <Input type="time" className="min-w-0 flex-1 px-2" value={ptStart}
-                onChange={(e) => setPtStart(e.target.value)} aria-label="Preferred start time" />
+                onChange={(e) => pickStart(e.target.value)} aria-label="Preferred start time" />
               <span className="shrink-0 text-[13px]" style={{ color: MUTED }}>–</span>
               <Input type="time" className="min-w-0 flex-1 px-2" value={ptEnd}
-                onChange={(e) => setPtEnd(e.target.value)} aria-label="Preferred end time" />
+                onChange={(e) => { setEndTouched(true); setPtEnd(e.target.value); }} aria-label="Preferred end time" />
             </div>
             <p className="text-[11px]" style={{ color: MUTED }}>
               We'll confirm your trainer for this time and message you on WhatsApp.
