@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,8 @@ import {
 import { WEEKDAYS, sortDays, daySetLabel } from "@/lib/daySets";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { slotSummary, STATUS_LABEL, OPEN_STATUSES, type BookingRequest } from "@/lib/bookingRequests";
-import { gatewayConfig, payForPlan } from "@/lib/payments";
+import { gatewayConfig, payForPlan, preloadCheckout } from "@/lib/payments";
+import { startCheckout } from "@/lib/repurchase";
 
 const GOLD = "#f0a720";
 const NAVY = "#1E3A5F";
@@ -49,6 +50,9 @@ export default function BookPersonalPlan() {
   // Stable for the lifetime of this booking attempt; a fresh visit (e.g. after
   // a rejection) gets a new one.
   const [attemptRef] = useState(() => Date.now().toString(36));
+  // Warm the gateway script while they choose, so Pay opens at once.
+  useEffect(() => { preloadCheckout(); }, []);
+
   const gatewayQ = useQuery({ queryKey: ["gateway-config"], queryFn: gatewayConfig });
 
   const adminId: string | null = (profile as any)?.assigned_admin_id ?? null;
@@ -174,9 +178,10 @@ export default function BookPersonalPlan() {
       const { data: soc } = await (supabase as any)
         .from("societies").select("id").eq("name", society.trim()).limit(1).maybeSingle();
 
-      const { data: created, error } = await (supabase as any)
-        .from("plans")
-        .insert({
+      const newPlanId = await startCheckout(supabase as any, {
+        userId: user.id,
+        planOptionId: plan.id,
+        row: {
           user_id: user.id,
           plan_option_id: plan.id,
           training_mode: "offline",
@@ -195,12 +200,9 @@ export default function BookPersonalPlan() {
           // verifies the payment and flips both fields.
           status: "stopped",
           payment_status: "pending",
-        })
-        .select("id").maybeSingle();
-      if (error) throw error;
-      if (!created?.id) throw new Error("Couldn't start your subscription. Please try again.");
-
-      const paid = await payForPlan(created.id);
+        },
+      });
+      const paid = await payForPlan(newPlanId);
       if (paid.status === "success") {
         // Offline personal has no batch, so no trainer is resolved at payment
         // time. The subscription is active and its sessions are laid out; an

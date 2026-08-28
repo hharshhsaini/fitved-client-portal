@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { batchDays, batchName, batchTiming, seatsLeft, type OnlineBatch } from "@/lib/onlineBatches";
 import { gatewayConfig, payForPlan, preloadCheckout } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
+import { startCheckout } from "@/lib/repurchase";
 
 const WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 const NAVY = "#1E3A5F";
@@ -145,9 +146,10 @@ export default function BuyOnlinePlan() {
 
       // The subscription starts life unpaid. The database trigger forbids this
       // client from writing "success", so only a verified payment can activate it.
-      const { data: created, error } = await (supabase as any)
-        .from("plans")
-        .insert({
+      const newPlanId = await startCheckout(supabase as any, {
+        userId: user.id,
+        planOptionId: plan.id,
+        row: {
           user_id: user.id,
           plan_option_id: plan.id,
           training_mode: "online",
@@ -172,12 +174,8 @@ export default function BuyOnlinePlan() {
           // pause classes.
           status: "stopped",
           payment_status: "pending",
-        })
-        .select("id").maybeSingle();
-
-      if (error) throw error;
-      const newPlanId = created?.id;
-      if (!newPlanId) throw new Error("Couldn't start your subscription. Please try again.");
+        },
+      });
 
       const paid = await payForPlan(newPlanId);
 
