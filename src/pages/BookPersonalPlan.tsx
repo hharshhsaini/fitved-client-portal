@@ -42,8 +42,8 @@ export default function BookPersonalPlan() {
 
   const [step, setStep] = useState<Step>(2);
   const [days, setDays] = useState<string[]>([]);
-  const [time, setTime] = useState("");
-  const [slotSetId, setSlotSetId] = useState("");
+  const [ptStart, setPtStart] = useState("");
+  const [ptEnd, setPtEnd] = useState("");
   const [society, setSociety] = useState("");
   const [address, setAddress] = useState("");
   const [paying, setPaying] = useState(false);
@@ -69,39 +69,12 @@ export default function BookPersonalPlan() {
   });
   const plan = planQ.data;
 
-  // Admin-defined availability: day combinations + their bookable times.
-  const availQ = useQuery({
-    queryKey: ["pt-availability", adminId],
-    enabled: !!adminId,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("pt_slot_sets")
-        .select("id, label, days, active, sort_order")
-        .eq("assigned_admin_id", adminId)
-        .eq("training_type", "personal")
-        .eq("active", true)
-        .order("sort_order");
-      if (error || !(data ?? []).length) return [] as any[];
-
-      const ids = (data as any[]).map((s: any) => s.id);
-      const { data: t } = await (supabase as any)
-        .from("pt_slot_set_times")
-        .select("slot_set_id, time_slot, active, sort_order")
-        .in("slot_set_id", ids)
-        .order("sort_order");
-      const byId: Record<string, string[]> = {};
-      for (const r of (t ?? []) as any[]) {
-        if (r.active === false) continue;
-        (byId[r.slot_set_id] ??= []).push(r.time_slot);
-      }
-      // Only offer combinations that actually have a bookable time.
-      return (data as any[])
-        .map((s: any) => ({ ...s, times: byId[s.id] ?? [] }))
-        .filter((s: any) => s.times.length > 0);
-    },
-  });
-  const availability = availQ.data ?? [];
-  const chosenSet = availability.find((s: any) => s.id === slotSetId) ?? null;
+  /*
+   * The admin-defined pt_slot_sets are no longer consulted here: one-to-one
+   * training is arranged around the customer, so they choose the days and the
+   * time themselves and an admin confirms a trainer against real availability
+   * afterwards. Same shape as online personal.
+   */
 
   // The admin's societies — offering these keeps the customer's answer matched
   // to a real society, which is what links them to a trainer's roster later.
@@ -225,7 +198,17 @@ export default function BookPersonalPlan() {
     }
   };
 
-  const canContinueSlot = days.length > 0 && !!time.trim();
+  // "7:00 AM – 8:00 AM" from two 24h inputs, matching how every other slot is
+  // written so trainer-availability checks can compare them.
+  const to12h = (v: string) => {
+    if (!v) return "";
+    const [H, M] = v.split(":").map(Number);
+    const period = H >= 12 ? "PM" : "AM";
+    const h = H % 12 === 0 ? 12 : H % 12;
+    return `${h}:${String(M).padStart(2, "0")} ${period}`;
+  };
+  const time = ptStart && ptEnd ? `${to12h(ptStart)} – ${to12h(ptEnd)}` : "";
+  const canContinueSlot = days.length === 3 && !!time && ptEnd > ptStart;
   const canContinueLocation = !!society.trim() && !!address.trim();
 
   const Row = ({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) => (
@@ -371,84 +354,46 @@ export default function BookPersonalPlan() {
           <h2 className="font-display text-lg sm:text-xl" style={{ color: NAVY }}>Choose your preferred slot</h2>
           <p className="text-[12px]" style={{ color: MUTED }}>Your trainer will be matched to this timing.</p>
 
-          {availability.length > 0 ? (
-            <>
-              <div className="mt-4 space-y-2">
-                <Label>Training days</Label>
-                <div className="grid gap-2.5 sm:grid-cols-2">
-                  {availability.map((s: any) => {
-                    const on = slotSetId === s.id;
-                    return (
-                      <button
-                        key={s.id}
-                        onClick={() => { setSlotSetId(s.id); setDays(sortDays(s.days)); setTime(""); }}
-                        className="flex items-center gap-3 rounded-2xl border p-3.5 text-left transition-all"
-                        style={{ borderColor: on ? GOLD : BORDER, background: on ? "#fffdf6" : "#fff" }}
-                      >
-                        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "rgba(240,167,32,0.12)", color: GOLD }}>
-                          <CalendarDays className="h-5 w-5" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-[15px] font-semibold" style={{ color: NAVY }}>
-                            {s.label || daySetLabel(s.days)}
-                          </span>
-                          <span className="block text-[12px]" style={{ color: MUTED }}>
-                            {s.days.length} day{s.days.length === 1 ? "" : "s"} / week · {s.times.length} timing{s.times.length === 1 ? "" : "s"}
-                          </span>
-                        </span>
-                        {on && <Check className="h-5 w-5 shrink-0" style={{ color: GOLD }} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          {/*
+            One-to-one training is arranged around the customer, not fitted
+            into a batch that already exists — the same as online personal.
+            They pick the days and the time they want; an admin confirms a
+            trainer against real availability after payment and may adjust it.
+          */}
+          <div className="mt-4 space-y-2">
+            <Label>Pick 3 days that suit you</Label>
+            <div className="flex flex-wrap gap-2">
+              {WEEKDAYS.map((d) => {
+                const on = days.includes(d);
+                const full = days.length >= 3 && !on;
+                return (
+                  <button key={d} type="button" disabled={full}
+                    onClick={() => setDays((p) => (on ? p.filter((x) => x !== d) : [...p, d]))}
+                    className="rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors disabled:opacity-40"
+                    style={on
+                      ? { borderColor: GOLD, background: GOLD, color: "#fff" }
+                      : { borderColor: BORDER, background: "#fff", color: MUTED }}>
+                    {d.slice(0, 3)}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-[11px]" style={{ color: MUTED }}>{days.length}/3 selected</p>
+          </div>
 
-              {chosenSet && (
-                <div className="mt-4 space-y-2">
-                  <Label htmlFor="pt-time">Preferred time</Label>
-                  <Select value={time} onValueChange={setTime}>
-                    <SelectTrigger id="pt-time"><SelectValue placeholder="Select a time" /></SelectTrigger>
-                    <SelectContent>
-                      {chosenSet.times.map((t: string) => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </>
-          ) : (
-            /* No availability configured by this admin — fall back to a free
-               request so the customer is never blocked from booking. */
-            <>
-              <div className="mt-4 space-y-2">
-                <Label>Preferred days</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {WEEKDAYS.map((d) => {
-                    const on = days.includes(d);
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => toggleDay(d)}
-                        className="rounded-full border px-3.5 py-2 text-xs font-semibold transition-colors"
-                        style={on
-                          ? { borderColor: GOLD, background: GOLD, color: "#fff" }
-                          : { borderColor: BORDER, background: "#fff", color: MUTED }}
-                      >
-                        {d.slice(0, 3)}
-                      </button>
-                    );
-                  })}
-                </div>
-                {days.length > 0 && <p className="text-[11px]" style={{ color: MUTED }}>{daySetLabel(days)}</p>}
-              </div>
-              <div className="mt-4 space-y-2">
-                <Label htmlFor="pt-time-free">Preferred time</Label>
-                <Input id="pt-time-free" value={time} onChange={(e) => setTime(e.target.value)} placeholder="e.g. 7:00 PM" />
-              </div>
-            </>
-          )}
+          <div className="mt-4 space-y-2">
+            <Label>What time works for you?</Label>
+            <div className="flex w-full min-w-0 items-center gap-2">
+              <Input type="time" className="min-w-0 flex-1 px-2" value={ptStart}
+                onChange={(e) => setPtStart(e.target.value)} aria-label="Preferred start time" />
+              <span className="shrink-0 text-[13px]" style={{ color: MUTED }}>–</span>
+              <Input type="time" className="min-w-0 flex-1 px-2" value={ptEnd}
+                onChange={(e) => setPtEnd(e.target.value)} aria-label="Preferred end time" />
+            </div>
+            <p className="text-[11px]" style={{ color: MUTED }}>
+              We'll confirm your trainer for this time and message you on WhatsApp.
+            </p>
+          </div>
 
           <Button disabled={!canContinueSlot} onClick={() => setStep(3)} className="mt-5 w-full gap-2 sm:ml-auto sm:w-auto sm:px-6">
             Continue <ArrowRight className="h-4 w-4" />
