@@ -30,7 +30,10 @@ export default async function handler(req: any, res: any) {
 
   const { data: plan, error } = await (sb as any)
     .from("plans")
-    .select("id, user_id, plan_option_id, payment_status, razorpay_order_id, total_sessions")
+    // training_mode/type are read by the category guard below — without them
+    // it compared undefined against the running plan, defaulted both sides to
+    // "offline group", and let every mismatch through.
+    .select("id, user_id, plan_option_id, payment_status, razorpay_order_id, total_sessions, training_mode, training_type")
     .eq("id", planId)
     .maybeSingle();
 
