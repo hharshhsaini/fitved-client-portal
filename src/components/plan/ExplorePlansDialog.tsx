@@ -9,6 +9,7 @@ import { visiblePlanOptions } from "@/lib/serviceMode";
 import { latestAssignment, canSkipBooking, repurchase } from "@/lib/repurchase";
 import { preloadCheckout } from "@/lib/payments";
 import { supportWhatsAppUrl, SUPPORT_WHATSAPP_DISPLAY } from "@/lib/support";
+import { formatDate } from "@/lib/dates";
 
 const GOLD   = "#f0a720";
 const NAVY   = "#1E3A5F";
@@ -320,19 +321,18 @@ export function PlanOptionsList({ userId, customerName, customerPhone }: Props) 
         <div className="rounded-[20px] p-6 text-center"
           style={{ background: "#fff", border: `1px solid ${BORDER}` }}>
           <p className="font-display" style={{ fontSize: 18, color: NAVY }}>
-            You're on a {activeMode2} {activeType} plan
+            You're on a {activeType} plan
           </p>
-          <p style={{ fontSize: 13.5, color: MUTED, marginTop: 6, lineHeight: 1.55 }}>
-            It runs to {activePlan.end_date}. Changing category mid-plan isn't something
-            you can do here — talk to us and we'll sort it out with you.
+          <p style={{ fontSize: 13.5, color: MUTED, marginTop: 4 }}>
+            Runs to {formatDate(activePlan.end_date)}
           </p>
           <a
-            href={supportWhatsAppUrl(`Hi FitVed, I'm on a ${activeMode2} ${activeType} plan and I'd like to ask about ${label}.`)}
+            href={supportWhatsAppUrl(`Hi FitVed, I'd like to ask about ${label}.`)}
             target="_blank" rel="noopener noreferrer"
             className="mt-4 flex items-center justify-center gap-2 rounded-xl font-semibold"
             style={{ background: NAVY, color: "#fff", fontSize: 15, padding: "13px 0", textDecoration: "none" }}
           >
-            Ask about {label} on WhatsApp
+            Ask about {label}
           </a>
           <p style={{ fontSize: 12, color: MUTED, marginTop: 8 }}>{SUPPORT_WHATSAPP_DISPLAY}</p>
         </div>
