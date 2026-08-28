@@ -83,12 +83,21 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     if (sessions?.length) {
       const rec = byDate[date];
       if (rec) {
-        if (rec.attended === true || rec.status === "completed") return "attended";
+        // An absence is the only thing that means "you weren't there".
+        if (rec.attended === false || rec.status === "missed") return "missed";
         if (rec.status === "paused") return "paused";
         if (rec.status === "trainer_off") return "off";
-        if (rec.status === "missed") return "missed";
         if (rec.status === "cancelled") return "rest";
-        return date < today ? "missed" : "upcoming";
+        if (rec.attended === true || rec.status === "completed") return "attended";
+        /**
+         * A past class that is still 'scheduled'.
+         *
+         * In FitVed a class happens unless a pause or a trainer's day off says
+         * otherwise — that is the same rule expire_subscriptions() applies when
+         * it ages these rows. So it ran: show the tick. Anything else is the
+         * database's bookkeeping leaking onto the customer's calendar.
+         */
+        return date < today ? "attended" : "upcoming";
       }
       if (date < startDate || date > endDate) return "outside";
       return "rest";
@@ -171,7 +180,7 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     switch (cell.state) {
       case "attended": return { title: "Class attended", sub: nice(cell.date) };
       case "upcoming": return { title: "Upcoming class", sub: nice(cell.date) };
-      case "missed":   return { title: "Class not marked", sub: nice(cell.date) };
+      case "missed":   return { title: "Absent — class ran", sub: nice(cell.date) };
       case "paused": {
         const p = pauses.find((p) => inRange(cell.date, p.from, p.to));
         return { title: "Paused", sub: p ? `${nice(p.from)} – ${nice(p.to)}` : nice(cell.date) };
@@ -214,10 +223,7 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
         </span>
       );
     } else if (cell.state === "missed") {
-      // A class that was scheduled and has passed with nothing recorded
-      // against it. It fell through to the inactive branch before, so a real
-      // class simply vanished from the calendar — indistinguishable from a
-      // day the customer never trained on.
+      // The class ran; this customer was marked absent.
       box.background = "rgba(176,125,16,0.10)";
       box.border = `1px solid ${GOLD}`;
       content = <span style={{ color: GOLD_DEEP, fontWeight: 600 }}>{cell.d}</span>;
@@ -360,7 +366,7 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
             style={{ width: 15, height: 15, background: "rgba(176,125,16,0.10)", border: `1px solid ${GOLD}` }}>
             <span style={{ fontSize: 9, color: GOLD_DEEP, fontWeight: 700 }}>!</span>
           </span>
-          Not marked
+          Absent
         </span>
         <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
           <span className="flex items-center justify-center rounded-[5px]"
