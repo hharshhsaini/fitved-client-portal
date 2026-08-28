@@ -171,6 +171,7 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
     switch (cell.state) {
       case "attended": return { title: "Class attended", sub: nice(cell.date) };
       case "upcoming": return { title: "Upcoming class", sub: nice(cell.date) };
+      case "missed":   return { title: "Class not marked", sub: nice(cell.date) };
       case "paused": {
         const p = pauses.find((p) => inRange(cell.date, p.from, p.to));
         return { title: "Paused", sub: p ? `${nice(p.from)} – ${nice(p.to)}` : nice(cell.date) };
@@ -212,6 +213,14 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
           <span style={{ width: 5, height: 5, borderRadius: "50%", background: RED, marginTop: 2 }} />
         </span>
       );
+    } else if (cell.state === "missed") {
+      // A class that was scheduled and has passed with nothing recorded
+      // against it. It fell through to the inactive branch before, so a real
+      // class simply vanished from the calendar — indistinguishable from a
+      // day the customer never trained on.
+      box.background = "rgba(176,125,16,0.10)";
+      box.border = `1px solid ${GOLD}`;
+      content = <span style={{ color: GOLD_DEEP, fontWeight: 600 }}>{cell.d}</span>;
     } else if (cell.state === "upcoming") {
       content = <span style={{ color: NAVY, fontWeight: 500 }}>{cell.d}</span>;
     } else {
@@ -346,6 +355,13 @@ export function ClassCalendar({ startDate, endDate, trainingDays, pauses, offTim
             Paused
           </span>
         )}
+        <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
+          <span className="flex items-center justify-center rounded-[5px]"
+            style={{ width: 15, height: 15, background: "rgba(176,125,16,0.10)", border: `1px solid ${GOLD}` }}>
+            <span style={{ fontSize: 9, color: GOLD_DEEP, fontWeight: 700 }}>!</span>
+          </span>
+          Not marked
+        </span>
         <span className="flex items-center gap-1.5" style={{ fontSize: 11, color: MUTED }}>
           <span className="flex items-center justify-center rounded-[5px]"
             style={{ width: 15, height: 15, background: "rgba(210,59,52,0.07)", border: "1px solid rgba(210,59,52,0.35)" }}>

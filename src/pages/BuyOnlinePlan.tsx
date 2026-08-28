@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, Clock, CreditCard, Loader2, ShieldCheck, UserRound, Users, Video } from "lucide-react";
@@ -8,7 +8,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { batchDays, batchName, batchTiming, seatsLeft, type OnlineBatch } from "@/lib/onlineBatches";
-import { gatewayConfig, payForPlan } from "@/lib/payments";
+import { gatewayConfig, payForPlan, preloadCheckout } from "@/lib/payments";
 import { Input } from "@/components/ui/input";
 
 const WEEKDAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
@@ -54,6 +54,9 @@ export default function BuyOnlinePlan() {
   const plan = planQ.data;
   const trainingType: "group" | "personal" = plan?.training_type === "personal" ? "personal" : "group";
   const isPersonal = trainingType === "personal";
+
+  // Warm the gateway script while they choose, so pressing Pay opens it at once.
+  useEffect(() => { preloadCheckout(); }, []);
 
   const gatewayQ = useQuery({ queryKey: ["gateway-config"], queryFn: gatewayConfig });
 
